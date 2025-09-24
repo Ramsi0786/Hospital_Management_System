@@ -1,0 +1,109 @@
+<!-- views/landing_page.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div class="landing-page-container">
+        <!-- Navigation Bar -->
+        <header class="navbar">
+            <div class="logo">
+                <img src="/images/logo.jpg" alt="logo">
+            </div>
+            <nav>
+                <a href="/" class="nav-link active">Home</a>
+                <a href="/about-us" class="nav-link">About Us</a>
+                <a href="/doctors" class="nav-link">Doctors</a>
+                <a href="/login" class="nav-link login-btn">Login</a>
+            </nav>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1>Smarter Healthcare, <br> Simplified for Everyone</h1>
+                <p>From clinics to hospitals, we bring patients, doctors, and healthcare providers together with powerful, cloud-based solutions.</p>
+                <button class="cta-button">Book Appointment</button>
+            </div>
+            <div class="hero-image">
+                <img src="/images/doctors.jpg" alt="Doctors">
+            </div>
+        </section>
+
+        <!-- Why Healora Section -->
+        <section class="why-healora-section">
+            <h2>Why HEALORA?</h2>
+            <div class="cards-container">
+                <div class="card">
+                    <h3>Faster, Smarter Workflows</h3>
+                    <p>Our system automates repetitive tasks, reduces paperwork, and helps doctors, nurses, and staff focus more on patients—not processes.</p>
+                </div>
+                <div class="card">
+                    <h3>Simplifying Healthcare Management</h3>
+                    <p>Healora is designed to make hospital and clinic operations seamless. From patient registration to billing, everything is quick, accurate, and hassle-free.</p>
+                </div>
+                <div class="card">
+                    <h3>Secure & Reliable</h3>
+                    <p>We ensure top-notch data security with encrypted storage, giving you peace of mind that patient records are always safe.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Section -->
+        <section class="stats-section">
+            <div class="stat-item">
+                <span class="stat-number">100+</span>
+                <p>Doctors</p>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">300+</span>
+                <p>Clients</p>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">100+</span>
+                <p>Records Handled Annually</p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <img src="public/images/logo.jpg" alt="logo">
+                    <p>Leading the Way in Medical Excellence, Trusted Care.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Important Links</h4>
+                    <p>Appointment</p>
+                    <p>Doctors</p>
+                    <p>Services</p>
+                    <p>About Us</p>
+                </div>
+                <div class="footer-contact">
+                    <h4>Contact Us</h4>
+                    <p>Call: (237) 881-812-255</p>
+                    <p>Email: healora.dr@gmail.com</p>
+                    <p>Address: 0122 Some place</p>
+                    <p>Some Country</p>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <input type="email" placeholder="Enter your email address">
+                    <button>-></button>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2021 Hospital's name All Rights Reserved by PNTEC-LTD</p>
+                <div class="social-icons">
+                    <!-- Add social media icons here -->
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

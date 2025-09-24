@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- ✅ Navbar (reused) -->
+  <%- include("partials/navbar") %>
+
+  <!-- ✅ Login Options Section -->
+  <main class="login-selection">
+  <div class="card">
+    <div class="card-logo">
+      <img src="/images/logo.jpg" alt="logo">
+    </div>
+    <h2>Select Login Type</h2>
+    <div class="login-buttons">
+      <a href="/doctor-login" class="btn doctor-btn">Doctor Login</a>
+      <a href="/patient-login" class="btn patient-btn">Patient Login</a>
+    </div>
+  </div>
+</main>
+
+ 
+</body>
+</html>

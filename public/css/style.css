@@ -1,0 +1,462 @@
+/* General Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #a8cdf2;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* Container */
+.landing-page-container {
+  margin: 0 auto;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  padding: 25px 50px;
+  background-color: #0d2c54; /* dark navy */
+  border-bottom: 1px solid #eee;
+}
+
+.navbar-container {
+  max-width: 1200px;          /* Limit content */
+  margin: 0 auto;             /* Center content */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+}
+
+
+.logo img {
+  width: 120px;
+}
+
+.navbar nav a {
+  margin-left: 20px;
+  text-decoration: none;
+  color: #fff;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.navbar nav a:hover {
+  color: #4db8ff;
+}
+
+.login-btn {
+  background-color: #fff;
+  color: #0d2c54 !important;
+  padding: 6px 15px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* Hero Section */
+.hero-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 100px 50px;
+  background: url('/images/molecular-structure-background.png') no-repeat center/cover;
+}
+
+.hero-content {
+  flex: 1;
+  padding-right: 50px; /* spacing between text and image */
+}
+
+.hero-image {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.hero-image img {
+  width: 100%; /* fill right half */
+  max-width: 500px; /* limit on large screens */
+  height: auto;
+  object-fit:cover;
+}
+
+.hero-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 20px;
+  color: #0d2c54;
+}
+
+
+.hero-content p {
+  margin: 20px 0; /* 20px top & bottom */
+  font-size: 1.1rem;
+  color: #444;
+}
+
+
+
+.cta-button {
+  background-color: #0d2c54;
+  color: #fff;
+  padding: 12px 25px;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.cta-button:hover {
+  background-color: #1a4b80;
+}
+
+.hero-image img {
+  width: 300px;
+  border-radius: 1px;
+}
+
+/* Why Healora Section */
+.why-healora-section {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.why-healora-section h2 {
+  font-size: 2rem;
+  margin-bottom: 40px;
+  color: #0d2c54;
+}
+
+.cards-container {
+  margin :0%;
+  display: flex;
+  gap: 50px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(17, 17, 17, 0.547);
+  flex: 1;
+  min-width: 280px;
+  max-width: 320px;
+}
+
+.card h3 {
+  margin-bottom: 15px;
+  color: #0d2c54;
+}
+
+
+/* Stats Section */
+
+.stats-section {
+  font-family: playfire;
+  display: flex;
+  justify-content: space-around; /* evenly distribute items */
+  gap: 50px; 
+  padding: 90px 100px; /* smaller padding */
+  background: #f4f9ff;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+
+.stat-item {
+  text-align: center;
+}
+
+
+.stat-number {
+  font-size: 5rem;
+  font-weight: 700;
+  color: #0d2c54;
+}
+
+
+/* Footer*/
+.footer {
+  background: #0d2c54;
+  color: #fff;
+  padding: 50px;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.footer-content h3, 
+.footer-content h4 {
+  margin-bottom: 15px;
+}
+
+.footer-contact p,
+.footer-links p {
+  margin: 5px 0;
+}
+
+.footer-newsletter input {
+  padding: 8px;
+  border: none;
+  border-radius: 4px;
+  width: 200px;
+  margin-right: 10px;
+}
+
+.footer-newsletter button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  background: #4db8ff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.footer-bottom {
+  text-align: center;
+  margin-top: 30px;
+  border-top: 1px solid #1a4b80;
+  padding-top: 15px;
+  font-size: 0.9rem;
+}
+
+/* Login Page Styling */
+.login-selection {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+}
+
+.card {
+  background: #fff;
+  padding: 50px 50px;
+  border-radius: 12px;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin-top:100px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.card-logo {
+  margin-bottom: 10px;
+  display:flex;
+  justify-content:center
+}
+
+.card h2 {
+  margin-bottom: 26px;
+  font-size: 22px;
+  color: #0b2a53;
+}
+
+/* ✅ Buttons */
+.login-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.btn {
+  display: block;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: 0.3s ease;
+  text-align: center;
+}
+
+.doctor-btn {
+  background-color: #0b2a53;
+  color: #fff;
+}
+
+.doctor-btn:hover {
+  background-color: #4da3ff;
+  transform: scale(1.05);
+}
+
+.patient-btn {
+  background-color: #0b2a53;
+  color: #fff;
+}
+
+.patient-btn:hover {
+  background-color: #4da3ff;
+  transform: scale(1.05);
+}
+
+/*-----------------------------> about Us <------------------------------------ */
+
+/* Hero Banner */
+.about-hero {
+  background: url('/images/about-banner.jpg') no-repeat center/cover;
+  height: 40vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.about-hero .overlay {
+  background: rgba(0,0,0,0.5);
+  padding: 40px 60px;
+  border-radius: 8px;
+  text-align: center;
+  color: #fff;
+}
+.about-hero h1 {
+  font-size: 36px;
+  font-weight: 600;
+}
+
+/* About Intro Section */
+.about-intro {
+  padding: 80px 60px;
+  background: #fff;
+}
+
+.intro-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.intro-text {
+  flex: 1;
+}
+
+.intro-text h2 {
+  color: #007bff;
+  font-size: 18px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.intro-text h3 {
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.about-values {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+
+.about-values li {
+  font-size: 16px;
+  color: #333;
+  display: flex;
+  align-items: center;
+}
+
+.about-values li::before {
+  content: "•";
+  color: #007bff;
+  font-weight: bold;
+  margin-right: 8px;
+}
+
+.intro-image {
+  flex: 1;
+  text-align: right;
+}
+
+.intro-image img {
+  max-width: 500px;
+  width: 100%;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+
+/* Mission & Vision Cards */
+.mission-vision {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  padding: 80px 20px;
+  justify-content: center;
+}
+.mission-vision .card {
+  flex: 1 1 300px;
+  background: #fff;
+  padding: 40px 30px;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  text-align: left;
+}
+.mission-vision .card h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e2d5f;
+  margin-bottom: 15px;
+}
+.mission-vision .card p {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #444;
+}
+
+/* Contact Section */
+.contact-section {
+  background: #fff;
+  padding: 80px 20px;
+  text-align: center;
+}
+.contact-section h2 {
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e2d5f;
+}
+.contact-boxes {
+  display: grid;
+  padding: 10px 10px;
+  grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+  gap: 20px;
+  margin-top: 40px;
+  margin-right: 150px;
+  margin-left: 150px;
+}
+.contact-boxes .box {
+  padding: 90px 10px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+}
+.contact-boxes .box h4 {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+.emergency { background: #7da6d6; }
+.location { background: #0b2a53; }
+.email { background: #7da6d6; }
+.hours { background: #7da6d6; }
