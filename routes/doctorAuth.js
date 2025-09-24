@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const Doctor = require("../models/doctor.js");
+const authMiddleware = require("../middleware/auth.js");
 
 const router = express.Router();
 
@@ -85,6 +86,8 @@ router.post("/doctor-login", async (req, res) => {
 });
 
 
-
+router.get("/dashboard", authMiddleware, (req, res) => {
+  res.send(`Welcome Doctor! Your ID: ${req.user.id}`);
+});
 
 module.exports = router;
