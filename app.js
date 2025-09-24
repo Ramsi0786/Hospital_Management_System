@@ -54,8 +54,9 @@ app.get('/doctor-login', (req, res) => {
 
 //========================= AUTH ROUTES (JWT Example) =========================
 
-const doctorAuthRoutes = require('./routes/doctorAuth');
-app.use('/doctor-login', doctorAuthRoutes);
+const doctorAuthRoutes = require("./routes/doctorauth");
+app.use("/auth", doctorAuthRoutes);
+
 
 // ========================= START SERVER =========================
 app.listen(PORT, () => {
