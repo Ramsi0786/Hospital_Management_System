@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Signup - Healora</title>
+  <link rel="stylesheet" href="/css/signup.css">
+</head>
+<body>
+  <div class="signup-container">
+    <div class="signup-card">
+
+      <!-- Logo -->
+      <div class="logo">
+        <img src="/images/logo.jpg" alt="Healora Logo">
+      </div>
+
+      <!-- Form -->
+      <form id="patientSignupForm">
+        <div class="input-group">
+          <input type="text" id="name" name="name" placeholder="Name">
+        </div>
+
+        <div class="input-group">
+          <input type="email" id="email" name="email" placeholder="Email ID">
+        </div>
+
+        <div class="input-group">
+          <input type="password" id="password" name="password" placeholder="Password">
+        </div>
+
+        <div class="input-group">
+          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password">
+        </div>
+
+        <button type="submit" class="btn primary">Sign Up</button>
+
+        <p class="login-link">Already have an account? <a href="/patient/patient-login">Login</a></p>
+      </form>
+
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById("patientSignupForm");
+    const name = document.getElementById("name");
+    const email = document.getElementById("email");
+    const password = document.getElementById("password");
+    const nameError = document.getElementById("nameError");
+    const emailError = document.getElementById("emailError");
+    const passwordError = document.getElementById("passwordError");
+    const serverError = document.getElementById("serverError");
+    const successMessage = document.getElementById("successMessage");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      nameError.textContent = "";
+      emailError.textContent = "";
+      passwordError.textContent = "";
+      serverError.textContent = "";
+      successMessage.textContent = "";
+
+      let isValid = true;
+      if (!name.value.trim()) { nameError.textContent = "Name is required"; isValid = false; }
+      if (!email.value.trim()) { emailError.textContent = "Email is required"; isValid = false; }
+      if (!password.value.trim()) { passwordError.textContent = "Password is required"; isValid = false; }
+
+      if (!isValid) return;
+
+      try {
+        const res = await fetch("/patient/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name.value.trim(),
+            email: email.value.trim(),
+            password: password.value.trim()
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          successMessage.textContent = data.message;
+          form.reset();
+        } else {
+          serverError.textContent = data.message;
+        }
+      } catch (err) {
+        serverError.textContent = "Server error. Please try again later.";
+      }
+    });
+  </script>
+</body>
+</html>

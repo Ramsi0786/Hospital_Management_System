@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Patient Login - Healora</title>
+  <link rel="stylesheet" href="/css/doc-log.css">
+  <style>
+    .error {
+      color: red;
+      font-size: 14px;
+      margin-top: 4px;
+      display: block;
+    }
+    .server-error {
+      color: red;
+      font-size: 15px;
+      margin: 10px 0;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <div class="login-card">
+      
+      <!-- Logo -->
+      <div class="logo">
+        <img src="/images/logo.jpg" alt="Healora Logo">
+      </div>
+
+      <!-- ✅ Single Form -->
+      <form id="patientLoginForm">
+        <div class="input-group">
+          <input type="email" id="email" name="email" placeholder="Email">
+          <span class="error" id="emailError"></span>
+        </div>
+
+        <div class="input-group">
+          <input type="password" id="password" name="password" placeholder="Password">
+          <span class="error" id="passwordError"></span>
+        </div>
+        
+        <div class="remember">
+          <input type="checkbox" id="remember">
+          <label for="remember">Remember me</label>
+        </div>
+
+        <div id="serverError" class="server-error"></div>
+
+        <button type="submit" class="btn primary">Login</button>
+        <button type="button" class="btn google">Login With Google</button>
+
+        <p class="forgot">
+          Forgot Password ? <a href="/reset-password">Reset Password</a>
+        </p>
+        <p class="forgot">
+          Don't have an account? <a href="/patient/signup">Sign Up</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('patientLoginForm');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const emailError = document.getElementById('emailError');
+    const passwordError = document.getElementById('passwordError');
+    const serverError = document.getElementById('serverError');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // clear old errors
+      emailError.textContent = "";
+      passwordError.textContent = "";
+      serverError.textContent = "";
+
+      let isValid = true;
+
+      // ✅ required field validation
+      if (!email.value.trim()) {
+        emailError.textContent = "Email is required";
+        isValid = false;
+      }
+      if (!password.value.trim()) {
+        passwordError.textContent = "Password is required";
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      // ✅ send to backend
+      try {
+        const res = await fetch("/patient/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            email: email.value.trim(), 
+            password: password.value.trim() 
+          })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          // login success
+          localStorage.setItem("token", data.token);
+          window.location.href = "/patient/dashboard";   // 👈 redirect to patient dashboard
+        } else {
+          // backend validation messages
+          if (data.errors) {
+            if (data.errors.email) emailError.textContent = data.errors.email;
+            if (data.errors.password) passwordError.textContent = data.errors.password;
+          }
+          if (data.message) {
+            serverError.textContent = data.message;
+          }
+        }
+      } catch (err) {
+        serverError.textContent = "Server error. Please try again later.";
+      }
+    });
+    
+  </script>
+</body>
+</html>
