@@ -46,7 +46,7 @@ app.get('/doctors', (req, res) => {
 });
 
 // Doctor login page
-app.get('/doctor-login', (req, res) => {
+app.get('/doctor/doctor-login', (req, res) => {
   res.render('doctor-login', { title: 'Doctor Login - Healora' });
 });
 
@@ -54,8 +54,12 @@ app.get('/doctor-login', (req, res) => {
 
 //========================= AUTH ROUTES (JWT Example) =========================
 
-const doctorAuthRoutes = require("./routes/doctorauth");
+const doctorAuthRoutes = require("./routes/doctorAuthRoutes");
 app.use("/auth", doctorAuthRoutes);
+
+const patientAuthRoutes = require("./routes/patientAuth");
+app.use("/patient", patientAuthRoutes);
+
 
 
 // ========================= START SERVER =========================
