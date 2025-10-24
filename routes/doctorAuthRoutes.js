@@ -90,4 +90,6 @@ router.get("/dashboard", authMiddleware, (req, res) => {
   res.send(`Welcome Doctor! Your ID: ${req.user.id}`);
 });
 
+
+
 module.exports = router;

@@ -4,68 +4,243 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Patient Signup - Healora</title>
-  <link rel="stylesheet" href="/css/signup.css">
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Font Awesome (optional icons) -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #e1f5fe, #b3e5fc);
+      font-family: 'Poppins', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    
+    }
+
+    .signup-section {
+      min-height: 100vh;
+    }
+
+    /* Left image */
+    .signup-section img.side-image {
+      height: 100vh;
+      object-fit: cover;
+    }
+
+    /* Right content */
+    .signup-content {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      padding: 20px;
+      background-color: #fff;
+    }
+
+    /* Card-like form */
+    .signup-form {
+      background-color: #ffffff;
+      padding: 40px 30px;
+      border-radius: 15px;
+      box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .signup-form h2 {
+      text-align: center;
+      color: #0d6efd;
+      margin-bottom: 25px;
+      font-weight: 700;
+    }
+
+    .signup-form .form-control {
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .signup-form .btn {
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .signup-form .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Links */
+    .signup-form p.text-center a {
+      color: #0d6efd;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .signup-form p.text-center a:hover {
+      text-decoration: underline;
+    }
+
+    /* Error and success messages */
+    .message {
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      color: red;
+      text-align: center;
+    }
+
+    .success {
+      color: green;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .signup-section img.side-image {
+        height: 250px;
+      }
+      .signup-content {
+        height: auto;
+        padding: 60px 20px;
+      }
+    }
+
+    .separator {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+}
+
+.separator::before,
+.separator::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+}
+
+.separator:not(:empty)::before {
+  margin-right: .75em;
+}
+
+.separator:not(:empty)::after {
+  margin-left: .75em;
+}
+
+.google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  text-decoration: none;
+  color: #444;
+  font-weight: 500;
+  padding: 10px;
+  width: 100%;
+  transition: 0.3s;
+}
+
+.google-btn img {
+  width: 20px;
+  margin-right: 10px;
+}
+
+.google-btn:hover {
+  background-color: #f7f7f7;
+}
+
+  </style>
 </head>
 <body>
-  <div class="signup-container">
-    <div class="signup-card">
 
-      <!-- Logo -->
-      <div class="logo">
-        <img src="/images/logo.jpg" alt="Healora Logo">
+  <section class="container-fluid px-0 signup-section">
+    <div class="row g-0">
+
+      <!-- Left: Image -->
+      <div class="col-md-6 d-none d-md-block">
+        <img src="/images/try-login.jpg" class="side-image w-100" alt="Healora illustration" loading="lazy">
       </div>
 
-      <!-- Form -->
-      <form id="patientSignupForm">
-        <div class="input-group">
-          <input type="text" id="name" name="name" placeholder="Name">
-        </div>
+      <!-- Right: Signup Form -->
+      <div class="col-md-6 signup-content">
+        <form id="patientSignupForm" class="signup-form">
 
-        <div class="input-group">
-          <input type="email" id="email" name="email" placeholder="Email ID">
-        </div>
+          <h2>Patient Registration</h2>
 
-        <div class="input-group">
-          <input type="password" id="password" name="password" placeholder="Password">
-        </div>
+          <!-- Messages -->
+          <div id="serverError" class="message"></div>
+          <div id="successMessage" class="message success"></div>
 
-        <div class="input-group">
-          <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm Password">
-        </div>
+          <!-- Inputs -->
+          <input type="text" name="name" id="name" placeholder="Full Name" class="form-control mb-3" required>
+          <input type="email" name="email" id="email" placeholder="Email" class="form-control mb-3" required>
+          <input type="text" name="phone" id="phone" placeholder="Phone Number" class="form-control mb-3" required pattern="[0-9]{10}">
+          <input type="password" name="password" id="password" placeholder="Password" class="form-control mb-3" required>
+          <input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password" class="form-control mb-4" required>
 
-        <button type="submit" class="btn primary">Sign Up</button>
+          <button type="submit" class="btn btn-primary w-100">Register</button>
 
-        <p class="login-link">Already have an account? <a href="/patient/patient-login">Login</a></p>
-      </form>
+          <div class="separator">
+          <span>OR</span>
+          </div>
+
+      <a href="/auth/google" 
+          style="display: flex; align-items: center; justify-content: center; 
+          background-color: white; border: 1px solid #ccc; border-radius: 5px;
+          text-decoration: none; color: #444; font-weight: 500; 
+          padding: 10px; width: 100%; transition: 0.3s;">
+          <img src="https://developers.google.com/identity/images/g-logo.png" 
+         alt="Google logo" style="width: 20px; margin-right: 10px;">
+         Continue with Google
+      </a>
+          <p class="text-center mt-3">
+            Already have an account? <a href="/patient/login">Login</a>
+          </p>
+        </form>
+      </div>
 
     </div>
-  </div>
+  </section>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
   <script>
     const form = document.getElementById("patientSignupForm");
     const name = document.getElementById("name");
     const email = document.getElementById("email");
+    const phone = document.getElementById("phone");
     const password = document.getElementById("password");
-    const nameError = document.getElementById("nameError");
-    const emailError = document.getElementById("emailError");
-    const passwordError = document.getElementById("passwordError");
+    const confirmPassword = document.getElementById("confirmPassword");
+
     const serverError = document.getElementById("serverError");
     const successMessage = document.getElementById("successMessage");
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      nameError.textContent = "";
-      emailError.textContent = "";
-      passwordError.textContent = "";
+      // Reset messages
       serverError.textContent = "";
       successMessage.textContent = "";
 
-      let isValid = true;
-      if (!name.value.trim()) { nameError.textContent = "Name is required"; isValid = false; }
-      if (!email.value.trim()) { emailError.textContent = "Email is required"; isValid = false; }
-      if (!password.value.trim()) { passwordError.textContent = "Password is required"; isValid = false; }
-
-      if (!isValid) return;
+      // Validate passwords match
+      if(password.value !== confirmPassword.value){
+        serverError.textContent = "Passwords do not match";
+        return;
+      }
 
       try {
         const res = await fetch("/patient/signup", {
@@ -74,6 +249,7 @@
           body: JSON.stringify({
             name: name.value.trim(),
             email: email.value.trim(),
+            phone: phone.value.trim(),
             password: password.value.trim()
           })
         });
@@ -83,6 +259,7 @@
         if (res.ok) {
           successMessage.textContent = data.message;
           form.reset();
+          setTimeout(() => { window.location.href = "/patient/login"; }, 1500);
         } else {
           serverError.textContent = data.message;
         }
