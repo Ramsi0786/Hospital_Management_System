@@ -1,55 +1,88 @@
-// 1. Import required modules
-const express = require('express');
-const path = require('path');
-const dotenv = require('dotenv');
+const express = require("express");
+const path = require("path");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv").config();
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const passport = require("./config/passport");
 
-// Load environment variables from .env file
-dotenv.config();
+const patientAuthRoutes = require("./routes/patientAuth");
+const oauthRoutes = require("./routes/oauthRoutes");
+const connectDB = require("./config/db");
 
-// Initialize the Express app
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware to parse incoming requests
-app.use(express.json()); // for API requests (JSON)
-app.use(express.urlencoded({ extended: true })); // for form submissions
+connectDB();
 
-// Set up EJS as the view engine
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+mongoose.connect("mongodb+srv://Ramsiii:Ramsi%40786@cluster0.jwaoaen.mongodb.net/hms")
+  .then(() => console.log("MongoDB connected successfully"))
+  .catch(err => console.error("MongoDB connection error:", err));
 
-// Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+app.use(
+  session({
+    secret: process.env.JWT_SECRET,
+    resave: false,
+    saveUninitialized: false,
+  })
+);
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+app.use(express.static(path.join(__dirname, "public")));
+
 
 //========================= ROUTES =========================
 
-// Landing Page
+
+
 app.get('/', (req, res) => {
   res.render('landing_page', { 
     title: 'Healora - Smarter Healthcare, Simplified for Everyone' 
   });
 });
 
-// User Login (redirect page)
+
 app.get('/login', (req, res) => {
   res.render('redirect', { title: 'Login - Healora' });
 });
 
-// About Us
+
 app.get('/about-us', (req, res) => {
   res.render('about-us', { title: 'Healora - About Us' });
 });
 
-// Doctors Public Page
+
 app.get('/doctors', (req, res) => {
   res.render('doctors', { title: 'Our Doctors' });
 });
 
-// Doctor login page
+app.get('/services', (req, res) =>{
+   res.render('services',{ title: 'our services'});
+});
+
+app.get('/contact', (req, res) => {
+  res.render('contact',{ title: 'connect with us'});
+});
+
+app.get('/departments/:name', (req, res) => {
+  const dept = req.params.name;
+  res.render(`departments/${dept}`);
+});
+
 app.get('/doctor/doctor-login', (req, res) => {
   res.render('doctor-login', { title: 'Doctor Login - Healora' });
 });
 
+const doctorRoutes = require('./routes/doctorAuthRoutes');
+app.use('/', doctorRoutes);
 
 
 //========================= AUTH ROUTES (JWT Example) =========================
@@ -57,12 +90,12 @@ app.get('/doctor/doctor-login', (req, res) => {
 const doctorAuthRoutes = require("./routes/doctorAuthRoutes");
 app.use("/auth", doctorAuthRoutes);
 
-const patientAuthRoutes = require("./routes/patientAuth");
-app.use("/patient", patientAuthRoutes);
+app.use("/patient", require("./routes/patientAuth"));
 
 
+app.use("/auth", oauthRoutes);
 
 // ========================= START SERVER =========================
 app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
