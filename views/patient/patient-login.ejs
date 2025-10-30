@@ -71,6 +71,16 @@ h2 {
   text-decoration: underline;
 }
 
+.message {
+      font-size: 0.9rem;
+      margin-bottom: 10px;
+      color: red;
+      text-align: center;
+    }
+
+.success {
+      color: green;
+    }
 
   </style>
 </head>
@@ -81,48 +91,90 @@ h2 {
       <img src="/images/logo.jpg" alt="Healora Logo">
     </div>
 
-```
 <h2>Patient Login</h2>
 
 <form id="patientLoginForm">
-  <input type="email" id="email" name="email" class="form-control mb-3" placeholder="Email" required>
-  <input type="password" id="password" name="password" class="form-control mb-4" placeholder="Password" required>
+
+  <div id="serverError" class="text-danger mb-2"></div>
+  <div id="successMessage" class="text-success mb-2"></div>
+
+  <input type="email" name="email" id="email" placeholder="Email" class="form-control mb-1">
+  <div id="errorEmail" class="text-danger mb-2"></div>
+
+  <div class="position-relative mb-1">
+  <input type="password" name="password" id="password" placeholder="Password" class="form-control">
+  <i class="fa-solid fa-eye toggle-password" id="togglePassword" 
+     style="position:absolute; right:15px; top:12px; cursor:pointer; color:#888;"></i>
+</div>
+<div id="errorPassword" class="text-danger mb-2"></div>
+
   <button type="submit" class="btn btn-custom w-100 py-2">Login</button>
-  <p class="text-center mt-3">Don’t have an account? <a href="/patient/signup">Register</a></p>
+
+  <p class="text-center mt-3">
+    Don’t have an account? <a href="/patient/signup">Register</a>
+  </p>
+
 </form>
+</div>
 
+<script>
+  const togglePassword = document.getElementById("togglePassword");
+  const passwordInput = document.getElementById("password");
 
-  </div>
+  togglePassword.addEventListener("click", () => {
+    const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+    passwordInput.setAttribute("type", type);
+    togglePassword.classList.toggle("fa-eye-slash");
+  });
+</script>
 
-  <script>
-    const form = document.getElementById("patientLoginForm");
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
+<script>
+const form = document.getElementById("patientLoginForm");
 
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value.trim();
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-      try {
-        const res = await fetch("/patient/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
+  // Clear previous errors
+  ["Email","Password"].forEach(f => {
+    document.getElementById("error" + f).textContent = "";
+    document.getElementById(f.toLowerCase()).classList.remove("error");
+  });
+  document.getElementById("serverError").textContent = "";
 
-        const data = await res.json();
+  const dataToSend = {
+    email: document.getElementById("email").value.trim(),
+    password: document.getElementById("password").value.trim()
+  };
 
-        if (res.ok) {
-          localStorage.setItem("token", data.token);
-          alert("Login successful!");
-          window.location.href = "/patient/dashboard";
-        } else {
-          alert(data.message || "Invalid email or password");
-        }
-      } catch (err) {
-        alert("Server error. Please try again later.");
-      }
+  try {
+    const res = await fetch("/patient/login", {
+      method: "POST",
+      headers: { "Content-Type":"application/json" },
+      body: JSON.stringify(dataToSend)
     });
-  </script>
+
+    const result = await res.json();
+
+    if(res.ok){
+      // Redirect to dashboard page
+      window.location.href = result.redirect;
+    } else {
+      const errs = result.errors || {};
+      if(errs.email) {
+        document.getElementById("errorEmail").textContent = errs.email;
+        document.getElementById("email").classList.add("error");
+      }
+      if(errs.password) {
+        document.getElementById("errorPassword").textContent = errs.password;
+        document.getElementById("password").classList.add("error");
+      }
+      if(errs.general) document.getElementById("serverError").textContent = errs.general;
+    }
+  } catch(err){
+    document.getElementById("serverError").textContent = "Server error. Please try again later.";
+  }
+});
+</script>
 
 </body>
 </html>

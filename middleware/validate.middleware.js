@@ -1,4 +1,3 @@
-// middleware/validate.js
 exports.validatePatientSignup = (req, res, next) => {
   const { name, email, phone, password, confirmPassword } = req.body;
 
