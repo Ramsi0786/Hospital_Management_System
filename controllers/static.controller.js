@@ -14,6 +14,10 @@ exports.patientSignupPage = (req, res) => {
   res.render("patient/patient-signup", { title: "Patient Signup - Healora" });
 };
 
+exports.patientOtpPage = (req, res) => {
+  res.render("patient/verify-otp", { title: "Verify OTP - Healora" });
+};
+
 exports.aboutUsPage = (req, res) => {
   res.render("about-us", { title: "Healora - About Us" });
 };

@@ -11,6 +11,8 @@ router.get("/contact", staticController.contactPage);
 router.get("/departments/:name", staticController.departmentPage);
 router.get("/patient/login", staticController.patientLoginPage);
 router.get("/patient/signup", staticController.patientSignupPage);
+router.get("/patient/signup", staticController.patientOtpPage);
+
 
 
 

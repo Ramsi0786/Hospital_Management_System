@@ -273,8 +273,13 @@ form.addEventListener("submit", async (e) => {
     const data = await res.json();
 
     if(res.ok){
-      document.getElementById("successMessage").textContent = data.message;
-      form.reset();
+      // Redirect to OTP verification page
+      if(data.requiresOtp) {
+        window.location.href = `/patient/verify-otp?email=${encodeURIComponent(data.email)}`;
+      } else {
+        document.getElementById("successMessage").textContent = data.message;
+        form.reset();
+      }
     } else {
       const errs = data.errors || {};
       if(errs.name) document.getElementById("errorName").textContent = errs.name;
