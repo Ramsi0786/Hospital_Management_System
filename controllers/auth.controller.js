@@ -1,16 +1,14 @@
-const passport = require("passport");
 const Patient = require("../models/patient.model");
-const { generateToken } = require("../config/jwt");
 const bcrypt = require("bcryptjs");
+const redisClient = require("../config/redis");
+const generateOtp = require("../utils/generateOtp");
+const { sendOtpEmail, sendConfirmationEmail } = require("../utils/sendEmail");
+const passport = require("passport");
 
+// SIGNUP
 exports.signup = async (req, res) => {
-  console.log("=== SIGNUP REQUEST RECEIVED ===");
-  console.log("req.body:", req.body);
-  
   const { name, email, phone, password, confirmPassword } = req.body;
   let errors = {};
-
-  console.log("Extracted values:", { name, email, phone, password: password ? "***" : undefined, confirmPassword: confirmPassword ? "***" : undefined });
 
   // Validation
   if (!name || name.trim().length < 3) errors.name = "Name must be at least 3 characters long";
@@ -21,48 +19,69 @@ exports.signup = async (req, res) => {
   if (!password || password.length < 6) errors.password = "Password must be at least 6 characters";
   if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match";
 
-  console.log("Validation errors:", errors);
-
   if (Object.keys(errors).length > 0) {
-    console.log("Returning validation errors");
     return res.status(400).json({ errors });
   }
 
   try {
-    console.log("Checking for existing user...");
     const existing = await Patient.findOne({ email });
-    console.log("Existing user found:", existing ? "YES" : "NO");
-    
-    if (existing) return res.status(400).json({ errors: { email: "User already exists!" } });
+    if (existing) {
+      return res.status(400).json({ errors: { email: "User already exists!" } });
+    }
 
-    console.log("Hashing password...");
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
-    console.log("Password hashed successfully");
-
-    console.log("Creating new patient object...");
     const newPatient = new Patient({
       name,
       email,
       phone,
       password: hashedPassword,
+      isVerified: false
     });
 
-    console.log("Saving patient to database...");
     await newPatient.save();
-    console.log("Patient saved successfully!");
-    
-    return res.status(201).json({ message: "Signup successful! Please log in." });
+
+    // Generate OTP and store in Redis for 5 min
+    const otp = generateOtp();
+    await redisClient.setEx(`otp:email:${email}`, 300, otp);
+    await sendOtpEmail(email, otp);
+
+    return res.status(201).json({ 
+      message: "OTP sent to your email",
+      requiresOtp: true,
+      email: email 
+    });
   } catch (err) {
-    console.error("=== SIGNUP ERROR ===");
-    console.error("Error name:", err.name);
-    console.error("Error message:", err.message);
-    console.error("Full error:", err);
-    console.error("Stack trace:", err.stack);
-    return res.status(500).json({ errors: { general: "Server error. Please try again." } });
+    console.error("Signup Error:", err);
+    return res.status(500).json({ errors: { general: "Signup error — please try again." } });
   }
 };
 
-// --------------------- LOGIN ---------------------
+// OTP VERIFICATION
+exports.verifyOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body.email.toLowerCase().trim();
+    const storedOtp = await redisClient.get(`otp:email:${email}`);
+    
+    if (!storedOtp) {
+      return res.status(400).json({ errors: { otp: "OTP expired or not sent." } });
+    }
+    
+    if (storedOtp !== otp) {
+      return res.status(400).json({ errors: { otp: "Invalid OTP. Try again." } });
+    }
+
+    await Patient.findOneAndUpdate({ email }, { isVerified: true });
+    await redisClient.del(`otp:email:${email}`);
+    await sendConfirmationEmail(email);
+
+    return res.status(200).json({ message: "Email verified successfully! Please log in." });
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    return res.status(500).json({ errors: { general: "Server error." } });
+  }
+};
+
+// LOGIN
 exports.login = async (req, res) => {
   const { email, password } = req.body;
   let errors = {};
@@ -80,6 +99,7 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password.trim(), patient.password);
     if (!isMatch) return res.status(400).json({ errors: { password: "Incorrect password" } });
 
+    const { generateToken } = require("../config/jwt");
     const token = generateToken({ id: patient._id });
 
     res.cookie("token", token, {
@@ -95,20 +115,17 @@ exports.login = async (req, res) => {
   }
 };
 
-// ------------------- Google OAuth -------------------
-
+// GOOGLE AUTH
 exports.googleAuth = passport.authenticate("google", { scope: ["profile", "email"] });
 
 exports.googleCallback = (req, res) => {
   try {
-    const token = generateToken({ id: req.user._id }); // ← Changed to 'id' to match middleware
+    const { generateToken } = require("../config/jwt");
+    const token = generateToken({ id: req.user._id });
     res.cookie("token", token, { httpOnly: true });
     res.redirect("/patient/dashboard");
   } catch (err) {
     console.error("Google callback error:", err);
-    res.redirect("/patient/login"); // ← Changed to /patient/login for consistency
+    res.redirect("/patient/login");
   }
 };
-
-
-
