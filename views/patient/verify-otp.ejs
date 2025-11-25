@@ -207,10 +207,15 @@
     }
 
     .timer {
-      color: #e53e3e;
+      color: #667eea;
       font-weight: 600;
       font-size: 14px;
       margin-top: 15px;
+      display: none;
+    }
+
+    .timer.expired {
+      color: #e53e3e;
     }
 
     @media (max-width: 576px) {
@@ -338,7 +343,7 @@
       });
     });
 
-    // Submit OTP
+    // Submit OTP - AUTO LOGIN AFTER VERIFICATION
     document.getElementById('otpForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
@@ -362,11 +367,12 @@
         const data = await res.json();
 
         if (res.ok) {
-          showAlert('✓ Email verified successfully! Redirecting...', 'success');
+          showAlert('✓ Email verified! Redirecting to dashboard...', 'success');
           verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verified!';
           setTimeout(() => {
-            window.location.href = '/patient/login';
-          }, 2000);
+            // Redirect to dashboard instead of login
+            window.location.href = data.redirect || '/patient/dashboard';
+          }, 1500);
         } else {
           showAlert(data.errors?.otp || 'Verification failed. Please try again.', 'error');
           verifyBtn.disabled = false;
@@ -386,10 +392,74 @@
       }
     });
 
+    // OTP Timer (5 minutes = 300 seconds)
+    let timeLeft = 60;
+    const timerElement = document.getElementById('timer');
+    const resendLink = document.getElementById('resendOtp');
+
+    function startTimer() {
+      timerElement.style.display = 'block';
+      resendLink.style.pointerEvents = 'none';
+      resendLink.style.opacity = '0.5';
+
+      const countdown = setInterval(() => {
+        timeLeft--;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerElement.textContent = `Code expires in ${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+        if (timeLeft <= 0) {
+          clearInterval(countdown);
+          timerElement.textContent = 'OTP expired! Click resend to get a new code.';
+          timerElement.classList.add('expired');
+          resendLink.style.pointerEvents = 'auto';
+          resendLink.style.opacity = '1';
+        }
+      }, 1000);
+    }
+
+    // Start timer on page load
+    startTimer();
+
     // Resend OTP
     document.getElementById('resendOtp').addEventListener('click', async (e) => {
       e.preventDefault();
-      showAlert('Resend OTP feature - to be implemented', 'error');
+
+      if (timeLeft > 0) {
+        showAlert('Please wait for the current OTP to expire', 'error');
+        return;
+      }
+
+      resendLink.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+      try {
+        const res = await fetch('/patient/resend-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+          showAlert('✓ New OTP sent to your email!', 'success');
+          timeLeft = 60; // Reset timer to 5 minutes
+          startTimer();
+          
+          // Clear OTP inputs
+          otpInputs.forEach(input => {
+            input.value = '';
+            input.classList.remove('filled');
+          });
+          otpInputs[0].focus();
+        } else {
+          showAlert(data.errors?.general || 'Failed to resend OTP', 'error');
+        }
+      } catch (err) {
+        showAlert('Server error. Please try again.', 'error');
+      }
+
+      resendLink.innerHTML = '<i class="fas fa-redo"></i> Resend OTP';
     });
   </script>
 

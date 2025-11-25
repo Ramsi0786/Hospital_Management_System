@@ -1,25 +1,45 @@
 const jwt = require("jsonwebtoken");
 const Patient = require("../models/patient.model");
 
-const protect = async (req, res, next) => {
-  const token =
-    req.cookies?.token ||
-    req.headers["authorization"]?.split(" ")[1] ||
-    req.query.token;
-
-  if (!token) {
-    return res.redirect("/patient/login");
-  }
-
+exports.protect = async (req, res, next) => {
   try {
+    const token = req.cookies.token;
+
+    if (!token) {
+      return res.redirect("/patient/login");
+    }
+
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = await Patient.findById(decoded.id).select("-password");
-    if (!req.user) return res.redirect("/patient/login");
+    const patient = await Patient.findById(decoded.id).select("-password");
+
+    if (!patient) {
+      return res.redirect("/patient/login");
+    }
+
+    req.user = patient;
     next();
-  } catch (err) {
-    console.error("Auth Middleware Error:", err);
+  } catch (error) {
+    console.error("Auth Error:", error);
     return res.redirect("/patient/login");
   }
 };
 
-module.exports = protect;
+exports.checkAuth = async (req, res, next) => {
+  try {
+    const token = req.cookies.token;
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const patient = await Patient.findById(decoded.id).select("-password");
+      
+      if (patient) {
+        req.user = patient;
+        res.locals.user = patient; 
+      }
+    }
+  } catch (error) {
+    
+  }
+  
+  next();
+};

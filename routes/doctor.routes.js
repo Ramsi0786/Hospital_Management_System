@@ -43,7 +43,6 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Doctor Dashboard
-router.get("/dashboard", authMiddleware, doctorController.getDashboard);
+
 
 module.exports = router;

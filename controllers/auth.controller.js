@@ -43,7 +43,7 @@ exports.signup = async (req, res) => {
 
     // Generate OTP and store in Redis for 5 min
     const otp = generateOtp();
-    await redisClient.setEx(`otp:email:${email}`, 300, otp);
+    await redisClient.setEx(`otp:email:${email}`, 60, otp);
     await sendOtpEmail(email, otp);
 
     return res.status(201).json({
@@ -57,7 +57,7 @@ exports.signup = async (req, res) => {
   }
 };
 
-// OTP VERIFICATION
+// OTP VERIFICATION - AUTO LOGIN AFTER VERIFICATION
 exports.verifyOtp = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -72,18 +72,83 @@ exports.verifyOtp = async (req, res) => {
       return res.status(400).json({ errors: { otp: "Invalid OTP. Try again." } });
     }
 
-    await Patient.findOneAndUpdate({ email: cleanEmail }, { isVerified: true });
+    // Update user as verified
+    const patient = await Patient.findOneAndUpdate(
+      { email: cleanEmail }, 
+      { isVerified: true },
+      { new: true }
+    );
+    
+    // Delete OTP from Redis
     await redisClient.del(`otp:email:${cleanEmail}`);
+    
+    // Send confirmation email
     await sendConfirmationEmail(cleanEmail);
 
-    return res.status(200).json({ message: "Email verified successfully! Please log in." });
+    // Generate JWT token and set cookie (AUTO LOGIN)
+    const { generateToken } = require("../config/jwt");
+    const token = generateToken({ id: patient._id });
+
+    const cookieOptions = {
+      httpOnly: true,
+      sameSite: "strict",
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    };
+
+    res.cookie("token", token, cookieOptions);
+
+    // Redirect to dashboard instead of login page
+    return res.status(200).json({ 
+      message: "Email verified successfully! Redirecting to dashboard...",
+      redirect: "/patient/dashboard"
+    });
   } catch (error) {
     console.error("Verify OTP error:", error);
     return res.status(500).json({ errors: { general: "Server error." } });
   }
 };
 
-// LOGIN
+// RESEND OTP
+exports.resendOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const cleanEmail = email.toLowerCase().trim();
+
+    // Check if user exists
+    const patient = await Patient.findOne({ email: cleanEmail });
+    if (!patient) {
+      return res.status(404).json({ errors: { general: "User not found." } });
+    }
+
+    // Check if already verified
+    if (patient.isVerified) {
+      return res.status(400).json({ errors: { general: "Email already verified." } });
+    }
+
+    // Generate new OTP and store in Redis for 5 minutes
+    const otp = generateOtp();
+    await redisClient.setEx(`otp:email:${cleanEmail}`, 60, otp);
+    
+    // Send OTP email
+    await sendOtpEmail(cleanEmail, otp);
+
+    return res.status(200).json({ 
+      message: "New OTP sent to your email!",
+      success: true 
+    });
+  } catch (error) {
+    console.error("Resend OTP error:", error);
+    return res.status(500).json({ errors: { general: "Failed to resend OTP. Please try again." } });
+  }
+};
+
+// =========================LOGIN========================================
+
+exports.logout = (req, res) => {
+  res.clearCookie("token");
+  res.redirect("/");
+};
+
 exports.login = async (req, res) => {
   const { email, password, remember } = req.body;
   let errors = {};
@@ -128,7 +193,10 @@ exports.login = async (req, res) => {
 
 // ============ FORGOT PASSWORD - RENDER PAGE (GET) ============
 exports.renderForgotPassword = (req, res) => {
-  res.render("patient/forgot-password", { error: null, success: null });
+  res.render("patient/forgot-password", { 
+    error: null, 
+    success: null 
+  });
 };
 
 // ============ FORGOT PASSWORD - PROCESS EMAIL (POST) ============
@@ -225,7 +293,7 @@ exports.resetPassword = async (req, res) => {
 
     // Update password
     const hashedPassword = await bcrypt.hash(password, 10);
-    await Patient.findOneAndUpdate({ email }, { password: hashedPassword });
+    await Patient.findOneAndUpdate({ email }, { password: hashedPassword, isVerified: true });
     
     // Delete token from Redis
     await redisClient.del(`reset:${email}`);

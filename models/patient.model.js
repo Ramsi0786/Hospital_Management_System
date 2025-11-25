@@ -5,9 +5,9 @@ const patientSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, trim: true },
   phone: { type: String },
   password: { type: String }, 
+  isVerified: { type: Boolean, default: false },
   googleId: { type: String },
 }, { timestamps: true });
 
-// ← Remove the entire pre-save hook
 
 module.exports = mongoose.model("Patient", patientSchema);
