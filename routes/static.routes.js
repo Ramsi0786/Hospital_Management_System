@@ -1,6 +1,18 @@
 const express = require("express");
 const router = express.Router();
 const staticController = require("../controllers/static.controller");
+const {checkAuth} = require('../middleware/auth.middleware');
+
+router.use(checkAuth);
+
+// Public routes
+router.get("/", (req, res) => {
+  res.render("landing_page", { title: "Healora - Healthcare Made Easy" });
+});
+
+router.get("/about-us", (req, res) => {
+  res.render("about-us", { title: "About Us - Healora" });
+});
 
 router.get("/", staticController.landingPage);
 router.get("/login", staticController.loginPage);
