@@ -1,11 +1,31 @@
 /* ==========================
-   Variables
+   CSS VARIABLES
 ========================== */
 :root {
-  --primary: #1B365D;       /* Healora main blue */
-  --secondary: #06A3DA;     /* Accent light blue */
-  --dark: #333333;          /* Dark text */
-  --light: #FFFFFF;         /* White / light text */
+  /* ========== PRIMARY COLORS ========== */
+  --primary: #0A2E5C;              
+  --primary-light: #1B4D8F;        
+  --primary-dark: #061A3D;     
+  --primary-rgb: 10, 46, 92; 
+  
+  /* ========== SECONDARY COLORS ========== */
+  --secondary: #00A3E0;          
+  --secondary-light: #3DBEF6;  
+  --secondary-dark: #007CB8; 
+  --secondary-rgb: 0, 163, 224;
+  
+  /* ========== BASIC COLORS ========== */
+  --white: #FFFFFF;
+  --black: #000000;
+  --dark: #0F172A;
+  --light: #FFFFFF;
+  
+  /* ========== BORDER RADIUS ========== */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
 }
 
 /* ==========================
@@ -15,71 +35,91 @@ body, p, span, a, li {
   font-family: 'Jost', sans-serif;
   color: var(--dark);
 }
-h1, h2, .font-weight-bold { font-weight: 700 !important; }
-h3, h4, .font-weight-semi-bold { font-weight: 600 !important; }
-h5, h6, .font-weight-medium { font-weight: 500 !important; }
+
+h1, h2, .font-weight-bold { 
+  font-weight: 700 !important; 
+}
+
+h3, h4, .font-weight-semi-bold { 
+  font-weight: 600 !important; 
+}
+
+h5, h6, .font-weight-medium { 
+  font-weight: 500 !important; 
+}
 
 /* ==========================
-   Buttons
+   Global Button Theme
 ========================== */
 .btn {
   font-family: 'Jost', sans-serif;
   font-weight: 600;
-  transition: all 0.4s ease;
+  transition: all 0.3s ease;
   text-align: center;
-}
-
-/* --- Primary --- */
-.btn-primary {
-  background-color: var(--primary);
-  border-color: var(--primary);
-  color: var(--light);
-}
-.btn-primary:hover {
-  background-color: var(--secondary);
-  border-color: var(--secondary);
-  color: var(--light);
-}
-
-/* --- Secondary --- */
-.btn-secondary {
-  background-color: var(--secondary);
-  border-color: var(--secondary);
-  color: var(--light);
-}
-.btn-secondary:hover {
-  background-color: var(--primary);
-  border-color: var(--primary);
-  color: var(--light);
-}
-
-/* --- Login Button --- */
-.btn-login {
-  padding: 16px 45px;        /* Increased padding for larger size */
-  font-size: 20px;           /* Bigger font */
-  border-radius: 35px;       /* More rounded look */
-  font-weight: 600;
-  margin-left: 50px;
-  background-color: var(--primary);
-  color: var(--light) !important;
+  border-radius: var(--radius-full);
+  padding: 12px 28px;
+  color: var(--white);
   border: none;
-  box-shadow: 0 4px 10px rgba(27, 54, 93, 0.3); /* Soft shadow */
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+}
+
+/* Primary Button */
+.btn-primary {
+  background: #1B365D;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #667eea, #203f6a);
+  transform: scale(1.05);
+  color: #fff;
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background: #1B365D;
+  color: #fff;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #667eea, #203f6a);
+  transform: scale(1.05);
+  color: #fff;
+}
+
+/* Login Button */
+.btn-login {
+  padding: 16px 45px;
+  font-size: 20px;
+  border-radius: 35px;
+  background: #1B365D;
+  color: #fff !important;
+  border: none;
+  box-shadow: 0 4px 10px rgba(27, 54, 93, 0.3);
   transition: all 0.3s ease;
 }
+
 .btn-login:hover {
-  background-color: var(--secondary);
-  color: var(--light) !important;
+  background: linear-gradient(135deg, #667eea, #203f6a);
+  transform: scale(1.05);
+  color: #fff !important;
 }
 
-/* Larger margin for desktop */
-@media (min-width: 992px) {
-  .btn-login { margin-left: 150px; }
+/* Rounded Square Buttons */
+.btn-square,
+.btn-sm-square,
+.btn-lg-square {
+  background: #1B365D;
+  color: #fff;
+  border: none;
 }
 
-/* --- Button Shape Variants --- */
-.btn-square { width: 36px; height: 36px; padding: 0; }
-.btn-sm-square { width: 28px; height: 28px; padding: 0; }
-.btn-lg-square { width: 46px; height: 46px; padding: 0; }
+.btn-square:hover,
+.btn-sm-square:hover,
+.btn-lg-square:hover {
+  background: linear-gradient(135deg, #667eea, #203f6a);
+  transform: scale(1.05);
+}
 
 /* ==========================
    Topbar
@@ -98,7 +138,9 @@ h5, h6, .font-weight-medium { font-weight: 500 !important; }
   transition: color 0.3s ease;
 }
 
-.top-bar a:hover { color: var(--secondary) !important; }
+.top-bar a:hover { 
+  color: var(--secondary) !important; 
+}
 
 .top-shape::before {
   position: absolute;
@@ -128,6 +170,7 @@ h5, h6, .font-weight-medium { font-weight: 500 !important; }
   color: var(--dark);
   transition: color 0.3s ease, font-weight 0.3s ease;
 }
+
 .navbar-light .navbar-nav .nav-link:hover,
 .navbar-light .navbar-nav .nav-link.active {
   color: var(--primary);
@@ -136,7 +179,9 @@ h5, h6, .font-weight-medium { font-weight: 500 !important; }
 
 /* Responsive Navbar */
 @media (max-width: 991.98px) {
-  .navbar-light .navbar-nav .nav-link { padding: 10px 0; }
+  .navbar-light .navbar-nav .nav-link { 
+    padding: 10px 0; 
+  }
 }
 
 /* ==========================
@@ -148,6 +193,7 @@ h5, h6, .font-weight-medium { font-weight: 500 !important; }
   transition: opacity 0.5s ease, visibility 0s linear 0.5s;
   z-index: 99999;
 }
+
 #spinner.show {
   opacity: 1;
   visibility: visible;
@@ -169,14 +215,13 @@ h5, h6, .font-weight-medium { font-weight: 500 !important; }
    Hero / Carousel Section
 ========================== */
 .carousel-caption {
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0; 
+  left: 0; 
+  right: 0; 
+  bottom: 0;
   background: rgba(9, 30, 62, 0.777);
   z-index: 1;
 }
-.carousel-control-prev,
-.carousel-control-next { width: 10%; }
-.carousel-control-prev-icon,
-.carousel-control-next-icon { width: 3rem; height: 3rem; }
 
 .hero-header,
 .bg-appointment,
@@ -185,185 +230,350 @@ h5, h6, .font-weight-medium { font-weight: 500 !important; }
               url(../img/carousel-1.jpg) center center no-repeat;
   background-size: cover;
 }
+
 @media (max-width: 576px) {
-  .carousel-caption h5 { font-size: 14px; font-weight: 500 !important; }
-  .carousel-caption h1 { font-size: 30px; font-weight: 600 !important; }
+  .carousel-caption h5 { 
+    font-size: 14px; 
+    font-weight: 500 !important; 
+  }
+  .carousel-caption h1 { 
+    font-size: 30px; 
+    font-weight: 600 !important; 
+  }
 }
 
-/* Hide default Bootstrap controls */
+/* Hide Bootstrap default arrows */
 #header-carousel .carousel-control-prev,
 #header-carousel .carousel-control-next {
   display: none !important;
 }
 
-/* Vertical custom controls */
+/* Overlay container */
 .carousel-vertical-controls {
   position: absolute;
-  bottom: 85%;
-  right: 25px; /* adjust left spacing */
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px; /* space between buttons and divider */
+  inset: 0;
   z-index: 10;
 }
 
+/* Invisible click zones */
 .carousel-vertical-controls button {
-  background:none;
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: 10%;         
   border: none;
-  color: #ffffff82;
-  font-size: 17px;   /* smaller arrow size */
-  width: 35px;
-  height: 35px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: transparent;
+  opacity: 0;      
   cursor: pointer;
-  transition: all 0.3s ease;
+  pointer-events: auto;
 }
 
-.carousel-vertical-controls button:hover {
-  background: var(--secondary);
-  transform: scale(1.1);
+/* LEFT half */
+.carousel-left button {
+  left: 0;
 }
 
-/* Divider */
+/* RIGHT half */
+.carousel-right button {
+  right: 0;
+}
+
+/* Remove divider */
 .carousel-divider {
-  width: 25px;
-  height:  1.5px;
-  background-color: #ffffff82;
+  display: none;
 }
 
 
-.about-sec-head{
-  color:#1B365D
-}
-
-
-  /* Slightly more vertical space */
-  .py-6 {
-    padding-top: 6rem !important;
-    padding-bottom: 6rem !important;
-  }
-
-  /* Card Styling */
-  .feature-card {
-    min-height: 350px; /* makes the cards taller */
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-  }
-
-  .icon-circle {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    background: rgba(27, 54, 93, 0.1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .hover-up {
-    transition: all 0.3s ease;
-  }
-
-  .hover-up:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  }
-
-  .why-healora-section {
-    background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
-  }
-
-
-  .bg-healora {
-    background-color: #1B365D !important;
-  }
-
-  .service-card {
-    border: none;
-    border-radius: 12px;
-    overflow: hidden;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    height: 100%;
-  }
-
-  .service-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-  }
-
-  .service-card img {
-    height: 250px;
-    object-fit: cover;
-  }
-
-  .service-card .card-body {
-    background-color: #f8f9fa;
-    padding: 25px;
-  }
-
-  .service-card h5 {
-    color: #1B365D;
-    font-weight: 600;
-  }
-
-  .service-card p {
-    color: #555;
-    font-size: 15px;
-  }
-
-  @media (max-width: 768px) {
-    .service-card img {
-      height: 200px;
-    }
-  }
-
-  /* ==========================
-   Meet Our Doctors Section
+/* ==========================
+   DOCTOR CAROUSEL CONTROLS
 ========================== */
-#doctors {
-  background-color: #f8f9fa;
-}
-
-#doctors h6 {
-  letter-spacing: 2px;
-  color: #1B365D;
-}
-
-#doctors h1 span {
-  color: #1B365D;
-}
-
+/* Doctor Card Styling */
 .doctor-card {
-  background: #fff;
+  background: #ffffff;
   border-radius: 15px;
+  padding: 30px 20px;
+  text-align: center;
   transition: all 0.3s ease;
+  border: 1px solid #e8ecef;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  height: 100%;
 }
 
 .doctor-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 8px 20px rgba(27, 54, 93, 0.15);
+  box-shadow: 0 10px 30px rgba(27, 54, 93, 0.15);
+  border-color: transparent;
 }
 
-.doctor-img img {
-  width: 150px;
-  height: 150px;
-  object-fit: cover;
-  border: 4px solid #1B365D;
+/* Doctor Avatar */
+.doctor-avatar {
+  width: 100px;
+  height: 100px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea, #203f6a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 36px;
+  font-weight: 700;
+  border: 4px solid #f8f9fa;
 }
 
-.social-icons a {
+.doctor-card:hover .doctor-avatar {
+  transform: scale(1.1);
+}
+
+/* Doctor Info */
+.doctor-name {
   color: #1B365D;
-  margin: 0 8px;
-  font-size: 1rem;
-  transition: color 0.3s ease;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
-.social-icons a:hover {
-  color: #00AEEF;
+.doctor-specialty {
+  color: #667eea;
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.doctor-dept {
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+  .doctor-card {
+    padding: 25px 15px;
+  }
+  
+  .doctor-avatar {
+    width: 90px;
+    height: 90px;
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 767px) {
+  .doctor-card {
+    padding: 20px 15px;
+  }
+  
+  .doctor-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 28px;
+  }
+}
+
+/* Hide Bootstrap default controls */
+#doctorCarousel .carousel-control-prev,
+#doctorCarousel .carousel-control-next {
+  display: none !important;
+}
+
+/* Navigation Container */
+.doctor-carousel-nav {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 40px;
+}
+
+/* Navigation Buttons */
+.doctor-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid #1B365D;
+  background: white;
+  color: #1B365D;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(27, 54, 93, 0.15);
+}
+
+.doctor-nav-btn:hover {
+  background: linear-gradient(135deg, #667eea, #203f6a);
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(27, 54, 93, 0.25);
+}
+
+.doctor-nav-btn:active {
+  transform: scale(0.95);
+}
+
+.doctor-nav-btn i {
+  font-size: 20px;
+}
+
+/* ==========================
+   RESPONSIVE CAROUSEL CONTROLS
+========================== */
+@media (max-width: 768px) {
+  /* Hero Carousel - Move to bottom center */
+  .carousel-vertical-controls {
+    top: auto;
+    bottom: 20px;
+    right: 50%;
+    transform: translateX(50%);
+    flex-direction: row;
+  }
+  
+  .carousel-divider {
+    width: 40px;
+    height: 2px;
+  }
+  
+  .carousel-vertical-controls button {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+  
+  /* Doctor Carousel - Smaller buttons */
+  .doctor-nav-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 16px;
+  }
+  
+  .doctor-carousel-nav {
+    margin-top: 30px;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 576px) {
+  .carousel-vertical-controls button {
+    width: 35px;
+    height: 35px;
+    font-size: 12px;
+  }
+  
+  .doctor-nav-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+}
+
+/* ==========================
+   About Section
+========================== */
+.about-sec-head {
+  color: #1B365D;
+}
+
+.py-6 {
+  padding-top: 6rem !important;
+  padding-bottom: 6rem !important;
+}
+
+/* ==========================
+   Feature Cards
+========================== */
+.feature-card {
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.icon-circle {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: rgba(27, 54, 93, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hover-up {
+  transition: all 0.3s ease;
+}
+
+.hover-up:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.why-healora-section {
+  background: linear-gradient(180deg, #ffffff 0%, #f4f7fb 100%);
+}
+
+.bg-healora {
+  background-color: #1B365D !important;
+}
+
+/* ==========================
+   Service Cards
+========================== */
+.service-card {
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  height: 100%;
+}
+
+.service-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+.service-card img {
+  height: 250px;
+  object-fit: cover;
+}
+
+.service-card .card-body {
+  background-color: #f8f9fa;
+  padding: 25px;
+}
+
+.service-card h5 {
+  color: #1B365D;
+  font-weight: 600;
+}
+
+.service-card p {
+  color: #555;
+  font-size: 15px;
+}
+
+.service-cta-btn {
+  background: #203f6a;
+  color: #fff;
+  padding: 12px 36px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 30px;
+  box-shadow: 0 6px 18px rgba(102, 126, 234, 0.35);
+  transition: all 0.3s ease;
+}
+
+.service-cta-btn:hover {
+  background: linear-gradient(135deg, #667eea, #203f6a);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.45);
+  color: #fff;
+}
+
+
+@media (max-width: 768px) {
+  .service-card img {
+    height: 200px;
+  }
 }

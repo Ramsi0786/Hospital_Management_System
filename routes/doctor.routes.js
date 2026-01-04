@@ -1,48 +1,38 @@
-const express = require("express");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const Doctor = require("../models/doctor.model");
-const doctorController = require("../controllers/doctor.controller");
-const authMiddleware = require("../middleware/auth.middleware");
-
+import express from "express";
 const router = express.Router();
+import * as doctorAuthController from "../controllers/auth/doctor.auth.controller.js";
+import * as doctorController from "../controllers/doctor.controller.js";
+import { protectDoctor } from "../middleware/auth.middleware.js"; // ← Fix this import
 
-// Doctor Registration
-router.post("/register", async (req, res) => {
-  const { name, email, password } = req.body;
-
-  try {
-    const existingDoctor = await Doctor.findOne({ email });
-    if (existingDoctor) return res.status(400).json({ msg: "Doctor already exists" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newDoctor = new Doctor({ name, email, password: hashedPassword });
-    await newDoctor.save();
-
-    res.status(201).json({ msg: "Doctor registered successfully" });
-  } catch (err) {
-    res.status(500).json({ msg: "Server error" });
-  }
+router.get('/login', (req, res) => {
+  res.render('doctor/login', {
+    title: "Doctor Login - Healora"
+  });
 });
 
-// Doctor Login
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const doctor = await Doctor.findOne({ email });
-    if (!doctor) return res.status(400).json({ msg: "Invalid credentials" });
+router.post("/login", doctorAuthController.login);
 
-    const isMatch = await bcrypt.compare(password, doctor.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
-
-    // Create JWT
-    const token = jwt.sign({ id: doctor._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.json({ token, doctor: { id: doctor._id, email: doctor.email } });
-  } catch (err) {
-    res.status(500).json({ msg: "Server error" });
-  }
+router.get("/logout", (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    sameSite: 'strict'
+  });
+  
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  
+  res.redirect('/doctor/login');
 });
 
+router.post("/logout", (req, res) => {
+  res.clearCookie('token', {
+    httpOnly: true,
+    sameSite: 'strict'
+  });
+  res.json({ success: true });
+});
 
+router.get("/dashboard", protectDoctor, doctorController.getDashboard);
 
-module.exports = router;
+export default router;

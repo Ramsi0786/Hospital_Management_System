@@ -1,13 +1,28 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
-const patientSchema = new mongoose.Schema({
-  name: { type: String, required: true, trim: true },
-  email: { type: String, required: true, unique: true, trim: true },
-  phone: { type: String },
-  password: { type: String }, 
-  isVerified: { type: Boolean, default: false },
-  googleId: { type: String },
-}, { timestamps: true });
+const patientSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, unique: true, trim: true },
+    phone: { type: String },
+    password: { type: String },
+    age: { type: Number, default: null },
+    gender: { type: String, enum: ["Male", "Female", "Other"], default: null },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    googleId: { type: String },
+    isVerified: { type: Boolean, default: false },
+    needsPasswordSetup: { type: Boolean, default: false },
+    isActive: { type: Boolean, default: true },
+    isBlocked: { type: Boolean, default: false },
+    deactivatedAt: { type: Date },
+    blockedReason: { type: String },
+    blockedAt: { type: Date },
+  },
+  { timestamps: true }
+);
 
-
-module.exports = mongoose.model("Patient", patientSchema);
+export default mongoose.model("Patient", patientSchema);

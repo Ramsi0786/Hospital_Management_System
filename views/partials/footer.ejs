@@ -1,117 +1,322 @@
 <!-- Footer -->
-<style>
-  .bg-foot {
-    background-color: #1B365D !important;
-  }
-
-  .footer-logo {
-    height: 55px;
-    border-radius: 8px;
-    margin-bottom: 10px;
-  }
-
-  .footer-links a {
-    display: block;
-    color: #ffffff;
-    text-decoration: none;
-    margin-bottom: 6px;
-    font-size: 15px;
-    transition: color 0.3s ease;
-  }
-
-  .footer-links a:hover {
-    color: #00bcd4;
-  }
-
-  .footer-title {
-    font-weight: 600;
-    margin-bottom: 15px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: #ffffff;
-  }
-
-  .footer-contact p {
-    color: #f9f9f9;
-    font-size: 15px;
-    margin-bottom: 8px;
-  }
-
-  .footer-contact i {
-    color: #00bcd4;
-    margin-right: 8px;
-  }
-
-  .footer-bottom {
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    margin-top: 30px;
-    padding-top: 15px;
-    text-align: center;
-    color: #ffffff;
-    font-size: 14px;
-  }
-
-  .newsletter input {
-    background-color: rgba(255, 255, 255, 0.15);
-    border: none;
-    color: #ffffff;
-  }
-
-  .newsletter input::placeholder {
-    color: #f0f0f0;
-  }
-
-  .newsletter button {
-    background-color: #00bcd4;
-    border: none;
-    font-weight: 600;
-    transition: background 0.3s ease;
-  }
-
-  .newsletter button:hover {
-    background-color: #0099aa;
-  }
-</style>
-
-<footer class="bg-foot text-light pt-5 pb-3">
+<footer class="footer bg-foot text-light">
   <div class="container">
-    <div class="row gy-4">
-      <!-- Logo and About -->
-      <div class="col-lg-3 col-md-6">
-        <img src="/images/logo.jpg" alt="Healora Logo" class="footer-logo">
-        <p class="small text-white">Leading the Way in Medical Excellence, Trusted Care for Every Step of Your Journey.</p>
-      </div>
+    <!-- Main Footer Content -->
+    <div class="footer-main py-5">
+      <div class="row gy-4">
+        
+        <!-- Company Info -->
+        <div class="col-lg-4 col-md-6">
+          <div class="footer-about">
+            <img src="/images/logo.jpg" alt="Healora Logo" class="footer-logo mb-3">
+            <h5 class="footer-brand-name mb-3">Healora Hospital</h5>
+            <p class="footer-description">
+              Leading the way in medical excellence. Trusted care for every step of your health journey with compassion and innovation.
+            </p>
+            <div class="footer-social mt-4">
+              <a href="#" class="social-icon" aria-label="Facebook">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+              <a href="#" class="social-icon" aria-label="Twitter">
+                <i class="fab fa-twitter"></i>
+              </a>
+              <a href="#" class="social-icon" aria-label="Instagram">
+                <i class="fab fa-instagram"></i>
+              </a>
+              <a href="#" class="social-icon" aria-label="LinkedIn">
+                <i class="fab fa-linkedin-in"></i>
+              </a>
+            </div>
+          </div>
+        </div>
 
-      <!-- Links -->
-      <div class="col-lg-3 col-md-6 footer-links">
-        <h5 class="footer-title">Quick Links</h5>
-        <a href="/appointment">Appointment</a>
-        <a href="/doctors">Doctors</a>
-        <a href="/services">Services</a>
-        <a href="/about-us">About Us</a>
-      </div>
+        <!-- Quick Links -->
+        <div class="col-lg-2 col-md-6">
+          <div class="footer-links">
+            <h5 class="footer-title">Quick Links</h5>
+            <ul class="footer-menu">
+              <li><a href="/">Home</a></li>
+              <li><a href="/about-us">About Us</a></li>
+              <li><a href="/doctors">Our Doctors</a></li>
+              <li><a href="/services">Services</a></li>
+              <li><a href="/contact">Contact</a></li>
+            </ul>
+          </div>
+        </div>
 
-      <!-- Contact -->
-      <div class="col-lg-3 col-md-6 footer-contact">
-        <h5 class="footer-title">Contact Us</h5>
-        <p><i class="fa fa-phone"></i> (237) 881-812-255</p>
-        <p><i class="fa fa-envelope"></i> healora.dr@gmail.com</p>
-        <p><i class="fa fa-map-marker-alt"></i> 0122 Some place, Some Country</p>
-      </div>
+        <!-- Services -->
+        <div class="col-lg-2 col-md-6">
+          <div class="footer-links">
+            <h5 class="footer-title">Services</h5>
+            <ul class="footer-menu">
+              <li><a href="/services">Emergency Care</a></li>
+              <li><a href="/services">Surgery</a></li>
+              <li><a href="/services">Diagnostics</a></li>
+              <li><a href="/services">Pharmacy</a></li>
+              <li><a href="/appointment">Appointment</a></li>
+            </ul>
+          </div>
+        </div>
 
-      <!-- Newsletter -->
-      <div class="col-lg-3 col-md-6 newsletter">
-        <h5 class="footer-title">Newsletter</h5>
-        <form>
-          <input class="form-control mb-2" type="email" placeholder="Enter your email">
-          <button class="btn btn-primary w-100">Subscribe</button>
-        </form>
+        <!-- Contact Info -->
+        <div class="col-lg-4 col-md-6">
+          <div class="footer-contact">
+            <h5 class="footer-title">Contact Info</h5>
+            <ul class="contact-list">
+              <li>
+                <i class="fas fa-map-marker-alt"></i>
+                <span>0122 Some Place, Some Country</span>
+              </li>
+              <li>
+                <i class="fas fa-phone"></i>
+                <span>(237) 881-812-255</span>
+              </li>
+              <li>
+                <i class="fas fa-envelope"></i>
+                <span>healora.dr@gmail.com</span>
+              </li>
+              <li>
+                <i class="fas fa-clock"></i>
+                <span>24/7 Emergency Service</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
       </div>
     </div>
 
-    <!-- Bottom -->
-    <div class="footer-bottom">
-      <p class="mb-0 text-white">&copy; 2025 <strong>Healora</strong>. All Rights Reserved.</p>
+    <!-- Footer Bottom -->
+    <div class="footer-bottom py-4">
+      <div class="row align-items-center">
+        <div class="col-md-6 text-center text-md-start">
+          <p class="mb-0">
+            &copy; 2025 <strong>Healora Hospital</strong>. All Rights Reserved.
+          </p>
+        </div>
+        <div class="col-md-6 text-center text-md-end">
+          <div class="footer-bottom-links">
+            <a href="/privacy">Privacy Policy</a>
+            <span class="separator">|</span>
+            <a href="/terms">Terms & Conditions</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </footer>
+
+<style>
+/* ==========================
+   FOOTER STYLES
+========================== */
+
+.footer {
+  background: #1B365D;
+  color: #ffffff;
+  font-family: 'Jost', sans-serif;
+}
+
+/* Footer Logo */
+.footer-logo {
+  height: 60px;
+  width: auto;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.footer-brand-name {
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+.footer-description {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 0;
+}
+
+/* Footer Titles */
+.footer-title {
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  position: relative;
+  padding-bottom: 10px;
+}
+
+.footer-title::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 40px;
+  height: 2px;
+  background: linear-gradient(135deg, #667eea, #203f6a);
+}
+
+/* Social Icons */
+.footer-social {
+  display: flex;
+  gap: 10px;
+}
+
+.social-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.social-icon:hover {
+  background: linear-gradient(135deg, #667eea, #203f6a);
+  color: #ffffff;
+  transform: translateY(-3px);
+}
+
+/* Footer Menu */
+.footer-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-menu li {
+  margin-bottom: 10px;
+}
+
+.footer-menu a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  display: inline-block;
+}
+
+.footer-menu a:hover {
+  color: #ffffff;
+  padding-left: 5px;
+}
+
+/* Contact List */
+.contact-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.contact-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.contact-list i {
+  color: #ffffff;
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.contact-list span {
+  color:rgba(255, 255, 255, 0.85);
+  flex: 1;
+}
+
+/* Footer Bottom */
+.footer-bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 20px;
+}
+
+.footer-bottom p {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 14px;
+  margin: 0;
+}
+
+.footer-bottom strong {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.footer-bottom-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+}
+
+.footer-bottom-links a {
+  color: rgba(255, 255, 255, 0.8);
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s ease;
+}
+
+.footer-bottom-links a:hover {
+  color: #ffffff;
+}
+
+.footer-bottom-links .separator {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer-main {
+    padding: 40px 0 20px;
+  }
+
+  .footer-logo {
+    height: 50px;
+  }
+
+  .footer-brand-name {
+    font-size: 1.1rem;
+  }
+
+  .footer-title {
+    font-size: 1rem;
+    margin-bottom: 15px;
+  }
+
+  .footer-about {
+    text-align: center;
+  }
+
+  .footer-social {
+    justify-content: center;
+  }
+
+  .footer-title::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .footer-bottom-links {
+    margin-top: 15px;
+  }
+}
+
+@media (min-width: 769px) {
+  .footer-bottom-links {
+    justify-content: flex-end;
+  }
+}
+</style>

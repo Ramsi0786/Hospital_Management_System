@@ -1,6 +1,6 @@
-const passport = require("passport");
-const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const Patient = require("../models/patient.model");
+import passport from "passport";
+import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import Patient from "../models/patient.model.js";
 
 passport.use(
   new GoogleStrategy(
@@ -18,6 +18,8 @@ passport.use(
             name: profile.displayName,
             email: profile.emails[0].value,
             googleId: profile.id,
+            isVerified: true,
+            needsPasswordSetup: true,
           });
         }
         return done(null, user);
@@ -33,4 +35,4 @@ passport.deserializeUser((id, done) => {
   Patient.findById(id).then((user) => done(null, user));
 });
 
-module.exports = passport;
+export default passport;

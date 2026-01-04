@@ -1,0 +1,26 @@
+<script>
+  function toggleProfileDropdown() {
+    document.getElementById('profileDropdown').classList.toggle('show');
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.profile-dropdown')) {
+      document.getElementById('profileDropdown').classList.remove('show');
+    }
+  });
+
+  function showLogoutModal() {
+    document.getElementById('logoutModal').classList.add('show');
+    document.getElementById('profileDropdown').classList.remove('show');
+  }
+
+  function closeLogoutModal() {
+    document.getElementById('logoutModal').classList.remove('show');
+  }
+
+  function confirmLogout() {
+    fetch('/admin/logout', { method: 'POST' })
+      .then(() => window.location.href = '/admin/login')
+      .catch(() => window.location.href = '/admin/login');
+  }
+</script>

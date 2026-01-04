@@ -1,7 +1,7 @@
-const jwt = require("jsonwebtoken");
-const Patient = require("../models/patient.model");
+import jwt from "jsonwebtoken";
+import Patient from "../models/patient.model.js";
 
-exports.protectPatient = async (req, res, next) => {
+export const protectPatient = async (req, res, next) => {
   try {
     const token = req.cookies.token;
     if (!token) return res.redirect("/patient/login");
