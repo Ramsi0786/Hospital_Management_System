@@ -1,4 +1,4 @@
-const nodemailer = require("nodemailer");
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-exports.sendOtpEmail = async (to, otp) => {
+export const sendOtpEmail = async (to, otp) => {
   try {
     const info = await transporter.sendMail({
       from: `"Healora Support" <${process.env.SMTP_USER}>`,
@@ -24,7 +24,7 @@ exports.sendOtpEmail = async (to, otp) => {
   }
 };
 
-exports.sendConfirmationEmail = async (to) => {
+export const sendConfirmationEmail = async (to) => {
   try {
     await transporter.sendMail({
       from: `"Healora Support" <${process.env.SMTP_USER}>`,
@@ -38,7 +38,7 @@ exports.sendConfirmationEmail = async (to) => {
   }
 };
 
-exports.sendPasswordResetEmail = async (to, link) => {
+export const sendPasswordResetEmail = async (to, link) => {
   try {
     await transporter.sendMail({
       from: `"Healora Support" <${process.env.SMTP_USER}>`,
@@ -47,7 +47,7 @@ exports.sendPasswordResetEmail = async (to, link) => {
       html: `
         <h2>Password Reset Request</h2>
         <p>Click the link below to reset your password:</p>
-        <a href="${link}" style="padding: 10px 20px; background-color: #0288d1; color: white; text-decoration: none; border-radius: 5px;">Reset Password</a>
+        <a href="${link}">Reset Password</a>
         <p>This link expires in 10 minutes.</p>
         <p>If you didn't request this, please ignore this email.</p>
       `

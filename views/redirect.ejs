@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Healora login page - choose your role to access personalized dashboard" />
-  <title><%= title %> | Healora</title>
+  <title>Login | Healora</title>
 
   <!-- Favicon -->
   <link rel="icon" href="/images/Logo-browser.jpg" />
 
   <!-- Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
@@ -18,108 +18,202 @@
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="/css/style.css" />
-  
   <style>
-    /* Section background */
-    .role-section {
-      background-color: #f8f9fa;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    /* Left image */
-    .role-section img.side-image {
-      height: 100vh;
-      object-fit: cover;
-    }
-
-    /* Right content */
-    .role-content {
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea, #203f6a);
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      background-color: #fff;
-      text-align: center;
       padding: 20px;
     }
 
-    /* Logo styling */
-    .role-content img.logo {
-      width: 70px;                /* smaller, balanced size */
-      height: auto;
-      margin-bottom: 20px;
-      display: block;
-    }
-
-    /* Rectangular login boxes */
-    .login-box {
-      border: 2px solid #0d6efd;
-      border-radius: 12px;
-      padding: 15px;
-      width: 230px;
+    .login-container {
+      width: 100%;
+      max-width: 1000px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      padding: 60px 40px;
       text-align: center;
-      font-weight: 600;
-      color: #0d6efd;
-      transition: all 0.3s ease;
-      cursor: pointer;
-      text-decoration: none;
-      background-color: #fff;
     }
 
-    .login-box:hover {
-      background-color: #0d6efd;
-      color: #fff;
-      transform: translateY(-4px);
-      box-shadow: 0 6px 15px rgba(13, 110, 253, 0.3);
+    .logo {
+      width: 150px;
+      height: auto;
+     
+      margin-bottom: 20px;
     }
 
-    /* Spacing between boxes */
-    .login-options {
+    .main-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #718096;
+      margin-bottom: 50px;
+    }
+
+    .cards-container {
       display: flex;
-      flex-direction: column;
-      gap: 15px;
-      margin-top: 25px;
+      gap: 25px;
+      justify-content: center;
+      flex-wrap: wrap;
     }
 
-    /* Responsive adjustments */
+    .role-card {
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 30px 25px;
+      width: 280px;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea, #203f6a);
+      transform: scaleX(0);
+      transition: transform 0.4s ease;
+    }
+
+    .role-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .role-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(102, 126, 234, 0.25);
+      border-color: #667eea;
+    }
+
+    .icon-wrapper {
+      width: 70px;
+      height: 70px;
+      margin: 0 auto 20px;
+      background: linear-gradient(135deg, #667eea, #203f6a);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+    }
+
+    .role-card:hover .icon-wrapper {
+      transform: scale(1.1) rotate(5deg);
+    }
+
+    .icon-wrapper i {
+      font-size: 32px;
+      color: #fff;
+    }
+
+    .role-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 8px;
+    }
+
+    .role-description {
+      font-size: 0.9rem;
+      color: #718096;
+      margin-bottom: 0;
+    }
+
+    /* Responsive */
     @media (max-width: 768px) {
-      .role-section img.side-image {
-        height: 250px;
+      .login-container {
+        padding: 40px 25px;
       }
-      .role-content {
-        height: auto;
-        padding: 60px 0;
+
+      .main-title {
+        font-size: 1.5rem;
+      }
+
+      .cards-container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .role-card {
+        width: 100%;
+        max-width: 350px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .logo {
+        width: 60px;
+        height: 60px;
+      }
+
+      .main-title {
+        font-size: 1.3rem;
+      }
+
+      .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 35px;
       }
     }
   </style>
 </head>
 <body>
 
-  <section class="container-fluid px-0 role-section">
-    <div class="row g-0">
+  <div class="login-container">
+    <img src="/images/logo-1.jpg" class="logo" alt="Healora Logo" loading="lazy" />
+    <h1 class="main-title">Welcome to Healora</h1>
+    <p class="subtitle">Select your role to access your dashboard</p>
 
-      <!-- Left: Image -->
-      <!-- <div class="col-md-6">
-        <img src="/images/try-login.jpg" class="side-image w-100" loading="lazy" />
-      </div> -->
-
-      <!-- Right: Role Selection -->
-      <div class="col-md role-content">
-        <img src="/images/logo.jpg" class="logo mx-auto" alt="Healora Logo" loading="lazy" />
-        <h3 class="fw-bold text-primary mb-3">Choose Your Login</h3>
-        <p class="text-muted mb-4">Access your personalized Healora dashboard</p>
-
-        <div class="login-options">
-          <a href="/patient/login" class="login-box">Patient Login</a>
-          <a href="/doctor/login" class="login-box">Doctor Login</a>
-          <a href="/admin/login" class="login-box">Admin Login</a>
+    <div class="cards-container">
+      <!-- Patient Card -->
+      <a href="/patient/login" class="role-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-user"></i>
         </div>
-      </div>
+        <h3 class="role-title">Patient</h3>
+        <p class="role-description">Book appointments and manage your health records</p>
+      </a>
 
+      <!-- Doctor Card -->
+      <a href="/doctor/login" class="role-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-user-md"></i>
+        </div>
+        <h3 class="role-title">Doctor</h3>
+        <p class="role-description">Manage patients and view appointments</p>
+      </a>
+
+      <!-- Admin Card -->
+      <a href="/admin/login" class="role-card">
+        <div class="icon-wrapper">
+          <i class="fas fa-user-shield"></i>
+        </div>
+        <h3 class="role-title">Admin</h3>
+        <p class="role-description">Oversee system and manage operations</p>
+      </a>
     </div>
-  </section>
+  </div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

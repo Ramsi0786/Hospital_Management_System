@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Departments | Healora</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <!-- Page Header -->
+  <section class="page-header">
+    <div class="container text-center py-5">
+      <h1 class="display-4 fw-bold text-white mb-3">Our Departments</h1>
+      <p class="text-white-50 fs-5">Comprehensive medical care across specialized departments</p>
+    </div>
+  </section>
+
+  <!-- Departments Grid -->
+  <section class="departments-section py-5">
+    <div class="container">
+      <div class="row g-4">
+
+        <!-- Cardiology -->
+        <div class="col-lg-4 col-md-6">
+          <div class="department-card">
+            <div class="dept-icon">
+              <i class="fas fa-heartbeat"></i>
+            </div>
+            <h4>Cardiology</h4>
+            <p>Expert care for heart conditions, including diagnosis, treatment, and prevention of cardiovascular diseases.</p>
+            <ul class="dept-services">
+              <li><i class="fas fa-check"></i> Heart Disease Treatment</li>
+              <li><i class="fas fa-check"></i> ECG & Stress Tests</li>
+              <li><i class="fas fa-check"></i> Cardiac Surgery</li>
+            </ul>
+            <a href="/doctors?department=Cardiology" class="btn btn-primary btn-sm">View Doctors</a>
+          </div>
+        </div>
+
+        <!-- Pediatrics -->
+        <div class="col-lg-4 col-md-6">
+          <div class="department-card">
+            <div class="dept-icon">
+              <i class="fas fa-baby"></i>
+            </div>
+            <h4>Pediatrics</h4>
+            <p>Specialized medical care for infants, children, and adolescents with compassion and expertise.</p>
+            <ul class="dept-services">
+              <li><i class="fas fa-check"></i> Child Health Check-ups</li>
+              <li><i class="fas fa-check"></i> Vaccinations</li>
+              <li><i class="fas fa-check"></i> Growth Monitoring</li>
+            </ul>
+            <a href="/doctors?department=Pediatrics" class="btn btn-primary btn-sm">View Doctors</a>
+          </div>
+        </div>
+
+        <!-- Dermatology -->
+        <div class="col-lg-4 col-md-6">
+          <div class="department-card">
+            <div class="dept-icon">
+              <i class="fas fa-spa"></i>
+            </div>
+            <h4>Dermatology</h4>
+            <p>Advanced treatment for skin, hair, and nail conditions with modern dermatological solutions.</p>
+            <ul class="dept-services">
+              <li><i class="fas fa-check"></i> Skin Disease Treatment</li>
+              <li><i class="fas fa-check"></i> Cosmetic Dermatology</li>
+              <li><i class="fas fa-check"></i> Hair Loss Treatment</li>
+            </ul>
+            <a href="/doctors?department=Dermatology" class="btn btn-primary btn-sm">View Doctors</a>
+          </div>
+        </div>
+
+        <!-- Neurology -->
+        <div class="col-lg-4 col-md-6">
+          <div class="department-card">
+            <div class="dept-icon">
+              <i class="fas fa-brain"></i>
+            </div>
+            <h4>Neurology</h4>
+            <p>Comprehensive care for brain, spine, and nervous system disorders with cutting-edge treatment.</p>
+            <ul class="dept-services">
+              <li><i class="fas fa-check"></i> Neurological Disorders</li>
+              <li><i class="fas fa-check"></i> Stroke Treatment</li>
+              <li><i class="fas fa-check"></i> Epilepsy Care</li>
+            </ul>
+            <a href="/doctors?department=Neurology" class="btn btn-primary btn-sm">View Doctors</a>
+          </div>
+        </div>
+
+        <!-- Orthopedics -->
+        <div class="col-lg-4 col-md-6">
+          <div class="department-card">
+            <div class="dept-icon">
+              <i class="fas fa-bone"></i>
+            </div>
+            <h4>Orthopedics</h4>
+            <p>Treatment for bone, joint, and muscle problems including sports injuries and fractures.</p>
+            <ul class="dept-services">
+              <li><i class="fas fa-check"></i> Joint Replacement</li>
+              <li><i class="fas fa-check"></i> Sports Medicine</li>
+              <li><i class="fas fa-check"></i> Fracture Treatment</li>
+            </ul>
+            <a href="/doctors?department=Orthopedics" class="btn btn-primary btn-sm">View Doctors</a>
+          </div>
+        </div>
+
+        <!-- General Surgery -->
+        <div class="col-lg-4 col-md-6">
+          <div class="department-card">
+            <div class="dept-icon">
+              <i class="fas fa-user-md"></i>
+            </div>
+            <h4>General Surgery</h4>
+            <p>Comprehensive surgical care with state-of-the-art facilities and experienced surgeons.</p>
+            <ul class="dept-services">
+              <li><i class="fas fa-check"></i> Laparoscopic Surgery</li>
+              <li><i class="fas fa-check"></i> Emergency Surgery</li>
+              <li><i class="fas fa-check"></i> Minimally Invasive Procedures</li>
+            </ul>
+            <a href="/doctors?department=Surgery" class="btn btn-primary btn-sm">View Doctors</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <%- include('partials/footer') %>
+
+  <style>
+    .page-header {
+      background: linear-gradient(135deg, #1a2f4d 0%, #1B365D 100%);
+      padding: 80px 0;
+    }
+
+    .departments-section {
+      background: #f8f9fa;
+    }
+
+    .department-card {
+      background: white;
+      border-radius: 15px;
+      padding: 30px;
+      height: 100%;
+      transition: all 0.3s ease;
+      border: 1px solid #e8ecef;
+    }
+
+    .department-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 10px 30px rgba(27, 54, 93, 0.15);
+      border-color: transparent;
+    }
+
+    .dept-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #00A3E0, #1B365D);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .department-card h4 {
+      color: #1B365D;
+      font-weight: 700;
+      margin-bottom: 15px;
+    }
+
+    .department-card p {
+      color: #64748b;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+
+    .dept-services {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 25px 0;
+    }
+
+    .dept-services li {
+      color: #64748b;
+      font-size: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .dept-services i {
+      color: #00A3E0;
+      font-size: 12px;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

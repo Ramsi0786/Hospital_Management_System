@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin/doctor.css">
+</head>
+<body>
+
+    <%- include('../partials/admin-sidebar', { currentPage: 'doctors' }) %>
+    <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Doctors' }) %>
+
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Doctors Management</h1>
+        <p>Manage all doctors and their information</p>
+      </div>
+      <button class="btn-add" onclick="showAddDoctorModal()">
+        <i class="fas fa-plus"></i>
+        Add New Doctor
+      </button>
+    </div>
+    
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search doctors by name, email, or specialization...">
+      </div>
+
+      <div class="filter-wrapper">
+        <i class="fas fa-building"></i>
+        <select id="departmentFilter" class="filter-select">
+          <option value="">All Departments</option>
+          <option value="Cardiology">Cardiology</option>
+          <option value="Neurology">Neurology</option>
+          <option value="Orthopedics">Orthopedics</option>
+          <option value="Pediatrics">Pediatrics</option>
+          <option value="Dermatology">Dermatology</option>
+          <option value="General Medicine">General Medicine</option>
+        </select>
+      </div>
+
+      <div class="filter-wrapper">
+        <i class="fas fa-filter"></i>
+        <select id="statusFilter" class="filter-select">
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="blocked">Blocked</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="doctors-table-container">
+      <table class="doctors-table">
+        <thead>
+          <tr>
+            <th>Doctor</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Specialization</th>
+            <th>Department</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="doctorsTableBody">
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading doctors...</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Add/Edit Doctor Modal -->
+  <div class="modal-overlay" id="doctorModal">
+    <div class="modal-content-custom">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add New Doctor</h3>
+        <button class="btn-close-modal" onclick="closeDoctorModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="doctorForm">
+        <div class="modal-body">
+          <input type="hidden" id="doctorId">
+
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="doctorName" placeholder="Dr. John Doe" required>
+            <span class="error-message" id="errorName"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="doctorEmail" placeholder="doctor@example.com" required>
+            <span class="error-message" id="errorEmail"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Phone *</label>
+            <input type="tel" id="doctorPhone" placeholder="1234567890" required>
+            <span class="error-message" id="errorPhone"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Password *</label>
+            <input type="password" id="doctorPassword" placeholder="Min 6 characters" required>
+            <span class="error-message" id="errorPassword"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Specialization *</label>
+            <input type="text" id="doctorSpecialization" placeholder="e.g., Cardiologist" required>
+            <span class="error-message" id="errorSpecialization"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Department *</label>
+            <select id="doctorDepartment" required>
+              <option value="">Select Department</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="Neurology">Neurology</option>
+              <option value="Orthopedics">Orthopedics</option>
+              <option value="Pediatrics">Pediatrics</option>
+              <option value="Dermatology">Dermatology</option>
+              <option value="Psychiatry">Psychiatry</option>
+              <option value="General Medicine">General Medicine</option>
+            </select>
+            <span class="error-message" id="errorDepartment"></span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeDoctorModal()">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit">Save Doctor</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+    <%- include('../partials/logout-modal') %>
+    <%- include('../partials/admin-scripts') %>
+    
+  <script>
+    let doctors = [];
+    let editingDoctorId = null;
+
+    async function loadDoctors() {
+      try {
+        const response = await fetch('/admin/doctors');
+        const data = await response.json();
+        doctors = data.doctors || [];
+        renderDoctors(doctors);
+      } catch (error) {
+        console.error('Error loading doctors:', error);
+      }
+    }
+
+    function getStatusBadge(status) {
+      const statusMap = {
+        'active': { class: 'badge-success', text: 'Active' },
+        'blocked': { class: 'badge-danger', text: 'Blocked' },
+        'inactive': { class: 'badge-warning', text: 'Inactive' }
+      };
+      const statusInfo = statusMap[status] || statusMap['active'];
+      return `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
+    }
+
+    function renderDoctors(doctorsList) {
+      const tbody = document.getElementById('doctorsTableBody');
+      
+      if (doctorsList.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7">
+              <div class="empty-state">
+                <i class="fas fa-user-doctor"></i>
+                <h3>No doctors found</h3>
+                <p>Add your first doctor to get started</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = doctorsList.map(doctor => {
+        const initials = doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        const doctorString = JSON.stringify(doctor).replace(/"/g, '&quot;');
+        
+        return `
+          <tr>
+            <td>
+              <div class="doctor-name">
+                <div class="doctor-avatar">${initials}</div>
+                <div class="doctor-info">
+                  <h4>${doctor.name}</h4>
+                  <p>ID: ${doctor._id.substring(0, 8)}</p>
+                </div>
+              </div>
+            </td>
+            <td>${doctor.email}</td>
+            <td>${doctor.phone}</td>
+            <td>${doctor.specialization}</td>
+            <td>${doctor.department}</td>
+            <td>${getStatusBadge(doctor.status)}</td>
+            <td onclick="event.stopPropagation();">
+              <div class="action-buttons">
+                <button class="btn-action btn-view" onclick="viewDoctorProfile('${doctor._id}')" title="View Profile">
+                  View
+                </button>
+                </div>
+            </td></tr>
+        `;
+      }).join('');
+    }
+
+    function viewDoctorProfile(doctorId) {
+      window.location.href = `/admin/doctor/${doctorId}`;
+    }
+
+    document.getElementById('searchInput').addEventListener('input', filterDoctors);
+    document.getElementById('departmentFilter').addEventListener('change', filterDoctors);
+    document.getElementById('statusFilter').addEventListener('change', filterDoctors);
+
+    function filterDoctors() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const department = document.getElementById('departmentFilter').value;
+      const status = document.getElementById('statusFilter').value;
+
+      const filtered = doctors.filter(doctor => {
+        const matchesSearch = doctor.name.toLowerCase().includes(searchTerm) ||
+                            doctor.email.toLowerCase().includes(searchTerm) ||
+                            doctor.specialization.toLowerCase().includes(searchTerm);
+        const matchesDepartment = !department || doctor.department === department;
+        const matchesStatus = !status || doctor.status === status;
+        return matchesSearch && matchesDepartment && matchesStatus;
+      });
+
+      renderDoctors(filtered);
+    }
+
+    function showAddDoctorModal() {
+      editingDoctorId = null;
+      document.getElementById('modalTitle').textContent = 'Add New Doctor';
+      document.getElementById('doctorForm').reset();
+      document.getElementById('doctorPassword').placeholder = 'Min 6 characters';
+      document.getElementById('doctorPassword').required = true;
+      clearErrors();
+      document.getElementById('doctorModal').classList.add('show');
+    }
+
+    function closeDoctorModal() {
+      document.getElementById('doctorModal').classList.remove('show');
+      clearErrors();
+    }
+
+    document.getElementById('doctorForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearErrors();
+
+      const formData = {
+        name: document.getElementById('doctorName').value.trim(),
+        email: document.getElementById('doctorEmail').value.trim(),
+        phone: document.getElementById('doctorPhone').value.trim(),
+        password: document.getElementById('doctorPassword').value,
+        specialization: document.getElementById('doctorSpecialization').value.trim(),
+        department: document.getElementById('doctorDepartment').value
+      };
+
+      let hasError = false;
+
+      if (formData.name.length < 3) {
+        document.getElementById('errorName').textContent = 'Name must be at least 3 characters';
+        hasError = true;
+      }
+
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        document.getElementById('errorEmail').textContent = 'Invalid email format';
+        hasError = true;
+      }
+
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        document.getElementById('errorPhone').textContent = 'Phone must be 10 digits';
+        hasError = true;
+      }
+
+      if (formData.password.length < 6) {
+        document.getElementById('errorPassword').textContent = 'Password must be at least 6 characters';
+        hasError = true;
+      }
+
+      if (!formData.specialization) {
+        document.getElementById('errorSpecialization').textContent = 'Specialization is required';
+        hasError = true;
+      }
+
+      if (!formData.department) {
+        document.getElementById('errorDepartment').textContent = 'Department is required';
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      try {
+        const response = await fetch('/admin/add-doctor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          closeDoctorModal();
+          loadDoctors();
+          alert(data.message || 'Doctor added successfully!');
+        } else {
+          if (data.errors) {
+            if (data.errors.email) document.getElementById('errorEmail').textContent = data.errors.email;
+            if (data.errors.phone) document.getElementById('errorPhone').textContent = data.errors.phone;
+          } else {
+            alert(data.error || 'Failed to add doctor');
+          }
+        }
+      } catch (error) {
+        console.error('Error adding doctor:', error);
+        alert('Error adding doctor. Please try again.');
+      }
+    });
+
+    async function deleteDoctor(id) {
+      event.stopPropagation();
+      
+      if (!confirm('Are you sure you want to delete this doctor? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/doctor/${id}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          loadDoctors();
+          alert('Doctor deleted successfully!');
+        } else {
+          alert(data.error || 'Failed to delete doctor');
+        }
+      } catch (error) {
+        console.error('Error deleting doctor:', error);
+        alert('Error deleting doctor. Please try again.');
+      }
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDoctors);
+  </script>
+
+</body>
+</html>

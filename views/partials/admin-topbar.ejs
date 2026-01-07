@@ -1,0 +1,189 @@
+<style>
+
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 240px;
+      right: 0;
+      height: 65px;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+    }
+
+    .breadcrumb-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .breadcrumb-nav i {
+      font-size: 13px;
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .profile-dropdown {
+      position: relative;
+    }
+
+    .profile-btn {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      padding: 8px 14px;
+      border-radius: 10px;
+      transition: all 0.3s;
+      background: none;
+      border: none;
+    }
+
+    .profile-btn:hover {
+      background: #f7fafc;
+    }
+
+    .profile-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: #203f6a;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .profile-info {
+      text-align: left;
+    }
+
+    .profile-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2d3748;
+      display: block;
+    }
+
+    .profile-role {
+      font-size: 12px;
+      color: #a0aec0;
+    }
+
+    .dropdown-menu-custom {
+      position: absolute;
+      top: 55px;
+      right: 0;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      min-width: 200px;
+      display: none;
+      z-index: 1000;
+      padding: 8px;
+    }
+
+    .dropdown-menu-custom.show {
+      display: block;
+      animation: fadeIn 0.2s ease;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .dropdown-item-custom {
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #4a5568;
+      font-size: 14px;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      border-radius: 8px;
+    }
+
+    .dropdown-item-custom:hover {
+      background: #f7fafc;
+    }
+
+    .dropdown-item-custom i {
+      width: 18px;
+      color: #718096;
+    }
+
+</style>
+
+<div class="top-bar">
+  <nav class="breadcrumb-nav">
+    <i class="fas fa-home"></i>
+    <span>Dashboard</span>
+    <% if (breadcrumb) { %>
+      <span class="separator">/</span>
+      <span><%= breadcrumb %></span>
+    <% } %>
+  </nav>
+
+  <div class="top-bar-right">
+    <div class="profile-dropdown">
+      <button class="profile-btn" onclick="toggleProfileDropdown()">
+        <div class="profile-avatar">
+          <% 
+            let initials = 'A';
+            if (admin && admin.name) {
+              initials = admin.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+            } else if (admin && admin.id === 'superAdmin') {
+              initials = 'SA';
+            }
+          %>
+          <%= initials %>
+        </div>
+        <div class="profile-info">
+          <span class="profile-name"><%= admin?.name || 'Super Admin' %></span>
+          <span class="profile-role">Administrator</span>
+        </div>
+        <i class="fas fa-chevron-down" style="font-size: 11px; color: #a0aec0;"></i>
+      </button>
+
+      <div class="dropdown-menu-custom" id="profileDropdown">
+        <button class="dropdown-item-custom">
+          <i class="fas fa-user"></i>
+          <span>Profile</span>
+        </button>
+        <button class="dropdown-item-custom">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </button>
+        <hr style="margin: 8px 0; border-color: #e2e8f0;">
+        <button class="dropdown-item-custom" onclick="showLogoutModal()">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,3 +1,3 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
-module.exports = () => crypto.randomBytes(32).toString('hex')
+export default () => crypto.randomBytes(32).toString('hex');

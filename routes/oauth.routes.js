@@ -1,16 +1,14 @@
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const passport = require("../config/passport");
-const authController = require("../controllers/auth.controller");
+import passport from "../config/passport.js";
+import * as authController from "../controllers/auth/patient.auth.controller.js";
 
-// Google OAuth
 router.get("/google", authController.googleAuth);
 
-// FIXED: Ensure passport is available for callback route!
 router.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/login" }),
   authController.googleCallback
 );
 
-module.exports = router;
+export default router;

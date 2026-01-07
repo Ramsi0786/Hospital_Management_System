@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Doctor Profile - Healora</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin/dashboard.css">
+  <link rel="stylesheet" href="/css/admin/patient-profile.css">
+</head>
+<body>
+
+<%
+  const appts = (typeof appointments !== 'undefined' && Array.isArray(appointments))
+    ? appointments
+    : [];
+    
+
+  let badgeClass = 'active';
+  let badgeText = 'Active';
+  let badgeIcon = 'circle';
+
+  if (doctor.status === 'blocked') {
+    badgeClass = 'blocked';
+    badgeText = 'Blocked';
+    badgeIcon = 'ban';
+  } else if (doctor.status === 'inactive') {
+    badgeClass = 'inactive';
+    badgeText = 'Inactive';
+    badgeIcon = 'moon';
+  }
+
+%>
+
+    <%- include('../partials/admin-sidebar', { currentPage: 'doctors' }) %>
+    <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Doctor Profile' }) %> 
+
+  <div class="main-content">
+    <a href="/admin/doctors-management" class="back-button">
+      <i class="fas fa-arrow-left"></i>
+      Back to Doctors
+    </a>
+
+    <!-- Profile Header -->
+    <div class="profile-header">
+      <div class="profile-content">
+        <div class="profile-top">
+          <div class="profile-main">
+            <div class="profile-avatar-large">
+              <% if (doctor.profileImage) { %>
+                <img 
+                  src="<%= doctor.profileImage %>" 
+                  alt="Doctor Avatar"
+                  class="avatar-img"
+                >
+              <% } else { %>
+                <i class="fas fa-user-doctor avatar-icon"></i>
+              <% } %>
+            </div>
+
+            <div class="profile-info">
+              <div class="profile-name-row">
+                <h1>Dr. <%= doctor.name %></h1>
+                <span class="badge <%= badgeClass %>">
+                  <i class="fas fa-<%= badgeIcon %>"></i>
+                  <%= badgeText %>
+                </span>
+
+              </div>
+
+              <div class="profile-meta">
+                <div class="meta-item">
+                  <i class="fas fa-id-card"></i>
+                  <span>ID: <%= doctor._id.toString().substring(0, 7).toUpperCase() %></span>
+                </div>
+                <div class="meta-item">
+                  <i class="fas fa-stethoscope"></i>
+                  <span><%= doctor.specialization %></span>
+                </div>
+                <div class="meta-item">
+                  <i class="fas fa-building"></i>
+                  <span><%= doctor.department %></span>
+                </div>
+                <div class="meta-item">
+                  <i class="fas fa-calendar"></i>
+                  <span>
+                    Joined <%= new Date(doctor.createdAt).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    }) %>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+  <button class="btn-action btn-edit" onclick="showEditModal()">
+    <i class="fas fa-edit"></i>
+    Edit 
+  </button>
+  <button 
+  class="btn-action <%= doctor.status === 'blocked' ? 'btn-unblock' : 'btn-block' %>" 
+  onclick="toggleBlock()"
+>
+  <i class="fas fa-<%= doctor.status === 'blocked' ? 'unlock' : 'ban' %>"></i>
+  <%= doctor.status === 'blocked' ? 'Unblock' : 'Block' %>
+</button>
+
+</div>
+        </div>
+      </div>
+
+      <!-- Stats Bar -->
+      <div class="profile-stats">
+        <div class="stat-item">
+          <span class="stat-value"><%= appts.length %></span>
+          <span class="stat-label">Total Appointments</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value"><%= appts.filter(a => a.status === 'completed').length %></span>
+          <span class="stat-label">Completed</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value"><%= doctor.experience || 2 %> Years</span>
+          <span class="stat-label">Experience</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value"><%= doctor.rating || 4.8 %> ★</span>
+          <span class="stat-label">Rating</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Grid -->
+    <div class="content-grid">
+      <!-- Basic Information -->
+      <div class="info-card">
+        <h3>
+          <i class="fas fa-user-doctor"></i>
+          Basic Information
+        </h3>
+
+        <div class="info-row">
+          <span class="info-label">Full Name</span>
+          <span class="info-value">Dr. <%= doctor.name %></span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-value">
+            <span class="badge <%= badgeClass %>">
+              <%= badgeText %>
+            </span>
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Email</span>
+          <span class="info-value"><%= doctor.email %></span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Phone</span>
+          <span class="info-value"><%= doctor.phone %></span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Specialization</span>
+          <span class="info-value"><%= doctor.specialization %></span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Department</span>
+          <span class="info-value"><%= doctor.department %></span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Qualification</span>
+          <span class="info-value"><%= doctor.qualification || '_' %></span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Experience</span>
+          <span class="info-value"><%= doctor.experience ? doctor.experience + ' Years' : '2' + ' Years'%></span>
+        </div>
+      </div>
+
+      <!-- Professional Details -->
+      <div class="info-card">
+        <h3>
+          <i class="fas fa-briefcase-medical"></i>
+          Professional Details
+        </h3>
+
+        <div class="info-row">
+          <span class="info-label">Consultation Fee</span>
+          <span class="info-value"><%= doctor.consultationFee ? '₹' + doctor.consultationFee : '_' %></span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Rating</span>
+          <span class="info-value">
+            <% if (doctor.rating) { %>
+              <%= doctor.rating %> ★ / 5
+            <% } else { %>
+              _
+            <% } %>
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Featured Doctor</span>
+          <span class="info-value">
+            <% if (doctor.isFeatured) { %>
+              <span class="badge active">Yes</span>
+            <% } else { %>
+              <span class="badge inactive">No</span>
+            <% } %>
+          </span>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Status</span>
+          <span class="info-value">
+            <span class="badge <%= badgeClass %>"><%= badgeText %></span>
+          </span>
+        </div>
+
+        <!-- Bio Section -->
+        <h3 style="margin-top: 20px;">
+          <i class="fas fa-file-alt"></i>
+          Biography
+        </h3>
+
+        <div class="info-row">
+          <p style="color: #64748b; font-size: 14px; line-height: 1.6;">
+            <%= doctor.bio || '_' %>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Availability Schedule -->
+    <div class="info-card">
+      <h3>
+        <i class="fas fa-clock"></i>
+        Availability Schedule
+      </h3>
+
+      <% if (doctor.availability && doctor.availability.length > 0) { %>
+        <div class="availability-grid">
+          <% doctor.availability.forEach(schedule => { %>
+            <div class="availability-day">
+              <div class="day-header"><%= schedule.day %></div>
+              <div class="time-slots">
+                <% if (schedule.slots && schedule.slots.length > 0) { %>
+                  <% schedule.slots.forEach(slot => { %>
+                    <span class="time-slot"><%= slot %></span>
+                  <% }) %>
+                <% } else { %>
+                  <span class="no-slots">Not Available</span>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="empty-state">
+          <i class="fas fa-calendar-times"></i>
+          <p>No availability schedule set</p>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Recent Appointments -->
+    <div class="info-card">
+      <h3>
+        <i class="fas fa-calendar-check"></i>
+        Recent Appointments
+      </h3>
+
+      <% if (appts.length === 0) { %>
+        <div class="empty-state">
+          <i class="fas fa-calendar-times"></i>
+          <p>No appointments found</p>
+        </div>
+      <% } else { %>
+        <table class="appointments-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Patient</th>
+              <th>Time</th>
+              <th>Reason</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% appts.slice(0, 10).forEach(appointment => { %>
+              <tr>
+                <td>
+                  <%= new Date(appointment.date).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  }) %>
+                </td>
+                <td><%= appointment.patientName || 'Unknown' %></td>
+                <td><%= appointment.time || '_' %></td>
+                <td><%= appointment.reason || '_' %></td>
+                <td>
+                  <span class="badge <%= appointment.status || 'pending' %>">
+                    <%= (appointment.status || 'pending').toUpperCase() %>
+                  </span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-content-custom">
+      <div class="modal-header">
+        <h3>Edit Doctor</h3>
+        <button class="btn-close-modal" onclick="closeEditModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <form id="editForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="editName" value="<%= doctor.name %>" required>
+          </div>
+          <div class="form-group">
+            <label>Email *</label>
+            <input type="email" id="editEmail" value="<%= doctor.email %>" required>
+          </div>
+          <div class="form-group">
+            <label>Phone *</label>
+            <input type="tel" id="editPhone" value="<%= doctor.phone %>" required>
+          </div>
+          <div class="form-group">
+            <label>Specialization *</label>
+            <input type="text" id="editSpecialization" value="<%= doctor.specialization %>" required>
+          </div>
+          <div class="form-group">
+            <label>Department *</label>
+            <select id="editDepartment" required>
+              <option value="">Select Department</option>
+              <option value="Cardiology" <%= doctor.department === 'Cardiology' ? 'selected' : '' %>>Cardiology</option>
+              <option value="Neurology" <%= doctor.department === 'Neurology' ? 'selected' : '' %>>Neurology</option>
+              <option value="Orthopedics" <%= doctor.department === 'Orthopedics' ? 'selected' : '' %>>Orthopedics</option>
+              <option value="Pediatrics" <%= doctor.department === 'Pediatrics' ? 'selected' : '' %>>Pediatrics</option>
+              <option value="Dermatology" <%= doctor.department === 'Dermatology' ? 'selected' : '' %>>Dermatology</option>
+              <option value="Psychiatry" <%= doctor.department === 'Psychiatry' ? 'selected' : '' %>>Psychiatry</option>
+              <option value="General Medicine" <%= doctor.department === 'General Medicine' ? 'selected' : '' %>>General Medicine</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Password (Leave blank to keep current)</label>
+            <input type="password" id="editPassword" placeholder="Enter new password">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeEditModal()">
+            Cancel
+          </button>
+          <button type="submit" class="btn-modal btn-submit">
+            Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <%- include('../partials/logout-modal') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script type="application/json" id="doctor-data">
+  <%- JSON.stringify({
+    id: doctor._id,
+    status: doctor.status
+  }) %>
+</script>
+
+
+  <script>
+    const DOCTOR_DATA = JSON.parse(
+      document.getElementById('doctor-data').textContent
+    );
+    const doctorId = DOCTOR_DATA.id;
+
+    function showEditModal() {
+      document.getElementById('editModal').classList.add('show');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModal').classList.remove('show');
+    }
+
+    document.getElementById('editModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeEditModal();
+      }
+    });
+
+    document.getElementById('editForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formData = {
+        name: document.getElementById('editName').value.trim(),
+        email: document.getElementById('editEmail').value.trim(),
+        phone: document.getElementById('editPhone').value.trim(),
+        specialization: document.getElementById('editSpecialization').value.trim(),
+        department: document.getElementById('editDepartment').value,
+        password: document.getElementById('editPassword').value
+      };
+
+      try {
+        const response = await fetch(`/admin/doctor/${doctorId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert('Doctor updated successfully!');
+          window.location.reload();
+        } else {
+          alert(data.error || 'Failed to update doctor');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error updating doctor. Please try again.');
+      }
+    });
+
+    async function toggleBlock() {
+      const isBlocked = DOCTOR_DATA.status === 'blocked';
+      const action = isBlocked ? 'unblock' : 'block';
+
+      if (!confirm(`Are you sure you want to ${action} this doctor?`)) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/api/doctors/${doctorId}/block`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ block: !isBlocked })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          alert(`Doctor ${action}ed successfully!`);
+          window.location.reload();
+        } else {
+          alert(data.error || `Failed to ${action} doctor`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert(`Error ${action}ing doctor. Please try again.`);
+      }
+    }
+
+    async function deleteDoctor() {
+      if (!confirm('Are you sure you want to delete this doctor? This action cannot be undone.')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/doctor/${doctorId}`, {
+          method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert('Doctor deleted successfully!');
+          window.location.href = '/admin/doctors-management';
+        } else {
+          alert(data.error || 'Failed to delete doctor');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error deleting doctor. Please try again.');
+      }
+    }
+  </script>
+
+  <style>
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .avatar-icon {
+      font-size: 48px;
+    }
+
+    .availability-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .availability-day {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .day-header {
+      font-weight: 600;
+      color: #203f6a;
+      margin-bottom: 12px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .time-slots {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .time-slot {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+
+    .no-slots {
+      color: #94a3b8;
+      font-size: 13px;
+      font-style: italic;
+    }
+  </style>
+</body>
+</html>

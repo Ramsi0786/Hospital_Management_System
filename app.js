@@ -1,17 +1,19 @@
-const express = require("express");
-const path = require("path");
-const dotenv = require("dotenv").config();
-const mongoose = require("mongoose");
-const cookieParser = require("cookie-parser");
-const session = require("express-session");
-const passport = require("./config/passport");
-const connectDB = require("./config/db");
+import 'dotenv/config'; 
 
-const patientRoutes = require("./routes/patient.routes");
-const doctorRoutes = require("./routes/doctor.routes");
-const adminRoutes = require("./routes/admin.routes");
-const oauthRoutes = require("./routes/oauth.routes");
-const staticRoutes = require("./routes/static.routes"); // NEW for static pages
+import express from "express";
+import path from "path";
+import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
+import session from "express-session";
+import passport from "./config/passport.js";
+import connectDB from "./config/db.js";
+
+import patientRoutes from "./routes/patient.routes.js";
+import doctorRoutes from "./routes/doctor.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
+import oauthRoutes from "./routes/oauth.routes.js";
+import staticRoutes from "./routes/static.routes.js";
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,20 +33,15 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-app.use(express.static(path.join(__dirname, "public")));
+app.set("views", path.join(process.cwd(), "views"));
+app.use(express.static(path.join(process.cwd(), "public")));
 
-
-app.use("/", staticRoutes);           
+app.use("/", staticRoutes);
 app.use("/auth", oauthRoutes);
 app.use("/doctor", doctorRoutes);
-app.use("/admin", adminRoutes);       
+app.use("/admin", adminRoutes);
 app.use("/patient", patientRoutes);
-
-
-
 
 app.use((req, res) => {
   res.status(404).render("404", { title: "Page Not Found - Healora" });

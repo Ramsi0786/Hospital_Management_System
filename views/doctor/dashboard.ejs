@@ -2,12 +2,214 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Doctor Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  
+  <link rel="stylesheet" href="/css/doctor/dashboard.css">
 </head>
 <body>
-  <h1>Welcome Doctor</h1>
-  <p>Email: <%= doctor.email %></p>
 
-  <a href="/doctor-logout">Logout</a>
+  <div class="sidebar">
+    <div class="logo">
+      <span>Healora</span>
+    </div>
+
+    <ul class="nav-menu">
+      <li class="nav-item">
+        <a href="/doctor/dashboard" class="nav-link active">
+          <i class="fas fa-home"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/doctor/profile" class="nav-link">
+          <i class="fas fa-user"></i>
+          <span>Profile</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/doctor/appointments" class="nav-link">
+          <i class="fas fa-calendar-check"></i>
+          <span>Appointments</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/doctor/consultation" class="nav-link">
+          <i class="fas fa-stethoscope"></i>
+          <span>Consultation History</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/doctor/transactions" class="nav-link">
+          <i class="fas fa-file-invoice-dollar"></i>
+          <span>Transaction History</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="/doctor/settings" class="nav-link">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link" onclick="showLogoutModal(); return false;">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+
+    <div class="top-bar">
+      <h1 class="page-title"><%= user.name %>'s Dashboard</h1>
+      <div class="user-profile">
+        <div class="user-avatar"><%= user.name.charAt(0).toUpperCase() %></div>
+        <div class="user-info">
+          <span>Hello <%= user.name.split(' ')[0] %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+
+      <div class="profile-card">
+        <div class="doctor-profile">
+          <div class="doctor-avatar">
+            <%= user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+          </div>
+          <div class="doctor-info">
+            <h2>Dr. <%= user.name %></h2>
+            <div class="doctor-meta">
+              <span class="meta-badge"><%= user.specialization || 'Specialist' %></span>
+              <span class="meta-badge"><%= user.department || 'General' %></span>
+            </div>
+            <p class="doctor-email"><%= user.email %></p>
+          </div>
+        </div>
+
+        <div class="profile-details">
+          <div class="detail-item">
+            <div class="detail-label">ID</div>
+            <div class="detail-value"><%= user._id.toString().substring(0, 8).toUpperCase() %></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Phone</div>
+            <div class="detail-value"><%= user.phone || 'Not provided' %></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Department</div>
+            <div class="detail-value"><%= user.department || 'General Medicine' %></div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-label">Joined Since</div>
+            <div class="detail-value"><%= new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) %></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="appointments-card">
+        <h3>Today's Appointments</h3>
+        <div class="appointments-header">
+          <div>Patient</div>
+          <div>Time</div>
+          <div>Status</div>
+        </div>
+        <div id="appointmentsList">
+          <div class="empty-state">
+            <i class="fas fa-calendar"></i>
+            <p>No appointments scheduled for today</p>
+          </div>
+        </div>
+        <div class="view-more">
+          <a href="/doctor/appointments">View more</a>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="color: white; font-size: 20px; font-weight: 600; margin-bottom: 20px;">Service Overview</h3>
+    
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <div class="stat-title">Total Appointments</div>
+        <div class="stat-value">0</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">
+          <i class="fas fa-user-friends"></i>
+        </div>
+        <div class="stat-title">Patients Attended</div>
+        <div class="stat-value">0</div>
+      </div>
+
+      <div class="wallet-card" style="grid-column: 1 / -1;">
+        <div class="wallet-header">
+          <i class="fas fa-wallet"></i>
+          <h3>My Wallet</h3>
+        </div>
+        <div class="wallet-item">
+          <span class="wallet-label">Wallet Balance</span>
+          <span class="wallet-value">₹ 0.00</span>
+        </div>
+        <div class="wallet-item">
+          <span class="wallet-label">Consultation Fee</span>
+          <span class="wallet-value">₹ 0.00</span>
+        </div>
+        <div class="wallet-item">
+          <span class="wallet-label">Compensations</span>
+          <span class="wallet-value">₹ 0.00</span>
+        </div>
+        <button class="withdraw-btn">Withdraw Now</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal-content-custom">
+      <div class="modal-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <h3>Confirm Logout</h3>
+      <p>Are you sure you want to logout from your doctor account?</p>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeLogoutModal()">Cancel</button>
+        <button class="modal-btn confirm" onclick="confirmLogout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    function showLogoutModal() {
+      document.getElementById('logoutModal').classList.add('show');
+    }
+
+    function closeLogoutModal() {
+      document.getElementById('logoutModal').classList.remove('show');
+    }
+
+    function confirmLogout() {
+      fetch('/doctor/logout', { method: 'POST' })
+        .then(() => window.location.href = '/doctor/login')
+        .catch(() => window.location.href = '/doctor/login');
+    }
+
+    document.getElementById('logoutModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeLogoutModal();
+      }
+    });
+  </script>
 </body>
 </html>
