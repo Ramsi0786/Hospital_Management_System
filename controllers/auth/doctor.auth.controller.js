@@ -13,9 +13,22 @@ export const login = async (req, res) => {
     }
 
     const doctor = await Doctor.findOne({ email });
+    
     if (!doctor) {
       return res.status(404).json({
         errors: { email: "No doctor account found" }
+      });
+    }
+
+    if (doctor.status === 'blocked') {
+      return res.status(403).json({
+        errors: { general: "Your account has been blocked. Please contact the administrator." }
+      });
+    }
+
+    if (doctor.status === 'inactive') {
+      return res.status(403).json({
+        errors: { general: "Your account is inactive. Please contact the administrator." }
       });
     }
 

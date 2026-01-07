@@ -9,7 +9,6 @@ const setNoCacheHeaders = (res) => {
   res.setHeader('Surrogate-Control', 'no-store');
 };
 
-// Patient Protection
 const protect = async (req, res, next) => {
   try {
     setNoCacheHeaders(res);
@@ -54,7 +53,6 @@ const protect = async (req, res, next) => {
   }
 };
 
-// Doctor Protection
 const protectDoctor = async (req, res, next) => {
   try {
     setNoCacheHeaders(res);
@@ -79,20 +77,21 @@ const protectDoctor = async (req, res, next) => {
       return res.redirect('/doctor/login');
     }
 
-    if (doctor.isBlocked) {
+   
+    if (doctor.status === 'blocked') {
       res.clearCookie('token');
       return res.status(403).render('error', {
         title: 'Account Blocked',
-        message: 'Your account has been blocked. Please contact admin.',
-        reason: doctor.blockedReason || 'Account violation'
+        message: 'Your account has been blocked. Please contact the administrator.',
+        reason: 'Account violation'
       });
     }
 
-    if (!doctor.isActive) {
+    if (doctor.status === 'inactive') {
       res.clearCookie('token');
       return res.status(403).render('error', {
         title: 'Account Inactive',
-        message: 'Your account has been deactivated. Please contact admin.'
+        message: 'Your account is inactive. Please contact the administrator.'
       });
     }
 

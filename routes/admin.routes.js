@@ -4,6 +4,7 @@ import * as adminAuthController from "../controllers/auth/admin.auth.controller.
 import * as adminController from '../controllers/admin.controller.js';
 import { adminProtect } from '../middleware/authAdmin.js';
 import Patient from '../models/patient.model.js';
+import Doctor from '../models/doctor.model.js';
 
 // ==================== AUTH ROUTES ====================
 router.get('/login', (req, res) => {
@@ -30,9 +31,7 @@ router.post('/logout', (req, res) => {
   res.json({ success: true });
 });
 
-
 router.get("/dashboard", adminProtect, adminController.getDashboard);
-
 
 // ==================== PATIENT MANAGEMENT ====================
 
@@ -43,33 +42,15 @@ router.get('/patients', adminProtect, (req, res) => {
   });
 });
 
-router.get('/patient/:id', adminProtect, async (req, res) => {
-  try {
-    const patient = await Patient.findById(req.params.id).select('-password -googleId');
-    
-    if (!patient) {
-      return res.redirect('/admin/patients');
-    }
-    
-    res.render('admin/patient-profile', {
-      title: `${patient.name} - Patient Profile`,
-      admin: req.admin,
-      patient: patient
-    });
-  } catch (error) {
-    console.error('Error loading patient profile:', error);
-    res.redirect('/admin/patients');
-  }
-});
+router.get('/patient/:id', adminProtect, adminController.getPatientById);
 
 router.get('/api/patients', adminProtect, adminController.getAllPatients);
 router.post('/api/patients', adminProtect, adminController.addPatient);
 router.put('/api/patients/:id', adminProtect, adminController.updatePatient);
 router.delete('/api/patients/:id', adminProtect, adminController.deletePatient);
-router.patch('/api/patients/:id/block', adminProtect, adminController.blockPatient);
+router.put('/api/patients/:id/block', adminProtect, adminController.blockPatient);
 router.patch('/api/patients/:id/unblock', adminProtect, adminController.unblockPatient);
 router.patch('/api/patients/:id/reactivate', adminProtect, adminController.reactivatePatient);
-
 
 // ==================== DOCTOR MANAGEMENT ====================
 
@@ -80,56 +61,16 @@ router.get('/doctors-management', adminProtect, (req, res) => {
   });
 });
 
+router.get('/doctor/:id', adminProtect, adminController.getDoctorById);
 router.post('/add-doctor', adminProtect, adminController.addDoctor);
 router.get('/doctors', adminProtect, adminController.getAllDoctors);
 router.put('/doctor/:id', adminProtect, adminController.updateDoctor);
 router.delete('/doctor/:id', adminProtect, adminController.deleteDoctor);
 
-router.get('/patient/:id', async (req, res) => {
-  try {
-    const patient = await Patient.findById(req.params.id);
-    
-    if (!patient) {
-      return res.status(404).send('Patient not found');
-    }
+// Block/Unblock Doctor Route
+router.patch('/api/doctors/:id/block', adminProtect, adminController.blockDoctor);
 
-    res.render('admin/patient-profile', { 
-      patient, 
-      admin: req.session.admin,
-      title: 'Patient Profile'
-    });
-  } catch (error) {
-    console.error('Error loading patient profile:', error);
-    res.status(500).send('Error loading patient profile');
-  }
-});
-
-router.put('/api/patients/:id/block', async (req, res) => {
-  try {
-    const { block } = req.body;
-    
-    const updatedPatient = await Patient.findByIdAndUpdate(
-      req.params.id,
-      { isBlocked: block },
-      { new: true }
-    );
-
-    if (!updatedPatient) {
-      return res.status(404).json({ error: 'Patient not found' });
-    }
-
-    res.json({ 
-      success: true,
-      message: `Patient ${block ? 'blocked' : 'unblocked'} successfully`, 
-      patient: updatedPatient 
-    });
-  } catch (error) {
-    console.error('Error blocking/unblocking patient:', error);
-    res.status(500).json({ error: 'Failed to update patient status' });
-  }
-});
-
-
+// ==================== APPOINTMENTS ====================
 
 router.get('/appointments', adminProtect, (req, res) => {
   res.render('admin/appointments', {
@@ -138,23 +79,7 @@ router.get('/appointments', adminProtect, (req, res) => {
   });
 });
 
-router.get("/departments", async (req, res) => {
-  try {
-    const departments = await Department.find().sort({ createdAt: -1 });
-
-    res.render("admin/departments", {
-      admin: req.admin,
-      departments 
-    });
-  } catch (error) {
-    console.error("Error loading departments:", error);
-    res.render("admin/departments", {
-      admin: req.admin,
-      departments: [] 
-    });
-  }
-});
-
+// ==================== SETTINGS ====================
 
 router.get('/settings', adminProtect, (req, res) => {
   res.render('admin/settings', {
@@ -162,6 +87,5 @@ router.get('/settings', adminProtect, (req, res) => {
     admin: req.admin
   });
 });
-
 
 export default router;

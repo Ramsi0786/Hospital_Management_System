@@ -15,7 +15,11 @@ const doctorSchema = new mongoose.Schema({
     profileImage: { type: String, default: '' }, 
     rating: { type: Number, default: 0, min: 0, max: 5 },
     
-    isActive: { type: Boolean, default: true },
+    status: { 
+        type: String, 
+        enum: ['active', 'inactive', 'blocked'], 
+        default: 'active' 
+    },
     isFeatured: { type: Boolean, default: false }, 
     
     availability: { 

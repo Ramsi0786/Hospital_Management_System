@@ -162,6 +162,79 @@ export const getAllDoctors = async (req, res) => {
   }
 };
 
+/* ==================== GET SINGLE DOCTOR ==================== */
+export const getDoctorById = async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id).select("-password");
+    
+    if (!doctor) {
+      return res.status(404).send("Doctor not found");
+    }
+
+    const appointments = await Appointment.find({ 
+      doctor: req.params.id
+    })
+    .populate('patient', 'name')
+    .sort({ date: -1 })
+    .catch(() => []);
+
+    const appointmentsWithNames = appointments.map(apt => ({
+      ...apt.toObject(),
+      patientName: apt.patient?.name || 'Unknown', 
+      status: apt.status || 'pending',
+      date: apt.date,
+      time: apt.time,
+      department: apt.department || 'N/A',
+      reason: apt.reason || 'N/A'
+    }));
+
+    res.render("admin/doctor-profile", {
+      doctor,
+      appointments: appointmentsWithNames,
+      admin: req.admin || req.user,
+      title: "Doctor Profile - Healora"
+    });
+  } catch (err) {
+    console.error("Get Doctor Error:", err);
+    res.status(500).send("Error loading doctor profile");
+  }
+};
+
+/* ==================== BLOCK DOCTOR ==================== */
+export const blockDoctor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { block } = req.body;
+
+    const newStatus = block ? 'blocked' : 'active';
+
+    const doctor = await Doctor.findByIdAndUpdate(
+      id,
+      { status: newStatus },
+      { new: true }
+    ).select("-password");
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        error: "Doctor not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Doctor ${block ? 'blocked' : 'unblocked'} successfully`,
+      doctor,
+    });
+  } catch (err) {
+    console.error("Block Doctor Error:", err);
+    res.status(500).json({
+      success: false,
+      error: "Error updating doctor status",
+    });
+  }
+};
+
 /* ==================== DELETE DOCTOR ==================== */
 export const deleteDoctor = async (req, res) => {
   try {
