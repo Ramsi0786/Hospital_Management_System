@@ -97,50 +97,35 @@
         <span>Settings</span>
       </a>
     </li>
+    <li class="nav-item">
+        <a href="#" class="nav-link" onclick="showLogoutModal(); return false;">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </a>
+      </li>
   </ul>
 </div>
 
-</style>
+<script>
+    // Logout Modal Functions
+    function showLogoutModal() {
+      document.getElementById('logoutModal').classList.add('show');
+    }
 
-<div class="sidebar">
-  <div class="logo">Healora</div>
-  <hr>
-  <ul class="nav flex-column">
-    <li class="nav-item">
-      <a href="/admin/dashboard" class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>">
-        <i class="fas fa-home"></i>
-        <span>Dashboard</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="/admin/doctors-management" class="nav-link <%= currentPage === 'doctors' ? 'active' : '' %>">
-        <i class="fas fa-user-doctor"></i>
-        <span>Doctors</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="/admin/patients" class="nav-link <%= currentPage === 'patients' ? 'active' : '' %>">
-        <i class="fas fa-user-injured"></i>
-        <span>Patients</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="/admin/appointments" class="nav-link <%= currentPage === 'appointments' ? 'active' : '' %>">
-        <i class="fas fa-calendar-check"></i>
-        <span>Appointments</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="/admin/departments" class="nav-link <%= currentPage === 'departments' ? 'active' : '' %>">
-        <i class="fas fa-building"></i>
-        <span>Departments</span>
-      </a>
-    </li>
-    <li class="nav-item">
-      <a href="/admin/settings" class="nav-link <%= currentPage === 'settings' ? 'active' : '' %>">
-        <i class="fas fa-cog"></i>
-        <span>Settings</span>
-      </a>
-    </li>
-  </ul>
-</div>
+    function closeLogoutModal() {
+      document.getElementById('logoutModal').classList.remove('show');
+    }
+
+    function confirmLogout() {
+      fetch('/patient/logout', { method: 'POST' })
+        .then(() => window.location.href = '/patient/login')
+        .catch(() => window.location.href = '/patient/login');
+    }
+
+    // Close modal when clicking outside
+    document.getElementById('logoutModal').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeLogoutModal();
+      }
+    });
+  </script>

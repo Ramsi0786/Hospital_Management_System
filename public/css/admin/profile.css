@@ -119,9 +119,59 @@ body {
   margin-left: 0;
 }
 
+.badge.active {
+  background: rgba(16, 185, 129, 0.25);
+  color: #ecfdf5;
+  border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+
+.badge.inactive {
+  background: rgba(245, 158, 11, 0.25);
+  color: rgb(245, 159, 11);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.badge.blocked {
+  background: rgba(239, 68, 68, 0.3);
+  color: #fef2f2;
+  border: 1px solid rgba(239, 68, 68, 0.6);
+}
+
+
 .badge i {
   font-size: 10px;
 }
+
+.status-pill {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  font-size: 9px;
+}
+
+.status-pill.active {
+  background-color: #e7f7ee;
+  color: #1a7f37;
+}
+
+.status-pill.inactive {
+  background-color: #fff4e5;
+  color: #b54708;
+}
+
+.status-pill.blocked {
+  background-color: #fdecea;
+  color: #b42318;
+}
+
 
 .profile-meta {
   display: flex;

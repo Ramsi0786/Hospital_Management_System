@@ -38,7 +38,7 @@ app.set("views", path.join(process.cwd(), "views"));
 app.use(express.static(path.join(process.cwd(), "public")));
 
 app.use("/", staticRoutes);
-app.use("/auth", oauthRoutes);
+app.use("/patient/auth", oauthRoutes);
 app.use("/doctor", doctorRoutes);
 app.use("/admin", adminRoutes);
 app.use("/patient", patientRoutes);
