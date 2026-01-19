@@ -9,6 +9,7 @@ const setNoCacheHeaders = (res) => {
   res.setHeader('Surrogate-Control', 'no-store');
 };
 
+// ============= PATIENT MIDDLEWARE =============
 const protect = async (req, res, next) => {
   try {
     setNoCacheHeaders(res);
@@ -20,6 +21,11 @@ const protect = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    if (decoded.role && decoded.role === 'doctor') {
+      return res.redirect('/doctor/dashboard');
+    }
+
     const patient = await Patient.findById(decoded.id).select('-password');
     
     if (!patient) {
@@ -47,12 +53,12 @@ const protect = async (req, res, next) => {
     req.user = patient;
     next();
   } catch (error) {
-    console.error('Patient auth error:', error);
     res.clearCookie('token');
     return res.redirect('/patient/login');
   }
 };
 
+// ============= DOCTOR MIDDLEWARE =============
 const protectDoctor = async (req, res, next) => {
   try {
     setNoCacheHeaders(res);
@@ -64,10 +70,9 @@ const protectDoctor = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    if (decoded.role !== 'doctor') {
-      res.clearCookie('token');
-      return res.redirect('/doctor/login');
+
+    if (!decoded.role || decoded.role !== 'doctor') {
+      return res.redirect('/patient/dashboard');
     }
 
     const doctor = await Doctor.findById(decoded.id).select('-password');
@@ -77,7 +82,6 @@ const protectDoctor = async (req, res, next) => {
       return res.redirect('/doctor/login');
     }
 
-   
     if (doctor.status === 'blocked') {
       res.clearCookie('token');
       return res.status(403).render('error', {
@@ -96,27 +100,32 @@ const protectDoctor = async (req, res, next) => {
     }
 
     req.user = doctor;
+    req.user.role = 'doctor';
     next();
   } catch (error) {
-    console.error('Doctor auth error:', error);
     res.clearCookie('token');
     return res.redirect('/doctor/login');
   }
 };
 
+// ============= CHECK AUTH (for login pages) =============
 const checkAuth = (req, res, next) => {
-  if (req.cookies.token) {
+  const token = req.cookies.token;
+  
+  if (token) {
     try {
-      const decoded = jwt.verify(req.cookies.token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
       if (decoded.role === 'doctor') {
         return res.redirect('/doctor/dashboard');
       }
+
       return res.redirect('/patient/dashboard');
     } catch (error) {
       res.clearCookie('token');
     }
   }
+  
   next();
 };
 

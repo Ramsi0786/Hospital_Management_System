@@ -207,7 +207,7 @@
         const initials = patient.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         
         return `
-          <tr onclick="viewPatientProfile('${patient._id}')" style="cursor: pointer;">
+          <tr">
             <td>
               <div class="patient-name">
                 <div class="patient-avatar">${initials}</div>
@@ -224,9 +224,8 @@
             <td>${getStatus(patient)}</td>
             <td onclick="event.stopPropagation();">
               <div class="action-buttons">
-                <button class="btn-action btn-delete" onclick="deletePatient('${patient._id}')" title="Delete">
-                  <i class="fas fa-trash"></i>
-                  Delete
+               <button class="btn-action btn-view" onclick="viewPatientProfile('${patient._id}')" title="View Profile">
+                View
                 </button>
               </div>
             </td>

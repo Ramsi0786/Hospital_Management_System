@@ -101,38 +101,38 @@
           <input type="hidden" id="doctorId">
 
           <div class="form-group">
-            <label>Full Name *</label>
-            <input type="text" id="doctorName" placeholder="Dr. John Doe" required>
+            <label>Full Name <span class="require-star">*</span></label>
+            <input type="text" id="doctorName" placeholder="Full Name">
             <span class="error-message" id="errorName"></span>
           </div>
 
           <div class="form-group">
-            <label>Email *</label>
-            <input type="email" id="doctorEmail" placeholder="doctor@example.com" required>
+            <label>Email <span class="require-star">*</span></label>
+            <input type="email" id="doctorEmail" placeholder="Email">
             <span class="error-message" id="errorEmail"></span>
           </div>
 
           <div class="form-group">
-            <label>Phone *</label>
-            <input type="tel" id="doctorPhone" placeholder="1234567890" required>
+            <label>Phone <span class="require-star">*</span></label>
+            <input type="tel" id="doctorPhone" placeholder="Phone Number">
             <span class="error-message" id="errorPhone"></span>
           </div>
 
           <div class="form-group">
-            <label>Password *</label>
-            <input type="password" id="doctorPassword" placeholder="Min 6 characters" required>
+            <label>Password <span class="require-star">*</span></label>
+            <input type="password" id="doctorPassword" placeholder="Min 6 characters" novalidate>
             <span class="error-message" id="errorPassword"></span>
           </div>
 
           <div class="form-group">
-            <label>Specialization *</label>
-            <input type="text" id="doctorSpecialization" placeholder="e.g., Cardiologist" required>
+            <label>Specialization <span class="require-star">*</span></label>
+            <input type="text" id="doctorSpecialization" placeholder="e.g., Cardiologist" >
             <span class="error-message" id="errorSpecialization"></span>
           </div>
 
           <div class="form-group">
-            <label>Department *</label>
-            <select id="doctorDepartment" required>
+            <label>Department <span class="require-star">*</span></label>
+            <select id="doctorDepartment">
               <option value="">Select Department</option>
               <option value="Cardiology">Cardiology</option>
               <option value="Neurology">Neurology</option>
@@ -260,8 +260,6 @@
       editingDoctorId = null;
       document.getElementById('modalTitle').textContent = 'Add New Doctor';
       document.getElementById('doctorForm').reset();
-      document.getElementById('doctorPassword').placeholder = 'Min 6 characters';
-      document.getElementById('doctorPassword').required = true;
       clearErrors();
       document.getElementById('doctorModal').classList.add('show');
     }
@@ -287,13 +285,13 @@
       let hasError = false;
 
       if (formData.name.length < 3) {
-        document.getElementById('errorName').textContent = 'Name must be at least 3 characters';
+        document.getElementById('errorName').textContent = 'Full name required';
         hasError = true;
       }
 
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        document.getElementById('errorEmail').textContent = 'Invalid email format';
+        document.getElementById('errorEmail').textContent = 'Invalid email format(including @ and domain)';
         hasError = true;
       }
 

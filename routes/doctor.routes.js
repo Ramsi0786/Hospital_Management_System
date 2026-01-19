@@ -1,16 +1,25 @@
 import express from "express";
 const router = express.Router();
-import * as doctorAuthController from "../controllers/auth/doctor.auth.controller.js";
+import { protectDoctor, checkAuth } from "../middleware/auth.middleware.js";
 import * as doctorController from "../controllers/doctor.controller.js";
-import { protectDoctor } from "../middleware/auth.middleware.js"; // ← Fix this import
+import * as authController from "../controllers/auth/doctor.auth.controller.js";
 
-router.get('/login', (req, res) => {
-  res.render('doctor/login', {
-    title: "Doctor Login - Healora"
-  });
-});
+// ==================== PUBLIC ROUTES ====================
 
-router.post("/login", doctorAuthController.login);
+router.get("/login", checkAuth, (req, res) => res.render("doctor/login"));
+router.post("/login", authController.login);
+
+router.get("/forgot-password", checkAuth, authController.renderForgotPassword);
+router.post("/forgot-password", authController.forgotPassword);
+
+router.get("/reset-password", authController.renderResetPassword);
+router.post("/reset-password", authController.resetPassword);
+
+// ==================== PROTECTED ROUTES ====================
+
+router.get("/dashboard", protectDoctor, doctorController.getDashboard);
+
+// ==================== LOGOUT ====================
 
 router.get("/logout", (req, res) => {
   res.clearCookie('token', {
@@ -32,7 +41,5 @@ router.post("/logout", (req, res) => {
   });
   res.json({ success: true });
 });
-
-router.get("/dashboard", protectDoctor, doctorController.getDashboard);
 
 export default router;

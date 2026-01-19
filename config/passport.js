@@ -11,28 +11,68 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        let user = await Patient.findOne({ googleId: profile.id });
+        const email = profile.emails[0].value;
+        const name = profile.displayName;
+        const googleId = profile.id;
+        const profileImage = profile.photos[0]?.value || '';
+        let patient = await Patient.findOne({
+          $or: [{ email }, { googleId }]
+        });
 
-        if (!user) {
-          user = await Patient.create({
-            name: profile.displayName,
-            email: profile.emails[0].value,
-            googleId: profile.id,
-            isVerified: true,
-            needsPasswordSetup: true,
-          });
+        if (patient) {
+
+          if (patient.isBlocked) {
+            return done(null, false, { message: 'Account is blocked' });
+          }
+
+          if (!patient.googleId) {
+            patient.googleId = googleId;
+          }
+
+          if (profileImage && !patient.profileImage) {
+            patient.profileImage = profileImage;
+          }
+
+          await patient.save();
+          
+          return done(null, patient);
         }
-        return done(null, user);
+        
+        patient = new Patient({
+          name,
+          email,
+          googleId,
+          profileImage,
+          isVerified: true,
+          isActive: true,
+          role: 'patient',
+          needsPasswordSetup: false,
+          authProvider: 'google'
+        });
+
+        await patient.save();
+
+        return done(null, patient);
       } catch (err) {
-        done(err, false);
+        console.error('Google Strategy Error:', err);
+        return done(err, false);
       }
     }
   )
 );
 
-passport.serializeUser((user, done) => done(null, user.id));
-passport.deserializeUser((id, done) => {
-  Patient.findById(id).then((user) => done(null, user));
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+passport.deserializeUser(async (id, done) => {
+  try {
+    const patient = await Patient.findById(id).select('-password');
+    done(null, patient);
+  } catch (error) {
+    console.error('Deserialize Error:', error);
+    done(error, null);
+  }
 });
 
 export default passport;

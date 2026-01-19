@@ -184,8 +184,8 @@ export const getDoctorById = async (req, res) => {
       status: apt.status || 'pending',
       date: apt.date,
       time: apt.time,
-      department: apt.department || 'N/A',
-      reason: apt.reason || 'N/A'
+      department: apt.department || '_',
+      reason: apt.reason || '_'
     }));
 
     res.render("admin/doctor-profile", {
@@ -465,7 +465,7 @@ export const deletePatient = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const patient = await Patient.findByIdAndDelete(id);
+    const patient = await Patient.findById(id);
 
     if (!patient) {
       return res.status(404).json({
@@ -474,9 +474,14 @@ export const deletePatient = async (req, res) => {
       });
     }
 
+    patient.isActive = false;
+    patient.isBlocked = false;
+
+    await patient.save();
+
     res.status(200).json({
       success: true,
-      message: "Patient deleted successfully",
+      message: "Patient marked as inactive successfully",
     });
   } catch (err) {
     console.error("Delete Patient Error:", err);
@@ -486,6 +491,7 @@ export const deletePatient = async (req, res) => {
     });
   }
 };
+
 
 /* ==================== UPDATE PATIENT ==================== */
 export const updatePatient = async (req, res) => {
