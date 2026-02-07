@@ -8,12 +8,11 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="/css/admin/patients.css" rel="stylesheet">
-
 </head>
 <body>
 
-    <%- include('../partials/admin-sidebar', { currentPage: 'patients' }) %>
-    <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Patients' }) %>
+  <%- include('../partials/admin-sidebar', { currentPage: 'patients' }) %>
+  <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Patients' }) %>
 
   <div class="main-content">
     <div class="page-header">
@@ -28,31 +27,31 @@
     </div>
 
     <div class="toolbar">
-  <div class="search-wrapper">
-    <i class="fas fa-search"></i>
-    <input type="text" id="searchInput" class="search-input" placeholder="Search patients by name or email">
-  </div>
+      <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search patients by name or email">
+      </div>
 
-  <div class="filter-wrapper">
-    <i class="fas fa-venus-mars"></i>
-    <select id="genderFilter" class="filter-select">
-      <option value="">All Genders</option>
-      <option value="Male">Male</option>
-      <option value="Female">Female</option>
-      <option value="Other">Other</option>
-    </select>
-  </div>
+      <div class="filter-wrapper">
+        <i class="fas fa-venus-mars"></i>
+        <select id="genderFilter" class="filter-select">
+          <option value="">All Genders</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
 
-  <div class="filter-wrapper">
-    <i class="fas fa-filter"></i>
-    <select id="statusFilter" class="filter-select">
-      <option value="">All Patients</option>
-      <option value="active">Active</option>
-      <option value="blocked">Blocked</option>
-      <option value="inactive">Inactive</option>
-    </select>
-  </div>
-</div>
+      <div class="filter-wrapper">
+        <i class="fas fa-filter"></i>
+        <select id="statusFilter" class="filter-select">
+          <option value="">All Patients</option>
+          <option value="active">Active</option>
+          <option value="blocked">Blocked</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+    </div>
 
     <div class="patients-table-container">
       <table class="patients-table">
@@ -79,8 +78,11 @@
         </tbody>
       </table>
     </div>
+    
+    <div id="pagination"></div>
   </div>
 
+  <!-- Add Patient Modal -->
   <div class="modal-overlay" id="patientModal">
     <div class="modal-content-custom">
       <div class="modal-header">
@@ -93,7 +95,6 @@
       <form id="patientForm">
         <div class="modal-body">
           <input type="hidden" id="patientId">
-          <input type="hidden" id="isEditMode" value="false">
 
           <div class="form-group">
             <label>Full Name <span class="require-star">*</span></label>
@@ -108,25 +109,25 @@
           </div>
 
           <div class="form-group">
-            <label>Phone <span id="phoneRequired" class="require-star" style="display: none;">*</span></label>
+            <label>Phone</label>
             <input type="tel" id="patientPhone" placeholder="1234567890">
             <span class="error-message" id="errorPhone"></span>
           </div>
 
           <div class="form-group">
-            <label>Password <span id="passwordRequired" class="require-star">*</span></label>
+            <label>Password <span class="require-star">*</span></label>
             <input type="password" id="patientPassword" placeholder="Min 6 characters">
             <span class="error-message" id="errorPassword"></span>
           </div>
 
           <div class="form-group">
-            <label>Age <span id="ageRequired" class="require-star" style="display: none;">*</span></label>
+            <label>Age</label>
             <input type="number" id="patientAge" placeholder="25" min="1" max="150">
             <span class="error-message" id="errorAge"></span>
           </div>
 
           <div class="form-group">
-            <label>Gender <span id="genderRequired" class="require-star" style="display: none;">*</span></label>
+            <label>Gender</label>
             <select id="patientGender">
               <option value="">Select Gender</option>
               <option value="Male">Male</option>
@@ -145,183 +146,171 @@
     </div>
   </div>
 
-    <%- include('../partials/logout-modal') %>
-    <%- include('../partials/admin-scripts') %>
+  <%- include('../partials/logout-modal') %>
+  <%- include('../partials/loading') %>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/alerts.js"></script>
+  <script src="/js/loader.js"></script>
+  <script src="/js/pagination.js"></script>
+  <%- include('../partials/admin-scripts') %>
     
   <script>
-    let patients = [];
-    let editingPatientId = null;
-    let isEditMode = false;
+  let allPatients = []; 
+  let filteredPatients = []; 
+  let editingPatientId = null;
 
-    async function loadPatients() {
-      try {
-        const response = await fetch('/admin/api/patients');
-        const data = await response.json();
-        patients = data.patients || [];
-        renderPatients(patients);
-      } catch (error) {
-        console.error('Error loading patients:', error);
-        document.getElementById('patientsTableBody').innerHTML = `
-          <tr>
-            <td colspan="7">
-              <div class="empty-state">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>Error loading patients</h3>
-                <p>Please refresh the page</p>
-              </div>
-            </td>
-          </tr>
-        `;
-      }
-    }
-
-    function getStatus(patient) {
-      if (patient.isBlocked) {
-        return `<span class="badge blocked">Blocked</span>`;
-      }
-      if (!patient.isActive) {
-        return `<span class="badge inactive">Inactive</span>`;
-      }
-      return `<span class="badge active">Active</span>`;
-    }
-
-    function renderPatients(patientsList) {
-      const tbody = document.getElementById('patientsTableBody');
-
-      if (patientsList.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7">
-              <div class="empty-state">
-                <i class="fas fa-user-injured"></i>
-                <h3>No patients found</h3>
-                <p>Add your first patient to get started</p>
-              </div>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = patientsList.map(patient => {
-        const initials = patient.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        
-        return `
-          <tr">
-            <td>
-              <div class="patient-name">
-                <div class="patient-avatar">${initials}</div>
-                <div class="patient-info">
-                  <h4>${patient.name}</h4>
-                  <p>ID: ${patient._id.substring(0, 8)}</p>
-                </div>
-              </div>
-            </td>
-            <td>${patient.email}</td>
-            <td>${patient.phone || '-'}</td>
-            <td>${patient.age || '-'}</td>
-            <td>${patient.gender || '-'}</td>
-            <td>${getStatus(patient)}</td>
-            <td onclick="event.stopPropagation();">
-              <div class="action-buttons">
-               <button class="btn-action btn-view" onclick="viewPatientProfile('${patient._id}')" title="View Profile">
-                View
-                </button>
-              </div>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function viewPatientProfile(patientId) {
-      window.location.href = `/admin/patient/${patientId}`;
-    }
-
-    document.getElementById('searchInput').addEventListener('input', filterPatients);
-    document.getElementById('genderFilter').addEventListener('change', filterPatients);
-    document.getElementById('statusFilter').addEventListener('change', filterPatients);
-
-    function filterPatients() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const gender = document.getElementById('genderFilter').value;
-      const status = document.getElementById('statusFilter').value;
-
-      const filtered = patients.filter(patient => {
-        const matchesSearch =
-          patient.name.toLowerCase().includes(searchTerm) ||
-          patient.email.toLowerCase().includes(searchTerm);
-
-        const matchesGender = !gender || patient.gender === gender;
-
-        const matchesStatus =
-          !status ||
-          (status === "active" && patient.isActive && !patient.isBlocked) ||
-          (status === "blocked" && patient.isBlocked) ||
-          (status === "inactive" && !patient.isActive);
-
-        return matchesSearch && matchesGender && matchesStatus;
+  async function loadPatients() {
+    Loader.show('Loading patients...'); 
+    
+    try {
+      const response = await fetch('/admin/api/patients');
+      const data = await response.json();
+      allPatients = data.patients || [];
+      filteredPatients = allPatients; 
+      
+      Pagination.init({
+        totalItems: allPatients.length,
+        limit: 10,
+        currentPage: 1,
+        onPageChange: renderCurrentPage
       });
+      
+      renderCurrentPage(); 
+    } catch (error) {
+      console.error('Error loading patients:', error);
+      Alert.error('Failed to load patients'); 
+    } finally {
+      Loader.hide(); 
+    }
+  }
 
-      renderPatients(filtered);
+  function renderCurrentPage() {
+    const startIndex = Pagination.getOffset();
+    const endIndex = startIndex + Pagination.limit;
+    const currentPatients = filteredPatients.slice(startIndex, endIndex);
+    
+    renderPatients(currentPatients);
+    Pagination.render('pagination');
+  }
+
+  function getStatus(patient) {
+    if (patient.isBlocked) {
+      return `<span class="badge blocked">Blocked</span>`;
+    }
+    if (!patient.isActive) {
+      return `<span class="badge inactive">Inactive</span>`;
+    }
+    return `<span class="badge active">Active</span>`;
+  }
+
+  function renderPatients(patientsList) {
+    const tbody = document.getElementById('patientsTableBody');
+
+    if (patientsList.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="fas fa-user-injured"></i>
+              <h3>No patients found</h3>
+              <p>Try adjusting your filters</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
     }
 
-    function showAddPatientModal() {
-      isEditMode = false;
-      editingPatientId = null;
+    tbody.innerHTML = patientsList.map(patient => {
+      const initials = patient.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
       
-      document.getElementById('modalTitle').textContent = 'Add New Patient';
-      document.getElementById('patientForm').reset();
-      document.getElementById('isEditMode').value = 'false';
-   
-      document.getElementById('phoneRequired').style.display = 'none';
-      document.getElementById('passwordRequired').style.display = 'inline';
-      document.getElementById('ageRequired').style.display = 'none';
-      document.getElementById('genderRequired').style.display = 'none';
-      
-      document.getElementById('patientPassword').placeholder = 'Min 6 characters (Required)';
-      
-      clearErrors();
-      document.getElementById('patientModal').classList.add('show');
-    }
+      return `
+        <tr>
+          <td>
+            <div class="patient-name">
+              <div class="patient-avatar">${initials}</div>
+              <div class="patient-info">
+                <h4>${patient.name}</h4>
+                <p>ID: ${patient._id.substring(0, 8)}</p>
+              </div>
+            </div>
+          </td>
+          <td>${patient.email}</td>
+          <td>${patient.phone || '-'}</td>
+          <td>${patient.age || '-'}</td>
+          <td>${patient.gender || '-'}</td>
+          <td>${getStatus(patient)}</td>
+          <td onclick="event.stopPropagation();">
+            <div class="action-buttons">
+              <button class="btn-action btn-view" onclick="viewPatientProfile('${patient._id}')" title="View Profile">
+                View
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
 
-    function closePatientModal() {
-      document.getElementById('patientModal').classList.remove('show');
-      clearErrors();
-    }
+  function viewPatientProfile(patientId) {
+    window.location.href = `/admin/patient/${patientId}`;
+  }
 
+  // debounce 
+  let searchTimeout;
+  document.getElementById('searchInput').addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(filterPatients, 300);
+  });
   
-    async function deletePatient(patientId) {
-      event.stopPropagation(); 
-      
-      if (!confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
-        return;
-      }
+  document.getElementById('genderFilter').addEventListener('change', filterPatients);
+  document.getElementById('statusFilter').addEventListener('change', filterPatients);
 
-      try {
-        const response = await fetch(`/admin/api/patients/${patientId}`, {
-          method: 'DELETE'
-        });
+  function filterPatients() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const gender = document.getElementById('genderFilter').value;
+    const status = document.getElementById('statusFilter').value;
 
-        const data = await response.json();
+    filteredPatients = allPatients.filter(patient => {
+      const matchesSearch =
+        patient.name.toLowerCase().includes(searchTerm) ||
+        patient.email.toLowerCase().includes(searchTerm);
 
-        if (response.ok || data.success) {
-          await loadPatients(); 
-          alert('Patient deleted successfully!');
-        } else {
-          alert(data.error || 'Failed to delete patient');
-        }
-      } catch (error) {
-        console.error('Error deleting patient:', error);
-        alert('Error deleting patient. Please try again.');
-      }
-    }
+      const matchesGender = !gender || patient.gender === gender;
 
-    function clearErrors() {
-      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
-    }
+      const matchesStatus =
+        !status ||
+        (status === "active" && patient.isActive && !patient.isBlocked) ||
+        (status === "blocked" && patient.isBlocked) ||
+        (status === "inactive" && !patient.isActive);
 
-    document.addEventListener('DOMContentLoaded', loadPatients);
-  </script>
+      return matchesSearch && matchesGender && matchesStatus;
+    });
+
+    Pagination.update(filteredPatients.length, 1);
+    renderCurrentPage();
+  }
+
+  function showAddPatientModal() {
+    document.getElementById('modalTitle').textContent = 'Add New Patient';
+    document.getElementById('patientForm').reset();
+    clearErrors();
+    document.getElementById('patientModal').classList.add('show');
+  }
+
+  function closePatientModal() {
+    document.getElementById('patientModal').classList.remove('show');
+    clearErrors();
+  }
+
+  function clearErrors() {
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+  }
+
+  document.addEventListener('DOMContentLoaded', loadPatients);
+</script>
 </body>
 </html>

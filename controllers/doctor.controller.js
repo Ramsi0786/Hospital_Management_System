@@ -1,5 +1,3 @@
-import Doctor from "../models/doctor.model.js";
-
 export const getDashboard = (req, res) => {
   res.render("doctor/dashboard", {
     user: req.user,

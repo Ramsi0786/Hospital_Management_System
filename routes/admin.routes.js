@@ -3,8 +3,6 @@ const router = express.Router();
 import * as adminAuthController from "../controllers/auth/admin.auth.controller.js";
 import * as adminController from '../controllers/admin.controller.js';
 import { adminProtect } from '../middleware/authAdmin.js';
-import Patient from '../models/patient.model.js';
-import Doctor from '../models/doctor.model.js';
 
 // ==================== AUTH ROUTES ====================
 router.get('/login', (req, res) => {
@@ -13,7 +11,7 @@ router.get('/login', (req, res) => {
 router.post('/login', adminAuthController.login);
 
 router.get('/logout', (req, res) => {
-  res.clearCookie('token', {
+  res.clearCookie('adminToken', {
     httpOnly: true,
     sameSite: 'strict'
   });
@@ -24,7 +22,7 @@ router.get('/logout', (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('token', {
+  res.clearCookie('adminToken', {
     httpOnly: true,
     sameSite: 'strict'
   });
@@ -67,7 +65,7 @@ router.get('/doctors', adminProtect, adminController.getAllDoctors);
 router.put('/doctor/:id', adminProtect, adminController.updateDoctor);
 router.delete('/doctor/:id', adminProtect, adminController.deleteDoctor);
 
-// Block/Unblock Doctor Route
+
 router.patch('/api/doctors/:id/block', adminProtect, adminController.blockDoctor);
 
 // ==================== APPOINTMENTS ====================

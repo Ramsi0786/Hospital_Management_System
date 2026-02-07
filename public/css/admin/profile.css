@@ -607,3 +607,58 @@ body {
     padding: 8px;
   }
 }
+    .avatar-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+
+    .avatar-icon {
+      font-size: 48px;
+    }
+
+    .availability-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .availability-day {
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .day-header {
+      font-weight: 600;
+      color: #203f6a;
+      margin-bottom: 12px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .time-slots {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .time-slot {
+      background: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+      text-align: center;
+    }
+
+    .no-slots {
+      color: #94a3b8;
+      font-size: 13px;
+      font-style: italic;
+    }

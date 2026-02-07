@@ -15,6 +15,8 @@
 </head>
 <body>
 
+  <%- include('../partials/loading') %>
+
 <%
   const appts = (typeof appointments !== 'undefined' && Array.isArray(appointments))
     ? appointments
@@ -327,7 +329,6 @@
     </div>
   </div>
 
-  <!-- Edit Modal -->
   <div class="modal-overlay" id="editModal">
     <div class="modal-content-custom">
       <div class="modal-header">
@@ -384,17 +385,23 @@
     </div>
   </div>
 
-  <%- include('../partials/logout-modal') %>
+ <%- include('../partials/logout-modal') %>
+
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/alerts.js"></script>
+  <script src="/js/loader.js"></script>
+  
+
+  <%- include('../partials/admin-scripts') %>
 
   <script type="application/json" id="doctor-data">
   <%- JSON.stringify({
     id: doctor._id,
     status: doctor.status
   }) %>
-</script>
-
+  </script>
 
   <script>
     const DOCTOR_DATA = JSON.parse(
@@ -428,6 +435,8 @@
         password: document.getElementById('editPassword').value
       };
 
+      Loader.show('Updating doctor...'); 
+
       try {
         const response = await fetch(`/admin/doctor/${doctorId}`, {
           method: 'PUT',
@@ -436,16 +445,20 @@
         });
 
         const data = await response.json();
+        
+        Loader.hide(); 
 
         if (response.ok) {
-          alert('Doctor updated successfully!');
-          window.location.reload();
+          Alert.success('Doctor updated successfully!').then(() => {
+            window.location.reload();
+          });
         } else {
-          alert(data.error || 'Failed to update doctor');
+          Alert.error(data.error || 'Failed to update doctor');
         }
       } catch (error) {
+        Loader.hide();
         console.error('Error:', error);
-        alert('Error updating doctor. Please try again.');
+        Alert.error('Error updating doctor. Please try again.');
       }
     });
 
@@ -453,9 +466,14 @@
       const isBlocked = DOCTOR_DATA.status === 'blocked';
       const action = isBlocked ? 'unblock' : 'block';
 
-      if (!confirm(`Are you sure you want to ${action} this doctor?`)) {
-        return;
-      }
+      const result = await Alert.confirm(
+        `Are you sure you want to ${action} this doctor?`,
+        `${action.charAt(0).toUpperCase() + action.slice(1)} Doctor`
+      );
+
+      if (!result.isConfirmed) return;
+
+      Loader.show(`${action}ing doctor...`); 
 
       try {
         const response = await fetch(`/admin/api/doctors/${doctorId}/block`, {
@@ -465,100 +483,24 @@
         });
 
         const data = await response.json();
+        
+        Loader.hide();
 
         if (response.ok && data.success) {
-          alert(`Doctor ${action}ed successfully!`);
-          window.location.reload();
+          Alert.success(`Doctor ${action}ed successfully!`).then(() => {
+            window.location.reload();
+          });
         } else {
-          alert(data.error || `Failed to ${action} doctor`);
+          Alert.error(data.error || `Failed to ${action} doctor`);
         }
       } catch (error) {
+        Loader.hide(); // ✅ Hide loader on error
         console.error('Error:', error);
-        alert(`Error ${action}ing doctor. Please try again.`);
+        Alert.error(`Error ${action}ing doctor. Please try again.`);
       }
     }
 
-    async function deleteDoctor() {
-      if (!confirm('Are you sure you want to delete this doctor? This action cannot be undone.')) {
-        return;
-      }
-
-      try {
-        const response = await fetch(`/admin/doctor/${doctorId}`, {
-          method: 'DELETE'
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          alert('Doctor deleted successfully!');
-          window.location.href = '/admin/doctors-management';
-        } else {
-          alert(data.error || 'Failed to delete doctor');
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        alert('Error deleting doctor. Please try again.');
-      }
-    }
   </script>
 
-  <style>
-    .avatar-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
-    }
-
-    .avatar-icon {
-      font-size: 48px;
-    }
-
-    .availability-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 16px;
-      margin-top: 20px;
-    }
-
-    .availability-day {
-      background: #f8fafc;
-      border-radius: 8px;
-      padding: 16px;
-      border: 1px solid #e2e8f0;
-    }
-
-    .day-header {
-      font-weight: 600;
-      color: #203f6a;
-      margin-bottom: 12px;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .time-slots {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .time-slot {
-      background: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      color: #475569;
-      border: 1px solid #e2e8f0;
-      text-align: center;
-    }
-
-    .no-slots {
-      color: #94a3b8;
-      font-size: 13px;
-      font-style: italic;
-    }
-  </style>
 </body>
 </html>

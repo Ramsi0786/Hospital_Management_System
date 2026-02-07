@@ -328,11 +328,15 @@
     </div>
   </div>
 
-  <%- include('../partials/logout-modal') %>
+<%- include('../partials/logout-modal') %>
+<%- include('../partials/loading') %>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/alerts.js"></script>
+  <script src="/js/loader.js"></script>
+  <%- include('../partials/admin-scripts') %>
 
-  <!-- Patient Data -->
   <script type="application/json" id="patient-data">
     <%- JSON.stringify({
       id: patient._id,
@@ -341,13 +345,11 @@
   </script>
 
   <script>
-    // Parse patient data
     const PATIENT_DATA = JSON.parse(
       document.getElementById('patient-data').textContent
     );
     const patientId = PATIENT_DATA.id;
 
-    // Modal functions
     function showEditModal() {
       document.getElementById('editModal').classList.add('show');
     }
@@ -356,14 +358,12 @@
       document.getElementById('editModal').classList.remove('show');
     }
 
-    // Close modal on outside click
     document.getElementById('editModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeEditModal();
       }
     });
 
-    // Edit form submission
     document.getElementById('editForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -375,6 +375,8 @@
         gender: document.getElementById('editGender').value
       };
 
+      Loader.show('Updating patient...'); 
+
       try {
         const response = await fetch(`/admin/api/patients/${patientId}`, {
           method: 'PUT',
@@ -383,28 +385,35 @@
         });
 
         const data = await response.json();
+        
+        Loader.hide(); 
 
         if (response.ok && data.success) {
-          alert('Patient updated successfully!');
-          window.location.reload();
+          Alert.success('Patient updated successfully!').then(() => {
+            window.location.reload();
+          });
         } else {
-          alert(data.error || 'Failed to update patient');
+          Alert.error(data.error || 'Failed to update patient');
         }
       } catch (error) {
+        Loader.hide(); 
         console.error('Error:', error);
-        alert('Error updating patient. Please try again.');
+        Alert.error('Error updating patient. Please try again.');
       }
     });
 
-    // Toggle block/unblock
     async function toggleBlock() {
       const isBlocked = PATIENT_DATA.isBlocked;
       const action = isBlocked ? 'unblock' : 'block';
 
-      if (!confirm(`Are you sure you want to ${action} this patient?`)) {
-        return;
-      }
+      const result = await Alert.confirm(
+        `Are you sure you want to ${action} this patient?`,
+        `${action.charAt(0).toUpperCase() + action.slice(1)} Patient`
+      );
 
+      if (!result.isConfirmed) return;
+
+      Loader.show(`${action}ing patient...`); 
       try {
         const response = await fetch(`/admin/api/patients/${patientId}/block`, {
           method: 'PUT',
@@ -413,24 +422,31 @@
         });
 
         const data = await response.json();
-
+        
+        Loader.hide();
         if (response.ok && data.success) {
-          alert(`Patient ${action}ed successfully!`);
-          window.location.reload();
+          Alert.success(`Patient ${action}ed successfully!`).then(() => {
+            window.location.reload();
+          });
         } else {
-          alert(data.error || `Failed to ${action} patient`);
+          Alert.error(data.error || `Failed to ${action} patient`);
         }
       } catch (error) {
+        Loader.hide(); 
         console.error('Error:', error);
-        alert(`Error ${action}ing patient. Please try again.`);
+        Alert.error(`Error ${action}ing patient. Please try again.`);
       }
     }
 
-    // Delete patient
     async function deletePatient() {
-      if (!confirm('Are you sure you want to delete this patient? This action cannot be undone.')) {
-        return;
-      }
+
+      const result = await Alert.confirmDelete(
+        'Are you sure you want to delete this patient? This action cannot be undone.'
+      );
+
+      if (!result.isConfirmed) return;
+
+      Loader.show('Deleting patient...'); 
 
       try {
         const response = await fetch(`/admin/api/patients/${patientId}`, {
@@ -438,16 +454,20 @@
         });
 
         const data = await response.json();
+        
+        Loader.hide(); 
 
         if (response.ok && data.success) {
-          alert('Patient deleted successfully!');
-          window.location.href = '/admin/patients';
+          Alert.success('Patient deleted successfully!').then(() => {
+            window.location.href = '/admin/patients';
+          });
         } else {
-          alert(data.error || 'Failed to delete patient');
+          Alert.error(data.error || 'Failed to delete patient');
         }
       } catch (error) {
+        Loader.hide();
         console.error('Error:', error);
-        alert('Error deleting patient. Please try again.');
+        Alert.error('Error deleting patient. Please try again.');
       }
     }
   </script>
