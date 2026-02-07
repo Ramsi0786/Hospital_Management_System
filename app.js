@@ -2,7 +2,6 @@ import 'dotenv/config';
 
 import express from "express";
 import path from "path";
-import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import passport from "./config/passport.js";
@@ -28,6 +27,11 @@ app.use(
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', 
+      httpOnly: true,
+      maxAge: 600000 // 10 minutes
+    }
   })
 );
 app.use(passport.initialize());

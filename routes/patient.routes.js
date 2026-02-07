@@ -12,9 +12,10 @@ router.post("/signup", authController.signup);
 router.get("/login", checkAuth, (req, res) => res.render("patient/patient-login"));
 router.post("/login", authController.login);
 
-router.get("/verify-otp", (req, res) => {
-  res.render("patient/verify-otp");
-});
+router.get("/verify-otp", authController.requireOtpSession,(req, res) => {
+    res.render("patient/verify-otp");
+  }
+);
 router.post("/verify-otp", authController.verifyOtp);
 router.post("/resend-otp", authController.resendOtp);
 

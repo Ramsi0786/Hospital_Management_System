@@ -12,8 +12,9 @@ const FormValidator = {
     return null;
   },
 
-  validateName(name, minLength = 3) {
-    if (!name || name.trim().length < minLength) return `Name must be at least ${minLength} characters`;
+  validateName(name, minLength = 4) {
+    if (!name || name.trim().length < minLength) return `Plese Enter Your Full Name`;
+    else if (!/^[a-zA-Z\s]+$/.test(name.trim())) return `Name can only contain letters and spaces`
     return null;
   },
 
@@ -127,87 +128,112 @@ const FormValidator = {
   return errors;
 },
 
-  async handleFormSubmit(formId, endpoint, validationType, callbacks = {}) {
-    const form = document.getElementById(formId);
-    
-    if (!form) {
-      console.error(`Form with id "${formId}" not found`);
-      return;
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      this.clearAllErrors();
+async handleFormSubmit(formId, endpoint, validationType, callbacks = {}) {
+  const form = document.getElementById(formId);
   
-      const formData = new FormData(form);
-      const data = {};
-      
-      formData.forEach((value, key) => {
-        if (key === 'remember') {
-          data[key] = value === 'on';
-        } else {
-          data[key] = typeof value === 'string' ? value.trim() : value;
-        }
-      });
-      
-      let errors = {};
-      if (validationType === 'signup') {
-        errors = this.validateSignupForm(data);
-      } else if (validationType === 'login') {
-        errors = this.validateLoginForm(data);
-      } else if (validationType === 'forgotPassword') {
-        errors = this.validateForgotPasswordForm(data);
-      } else if (validationType === 'resetPassword') {
-        errors = this.validateResetPasswordForm(data);
-      }
-      
-      if (Object.keys(errors).length > 0) {
-        Object.keys(errors).forEach(field => {
-          const errorId = `error${field.charAt(0).toUpperCase() + field.slice(1)}`;
-          this.showError(errorId, errors[field]);
-        });
-        return;
-      }
-      
-      try {
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-         
-          if (callbacks.onSuccess) {
-            callbacks.onSuccess(result);
-          }
-        } else {
+  if (!form) {
+    console.error(`Form with id "${formId}" not found`);
+    return;
+  }
 
-          const serverErrors = result.errors || {};
-          Object.keys(serverErrors).forEach(field => {
-            if (field === 'general') {
-              this.showError('serverError', serverErrors[field]);
-            } else {
-              const errorId = `error${field.charAt(0).toUpperCase() + field.slice(1)}`;
-              this.showError(errorId, serverErrors[field]);
-            }
-          });
-          
-          if (callbacks.onError) {
-            callbacks.onError(serverErrors);
-          }
-        }
-      } catch (err) {
-        this.showError('serverError', 'Server error. Please try again later.');
-        if (callbacks.onError) {
-          callbacks.onError({ general: 'Server error' });
-        }
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    this.clearAllErrors();
+
+    const formData = new FormData(form);
+    const data = {};
+    
+    formData.forEach((value, key) => {
+      if (key === 'remember') {
+        data[key] = value === 'on';
+      } else {
+        data[key] = typeof value === 'string' ? value.trim() : value;
       }
     });
-  },
+    
+    let errors = {};
+    if (validationType === 'signup') {
+      errors = this.validateSignupForm(data);
+    } else if (validationType === 'login') {
+      errors = this.validateLoginForm(data);
+    } else if (validationType === 'forgotPassword') {
+      errors = this.validateForgotPasswordForm(data);
+    } else if (validationType === 'resetPassword') {
+      errors = this.validateResetPasswordForm(data);
+    }
+    
+    if (Object.keys(errors).length > 0) {
+      Object.keys(errors).forEach(field => {
+        const errorId = `error${field.charAt(0).toUpperCase() + field.slice(1)}`;
+        this.showError(errorId, errors[field]);
+      });
+      return;
+    }
+    
+    if (window.Loader) {
+      const messages = {
+        signup: 'Creating your account...',
+        login: 'Logging in...',
+        forgotPassword: 'Sending reset link...',
+        resetPassword: 'Resetting password...'
+      };
+      Loader.show(messages[validationType] || 'Processing...');
+    }
+    
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      if (window.Loader) {
+        Loader.hide();
+      }
+      
+      if (response.ok) {
+        if (window.Alert && result.message) {
+          Alert.success(result.message);
+        }
+        
+        if (callbacks.onSuccess) {
+          callbacks.onSuccess(result);
+        }
+      } else {
+        const serverErrors = result.errors || {};
+        Object.keys(serverErrors).forEach(field => {
+          if (field === 'general') {
+            this.showError('serverError', serverErrors[field]);
+          } else {
+            const errorId = `error${field.charAt(0).toUpperCase() + field.slice(1)}`;
+            this.showError(errorId, serverErrors[field]);
+          }
+        });
+        
+        if (callbacks.onError) {
+          callbacks.onError(serverErrors);
+        }
+      }
+    } catch (err) {
+      if (window.Loader) {
+        Loader.hide();
+      }
+      
+      if (window.Alert) {
+        Alert.error('Server error. Please try again later.');
+      } else {
+        this.showError('serverError', 'Server error. Please try again later.');
+      }
+      
+      if (callbacks.onError) {
+        callbacks.onError({ general: 'Server error' });
+      }
+    }
+  });
+},
 
   setupPasswordToggle(passwordFieldId, toggleIconId) {
     const passwordField = document.getElementById(passwordFieldId);

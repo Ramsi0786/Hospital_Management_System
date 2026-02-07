@@ -107,7 +107,7 @@
 </div>
 
 <script>
-    // Logout Modal Functions
+  
     function showLogoutModal() {
       document.getElementById('logoutModal').classList.add('show');
     }
@@ -122,7 +122,6 @@
         .catch(() => window.location.href = '/patient/login');
     }
 
-    // Close modal when clicking outside
     document.getElementById('logoutModal').addEventListener('click', function(e) {
       if (e.target === this) {
         closeLogoutModal();

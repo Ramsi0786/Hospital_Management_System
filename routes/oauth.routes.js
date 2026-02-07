@@ -42,7 +42,7 @@ router.get(
       return res.redirect("/patient/dashboard");
       
     } catch (err) {
-      console.error("❌ OAuth callback error:", err);
+      console.error("OAuth callback error:", err);
       return res.redirect("/patient/login?error=auth_failed");
     }
   }

@@ -11,6 +11,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin/doctor.css">
+  <link rel="stylesheet" href="/css/pagination.css">
+
 </head>
 <body>
 
@@ -84,6 +86,7 @@
         </tbody>
       </table>
     </div>
+    <div id="pagination"></div>
   </div>
 
   <!-- Add/Edit Doctor Modal -->
@@ -154,229 +157,276 @@
     </div>
   </div>
 
-    <%- include('../partials/logout-modal') %>
-    <%- include('../partials/admin-scripts') %>
+<%- include('../partials/logout-modal') %>
+<%- include('../partials/loading') %>
+
+  <!-- Load scripts in correct order -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/alerts.js"></script>
+  <script src="/js/loader.js"></script>
+  <script src="/js/pagination.js"></script>
+  <%- include('../partials/admin-scripts') %>
     
   <script>
-    let doctors = [];
-    let editingDoctorId = null;
+  let allDoctors = []; 
+  let filteredDoctors = [];
+  let editingDoctorId = null;
 
-    async function loadDoctors() {
-      try {
-        const response = await fetch('/admin/doctors');
-        const data = await response.json();
-        doctors = data.doctors || [];
-        renderDoctors(doctors);
-      } catch (error) {
-        console.error('Error loading doctors:', error);
-      }
-    }
+  async function loadDoctors() {
+    Loader.show('Loading doctors...'); 
+    
+    try {
+      const response = await fetch('/admin/doctors');
+      const data = await response.json();
+      allDoctors = data.doctors || [];
+      filteredDoctors = allDoctors; 
 
-    function getStatusBadge(status) {
-      const statusMap = {
-        'active': { class: 'badge-success', text: 'Active' },
-        'blocked': { class: 'badge-danger', text: 'Blocked' },
-        'inactive': { class: 'badge-warning', text: 'Inactive' }
-      };
-      const statusInfo = statusMap[status] || statusMap['active'];
-      return `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
-    }
-
-    function renderDoctors(doctorsList) {
-      const tbody = document.getElementById('doctorsTableBody');
-      
-      if (doctorsList.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7">
-              <div class="empty-state">
-                <i class="fas fa-user-doctor"></i>
-                <h3>No doctors found</h3>
-                <p>Add your first doctor to get started</p>
-              </div>
-            </td>
-          </tr>
-        `;
-        return;
-      }
-
-      tbody.innerHTML = doctorsList.map(doctor => {
-        const initials = doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-        const doctorString = JSON.stringify(doctor).replace(/"/g, '&quot;');
-        
-        return `
-          <tr>
-            <td>
-              <div class="doctor-name">
-                <div class="doctor-avatar">${initials}</div>
-                <div class="doctor-info">
-                  <h4>${doctor.name}</h4>
-                  <p>ID: ${doctor._id.substring(0, 8)}</p>
-                </div>
-              </div>
-            </td>
-            <td>${doctor.email}</td>
-            <td>${doctor.phone}</td>
-            <td>${doctor.specialization}</td>
-            <td>${doctor.department}</td>
-            <td>${getStatusBadge(doctor.status)}</td>
-            <td onclick="event.stopPropagation();">
-              <div class="action-buttons">
-                <button class="btn-action btn-view" onclick="viewDoctorProfile('${doctor._id}')" title="View Profile">
-                  View
-                </button>
-                </div>
-            </td></tr>
-        `;
-      }).join('');
-    }
-
-    function viewDoctorProfile(doctorId) {
-      window.location.href = `/admin/doctor/${doctorId}`;
-    }
-
-    document.getElementById('searchInput').addEventListener('input', filterDoctors);
-    document.getElementById('departmentFilter').addEventListener('change', filterDoctors);
-    document.getElementById('statusFilter').addEventListener('change', filterDoctors);
-
-    function filterDoctors() {
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const department = document.getElementById('departmentFilter').value;
-      const status = document.getElementById('statusFilter').value;
-
-      const filtered = doctors.filter(doctor => {
-        const matchesSearch = doctor.name.toLowerCase().includes(searchTerm) ||
-                            doctor.email.toLowerCase().includes(searchTerm) ||
-                            doctor.specialization.toLowerCase().includes(searchTerm);
-        const matchesDepartment = !department || doctor.department === department;
-        const matchesStatus = !status || doctor.status === status;
-        return matchesSearch && matchesDepartment && matchesStatus;
+      Pagination.init({
+        totalItems: allDoctors.length,
+        limit: 10,
+        currentPage: 1,
+        onPageChange: renderCurrentPage
       });
+      
+      renderCurrentPage(); 
+    } catch (error) {
+      console.error('Error loading doctors:', error);
+      Alert.error('Failed to load doctors');
+    } finally {
+      Loader.hide();
+    }
+  }
 
-      renderDoctors(filtered);
+  function renderCurrentPage() {
+    const startIndex = Pagination.getOffset();
+    const endIndex = startIndex + Pagination.limit;
+    const currentDoctors = filteredDoctors.slice(startIndex, endIndex);
+    
+    renderDoctors(currentDoctors);
+    Pagination.render('pagination');
+  }
+
+  function getStatusBadge(status) {
+    const statusMap = {
+      'active': { class: 'badge-success', text: 'Active' },
+      'blocked': { class: 'badge-danger', text: 'Blocked' },
+      'inactive': { class: 'badge-warning', text: 'Inactive' }
+    };
+    const statusInfo = statusMap[status] || statusMap['active'];
+    return `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
+  }
+
+  function renderDoctors(doctorsList) {
+    const tbody = document.getElementById('doctorsTableBody');
+    
+    if (doctorsList.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="fas fa-user-doctor"></i>
+              <h3>No doctors found</h3>
+              <p>Try adjusting your filters</p>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
     }
 
-    function showAddDoctorModal() {
-      editingDoctorId = null;
-      document.getElementById('modalTitle').textContent = 'Add New Doctor';
-      document.getElementById('doctorForm').reset();
-      clearErrors();
-      document.getElementById('doctorModal').classList.add('show');
-    }
+    tbody.innerHTML = doctorsList.map(doctor => {
+      const initials = doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+      
+      return `
+        <tr>
+          <td>
+            <div class="doctor-name">
+              <div class="doctor-avatar">${initials}</div>
+              <div class="doctor-info">
+                <h4>${doctor.name}</h4>
+                <p>ID: ${doctor._id.substring(0, 8)}</p>
+              </div>
+            </div>
+          </td>
+          <td>${doctor.email}</td>
+          <td>${doctor.phone}</td>
+          <td>${doctor.specialization}</td>
+          <td>${doctor.department}</td>
+          <td>${getStatusBadge(doctor.status)}</td>
+          <td onclick="event.stopPropagation();">
+            <div class="action-buttons">
+              <button class="btn-action btn-view" onclick="viewDoctorProfile('${doctor._id}')" title="View Profile">
+                View
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
 
-    function closeDoctorModal() {
-      document.getElementById('doctorModal').classList.remove('show');
-      clearErrors();
-    }
+  function viewDoctorProfile(doctorId) {
+    window.location.href = `/admin/doctor/${doctorId}`;
+  }
 
-    document.getElementById('doctorForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      clearErrors();
+  let searchTimeout;
+  document.getElementById('searchInput').addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(filterDoctors, 300);
+  });
+  
+  document.getElementById('departmentFilter').addEventListener('change', filterDoctors);
+  document.getElementById('statusFilter').addEventListener('change', filterDoctors);
 
-      const formData = {
-        name: document.getElementById('doctorName').value.trim(),
-        email: document.getElementById('doctorEmail').value.trim(),
-        phone: document.getElementById('doctorPhone').value.trim(),
-        password: document.getElementById('doctorPassword').value,
-        specialization: document.getElementById('doctorSpecialization').value.trim(),
-        department: document.getElementById('doctorDepartment').value
-      };
+  function filterDoctors() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const department = document.getElementById('departmentFilter').value;
+    const status = document.getElementById('statusFilter').value;
 
-      let hasError = false;
-
-      if (formData.name.length < 3) {
-        document.getElementById('errorName').textContent = 'Full name required';
-        hasError = true;
-      }
-
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        document.getElementById('errorEmail').textContent = 'Invalid email format(including @ and domain)';
-        hasError = true;
-      }
-
-      const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(formData.phone)) {
-        document.getElementById('errorPhone').textContent = 'Phone must be 10 digits';
-        hasError = true;
-      }
-
-      if (formData.password.length < 6) {
-        document.getElementById('errorPassword').textContent = 'Password must be at least 6 characters';
-        hasError = true;
-      }
-
-      if (!formData.specialization) {
-        document.getElementById('errorSpecialization').textContent = 'Specialization is required';
-        hasError = true;
-      }
-
-      if (!formData.department) {
-        document.getElementById('errorDepartment').textContent = 'Department is required';
-        hasError = true;
-      }
-
-      if (hasError) return;
-
-      try {
-        const response = await fetch('/admin/add-doctor', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          closeDoctorModal();
-          loadDoctors();
-          alert(data.message || 'Doctor added successfully!');
-        } else {
-          if (data.errors) {
-            if (data.errors.email) document.getElementById('errorEmail').textContent = data.errors.email;
-            if (data.errors.phone) document.getElementById('errorPhone').textContent = data.errors.phone;
-          } else {
-            alert(data.error || 'Failed to add doctor');
-          }
-        }
-      } catch (error) {
-        console.error('Error adding doctor:', error);
-        alert('Error adding doctor. Please try again.');
-      }
+    filteredDoctors = allDoctors.filter(doctor => {
+      const matchesSearch = doctor.name.toLowerCase().includes(searchTerm) ||
+                          doctor.email.toLowerCase().includes(searchTerm) ||
+                          doctor.specialization.toLowerCase().includes(searchTerm);
+      const matchesDepartment = !department || doctor.department === department;
+      const matchesStatus = !status || doctor.status === status;
+      return matchesSearch && matchesDepartment && matchesStatus;
     });
 
-    async function deleteDoctor(id) {
-      event.stopPropagation();
+    Pagination.update(filteredDoctors.length, 1); 
+    renderCurrentPage();
+  }
+
+  function showAddDoctorModal() {
+    editingDoctorId = null;
+    document.getElementById('modalTitle').textContent = 'Add New Doctor';
+    document.getElementById('doctorForm').reset();
+    clearErrors();
+    document.getElementById('doctorModal').classList.add('show');
+  }
+
+  function closeDoctorModal() {
+    document.getElementById('doctorModal').classList.remove('show');
+    clearErrors();
+  }
+
+  document.getElementById('doctorForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearErrors();
+
+    const formData = {
+      name: document.getElementById('doctorName').value.trim(),
+      email: document.getElementById('doctorEmail').value.trim(),
+      phone: document.getElementById('doctorPhone').value.trim(),
+      password: document.getElementById('doctorPassword').value,
+      specialization: document.getElementById('doctorSpecialization').value.trim(),
+      department: document.getElementById('doctorDepartment').value
+    };
+
+    let hasError = false;
+
+    if (formData.name.length < 3) {
+      document.getElementById('errorName').textContent = 'Full name required';
+      hasError = true;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      document.getElementById('errorEmail').textContent = 'Invalid email format (including @ and domain)';
+      hasError = true;
+    }
+
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      document.getElementById('errorPhone').textContent = 'Phone must be 10 digits';
+      hasError = true;
+    }
+
+    if (formData.password.length < 6) {
+      document.getElementById('errorPassword').textContent = 'Password must be at least 6 characters';
+      hasError = true;
+    }
+
+    if (!formData.specialization) {
+      document.getElementById('errorSpecialization').textContent = 'Specialization is required';
+      hasError = true;
+    }
+
+    if (!formData.department) {
+      document.getElementById('errorDepartment').textContent = 'Department is required';
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    Loader.show('Adding doctor...');
+
+    try {
+      const response = await fetch('/admin/add-doctor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
       
-      if (!confirm('Are you sure you want to delete this doctor? This action cannot be undone.')) {
-        return;
-      }
+      Loader.hide(); 
 
-      try {
-        const response = await fetch(`/admin/doctor/${id}`, {
-          method: 'DELETE'
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          loadDoctors();
-          alert('Doctor deleted successfully!');
+      if (response.ok) {
+        closeDoctorModal();
+        Alert.success(data.message || 'Doctor added successfully!');
+      } else {
+        if (data.errors) {
+          if (data.errors.email) document.getElementById('errorEmail').textContent = data.errors.email;
+          if (data.errors.phone) document.getElementById('errorPhone').textContent = data.errors.phone;
         } else {
-          alert(data.error || 'Failed to delete doctor');
+          Alert.error(data.error || 'Failed to add doctor');
         }
-      } catch (error) {
-        console.error('Error deleting doctor:', error);
-        alert('Error deleting doctor. Please try again.');
       }
+    } catch (error) {
+      Loader.hide();
+      console.error('Error adding doctor:', error);
+      Alert.error('Error adding doctor. Please try again.');
     }
+  });
 
-    function clearErrors() {
-      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+  async function deleteDoctor(id) {
+    event.stopPropagation();
+    
+    const result = await Alert.confirmDelete('Are you sure you want to delete this doctor? This action cannot be undone.');
+    
+    if (!result.isConfirmed) return;
+
+    Loader.show('Deleting doctor...');
+
+    try {
+      const response = await fetch(`/admin/doctor/${id}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+      
+      Loader.hide();
+
+      if (response.ok) {
+        loadDoctors(); 
+        Alert.success('Doctor deleted successfully!');
+      } else {
+        Alert.error(data.error || 'Failed to delete doctor');
+      }
+    } catch (error) {
+      Loader.hide();
+      console.error('Error deleting doctor:', error);
+      Alert.error('Error deleting doctor. Please try again.');
     }
+  }
 
-    document.addEventListener('DOMContentLoaded', loadDoctors);
-  </script>
+  function clearErrors() {
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+  }
+
+  document.addEventListener('DOMContentLoaded', loadDoctors);
+</script>
 
 </body>
 </html>

@@ -1,4 +1,3 @@
-import Admin from "../models/admin.model.js";
 import Patient from "../models/patient.model.js";
 import Doctor from "../models/doctor.model.js";
 import Appointment from "../models/appointment.model.js";
