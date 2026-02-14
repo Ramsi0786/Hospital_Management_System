@@ -9,7 +9,7 @@ import connectDB from "./config/db.js";
 
 import patientRoutes from "./routes/patient.routes.js";
 import doctorRoutes from "./routes/doctor.routes.js";
-import adminRoutes from "./routes/admin.routes.js";
+import adminRoutes from "./routes/admin/routes.js";
 import oauthRoutes from "./routes/oauth.routes.js";
 import staticRoutes from "./routes/static.routes.js";
 

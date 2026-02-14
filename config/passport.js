@@ -11,16 +11,18 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
+        
         const email = profile.emails[0].value;
         const name = profile.displayName;
         const googleId = profile.id;
         const profileImage = profile.photos[0]?.value || '';
+        
         let patient = await Patient.findOne({
           $or: [{ email }, { googleId }]
         });
 
         if (patient) {
-
+          
           if (patient.isBlocked) {
             return done(null, false, { message: 'Account is blocked' });
           }
@@ -33,6 +35,12 @@ passport.use(
             patient.profileImage = profileImage;
           }
 
+          if (!patient.isActive) {
+            patient.isActive = true;
+            patient.deactivatedAt = null;
+          }
+
+          patient.isVerified = true;
           await patient.save();
           
           return done(null, patient);
@@ -54,7 +62,10 @@ passport.use(
 
         return done(null, patient);
       } catch (err) {
-        console.error('Google Strategy Error:', err);
+        console.error("========================================");
+        console.error("GOOGLE STRATEGY ERROR:");
+        console.error(err);
+        console.error("========================================");
         return done(err, false);
       }
     }
@@ -67,10 +78,14 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
+
     const patient = await Patient.findById(id).select('-password');
+    if (!patient) {
+      return done(null, false);
+    }
     done(null, patient);
   } catch (error) {
-    console.error('Deserialize Error:', error);
+    console.error("Deserialize Error:", error);
     done(error, null);
   }
 });

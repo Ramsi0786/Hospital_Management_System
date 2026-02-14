@@ -1,0 +1,56 @@
+/* 
+=============================================
+   SWEETALERT2 Z-INDEX FIX
+   Makes alerts appear above modals
+=============================================
+
+Main container - highest z-index */
+.swal2-container {
+  z-index: 99999 !important;
+}
+
+/* Popup window */
+.swal2-popup {
+  z-index: 99999 !important;
+}
+
+/* Backdrop overlay */
+.swal2-backdrop-show {
+  z-index: 99998 !important;
+}
+
+/* Custom classes */
+.swal-high-z-index {
+  z-index: 99999 !important;
+}
+
+.swal-popup-above-modal {
+  z-index: 99999 !important;
+}
+
+/* ============= MODAL Z-INDEX (BELOW ALERTS) =============*/
+
+.modal-overlay {
+  z-index: 9999 !important;
+}
+
+.modal-content-custom {
+  z-index: 10000 !important;
+}
+
+/* ============= ENSURE ALERTS ARE ALWAYS VISIBLE ============= */
+
+.swal2-container * {
+  pointer-events: auto !important;
+}
+
+.swal2-confirm,
+.swal2-cancel {
+  z-index: 100000 !important;
+  pointer-events: auto !important;
+}
+
+/* ============= LOADING OVERLAY ============= */
+#loading-overlay {
+  z-index: 9998 !important;
+}

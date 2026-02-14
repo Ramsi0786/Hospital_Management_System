@@ -2,8 +2,10 @@ import Patient from "../models/patient.model.js";
 import Doctor from "../models/doctor.model.js";
 import Appointment from "../models/appointment.model.js";
 import bcrypt from "bcryptjs";
+import { sendDoctorWelcomeEmail } from "../utils/sendEmail.js";
 
 /* ==================== GET DASHBOARD ==================== */
+
 export const getDashboard = async (req, res) => {
   try {
     const admin = req.admin || req.user;
@@ -78,6 +80,7 @@ export const getDashboard = async (req, res) => {
 };
 
 /* ==================== ADD PATIENT ==================== */
+
 export const addPatient = async (req, res) => {
   try {
     const { name, email, phone, password, age, gender } = req.body;
@@ -119,172 +122,7 @@ export const addPatient = async (req, res) => {
   }
 };
 
-/* ==================== ADD DOCTOR ==================== */
-export const addDoctor = async (req, res) => {
-  try {
-    const { name, email, phone, password, specialization, department } =
-      req.body;
-
-    const existingDoctor = await Doctor.findOne({ email });
-    if (existingDoctor) {
-      return res.status(400).json({ error: "Doctor email already exists" });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newDoctor = new Doctor({
-      name,
-      email,
-      phone,
-      specialization,
-      department,
-      password: hashedPassword,
-    });
-
-    await newDoctor.save();
-
-    res.status(201).json({ message: "Doctor added successfully" });
-  } catch (err) {
-    console.error("Add Doctor Error:", err);
-    res.status(500).json({ error: "Error adding Doctor" });
-  }
-};
-
-/* ==================== GET ALL DOCTORS ==================== */
-export const getAllDoctors = async (req, res) => {
-  try {
-    const doctors = await Doctor.find().select("-password");
-    res.json({ doctors });
-  } catch (err) {
-    console.error("Get Doctors Error:", err);
-    res.status(500).json({ error: "Error fetching doctors" });
-  }
-};
-
-/* ==================== GET SINGLE DOCTOR ==================== */
-export const getDoctorById = async (req, res) => {
-  try {
-    const doctor = await Doctor.findById(req.params.id).select("-password");
-    
-    if (!doctor) {
-      return res.status(404).send("Doctor not found");
-    }
-
-    const appointments = await Appointment.find({ 
-      doctor: req.params.id
-    })
-    .populate('patient', 'name')
-    .sort({ date: -1 })
-    .catch(() => []);
-
-    const appointmentsWithNames = appointments.map(apt => ({
-      ...apt.toObject(),
-      patientName: apt.patient?.name || 'Unknown', 
-      status: apt.status || 'pending',
-      date: apt.date,
-      time: apt.time,
-      department: apt.department || '_',
-      reason: apt.reason || '_'
-    }));
-
-    res.render("admin/doctor-profile", {
-      doctor,
-      appointments: appointmentsWithNames,
-      admin: req.admin || req.user,
-      title: "Doctor Profile - Healora"
-    });
-  } catch (err) {
-    console.error("Get Doctor Error:", err);
-    res.status(500).send("Error loading doctor profile");
-  }
-};
-
-/* ==================== BLOCK DOCTOR ==================== */
-export const blockDoctor = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { block } = req.body;
-
-    const newStatus = block ? 'blocked' : 'active';
-
-    const doctor = await Doctor.findByIdAndUpdate(
-      id,
-      { status: newStatus },
-      { new: true }
-    ).select("-password");
-
-    if (!doctor) {
-      return res.status(404).json({
-        success: false,
-        error: "Doctor not found",
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: `Doctor ${block ? 'blocked' : 'unblocked'} successfully`,
-      doctor,
-    });
-  } catch (err) {
-    console.error("Block Doctor Error:", err);
-    res.status(500).json({
-      success: false,
-      error: "Error updating doctor status",
-    });
-  }
-};
-
-/* ==================== DELETE DOCTOR ==================== */
-export const deleteDoctor = async (req, res) => {
-  try {
-    await Doctor.findByIdAndDelete(req.params.id);
-    res.json({ message: "Doctor deleted" });
-  } catch (err) {
-    console.error("Delete Doctor Error:", err);
-    res.status(500).json({ error: "Error deleting Doctor" });
-  }
-};
-
-/* ==================== UPDATE DOCTOR ==================== */
-export const updateDoctor = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, email, phone, password, specialization, department } =
-      req.body;
-
-    const updateData = {
-      name,
-      email,
-      phone,
-      specialization,
-      department,
-    };
-
-    if (password && password.trim()) {
-      const hashedPassword = await bcrypt.hash(password.trim(), 10);
-      updateData.password = hashedPassword;
-    }
-
-    const updatedDoctor = await Doctor.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updatedDoctor) {
-      return res.status(404).json({ error: "Doctor not found" });
-    }
-
-    res.status(200).json({
-      message: "Doctor updated successfully",
-      doctor: updatedDoctor,
-    });
-  } catch (err) {
-    console.error("Update Doctor Error:", err);
-    res.status(500).json({ error: "Error updating doctor" });
-  }
-};
-
-/* ==================== GET ALL PATIENTS (SEARCH, PAGINATION, FILTER) ==================== */
+/* ==================== GET ALL PATIENTS ==================== */
 export const getAllPatients = async (req, res) => {
   try {
     const {
@@ -459,7 +297,7 @@ export const unblockPatient = async (req, res) => {
   }
 };
 
-/* ==================== SOFT DELETE (DEACTIVATE) PATIENT ==================== */
+/* ==================== DELETE PATIENT ==================== */
 export const deletePatient = async (req, res) => {
   try {
     const { id } = req.params;
@@ -490,7 +328,6 @@ export const deletePatient = async (req, res) => {
     });
   }
 };
-
 
 /* ==================== UPDATE PATIENT ==================== */
 export const updatePatient = async (req, res) => {
@@ -571,3 +408,206 @@ export const reactivatePatient = async (req, res) => {
     });
   }
 };
+
+/* ==================== ADD DOCTOR ==================== */
+
+export const addDoctor = async (req, res) => {
+  try {
+    const { name, email, phone, password, specialization, department } = req.body;
+
+    const existingDoctor = await Doctor.findOne({ email });
+    if (existingDoctor) {
+      return res.status(400).json({ 
+        success: false,
+        error: "Doctor email already exists" 
+      });
+    }
+
+    const plainPassword = password;
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const newDoctor = new Doctor({
+      name,
+      email,
+      phone,
+      specialization,
+      department,
+      password: hashedPassword,
+    });
+
+    await newDoctor.save();
+
+    try {
+      await sendDoctorWelcomeEmail(email, name, plainPassword);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+    }
+
+    res.status(201).json({ 
+      success: true,
+      message: "Doctor added successfully and welcome email sent!" 
+    });
+  } catch (err) {
+    console.error("Add Doctor Error:", err);
+    res.status(500).json({ 
+      success: false,
+      error: "Error adding Doctor" 
+    });
+  }
+};
+
+/* ==================== GET ALL DOCTORS ==================== */
+export const getAllDoctors = async (req, res) => {
+  try {
+    const { sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    
+    let sortOptions = {};
+    
+    switch(sortBy) {
+      case 'name':
+        sortOptions = { name: sortOrder === 'asc' ? 1 : -1 };
+        break;
+      case 'fee':
+        sortOptions = { consultationFee: sortOrder === 'asc' ? 1 : -1 };
+        break;
+      case 'experience':
+        sortOptions = { experience: sortOrder === 'asc' ? 1 : -1 };
+        break;
+      default:
+        sortOptions = { createdAt: -1 };
+    }
+    
+    const doctors = await Doctor.find()
+      .select("-password")
+      .sort(sortOptions);
+      
+    res.json({ doctors });
+  } catch (err) {
+    console.error("Get Doctors Error:", err);
+    res.status(500).json({ error: "Error fetching doctors" });
+  }
+};
+
+/* ==================== GET SINGLE DOCTOR ==================== */
+export const getDoctorById = async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id).select("-password");
+    
+    if (!doctor) {
+      return res.status(404).send("Doctor not found");
+    }
+
+    const appointments = await Appointment.find({ 
+      doctor: req.params.id
+    })
+    .populate('patient', 'name')
+    .sort({ date: -1 })
+    .catch(() => []);
+
+    const appointmentsWithNames = appointments.map(apt => ({
+      ...apt.toObject(),
+      patientName: apt.patient?.name || 'Unknown', 
+      status: apt.status || 'pending',
+      date: apt.date,
+      time: apt.time,
+      department: apt.department || '_',
+      reason: apt.reason || '_'
+    }));
+
+    res.render("admin/doctor-profile", {
+      doctor,
+      appointments: appointmentsWithNames,
+      admin: req.admin || req.user,
+      title: "Doctor Profile - Healora"
+    });
+  } catch (err) {
+    console.error("Get Doctor Error:", err);
+    res.status(500).send("Error loading doctor profile");
+  }
+};
+
+/* ==================== BLOCK DOCTOR ==================== */
+export const blockDoctor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { block } = req.body;
+
+    const newStatus = block ? 'blocked' : 'active';
+
+    const doctor = await Doctor.findByIdAndUpdate(
+      id,
+      { status: newStatus },
+      { new: true }
+    ).select("-password");
+
+    if (!doctor) {
+      return res.status(404).json({
+        success: false,
+        error: "Doctor not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Doctor ${block ? 'blocked' : 'unblocked'} successfully`,
+      doctor,
+    });
+  } catch (err) {
+    console.error("Block Doctor Error:", err);
+    res.status(500).json({
+      success: false,
+      error: "Error updating doctor status",
+    });
+  }
+};
+
+/* ==================== DELETE DOCTOR ==================== */
+export const deleteDoctor = async (req, res) => {
+  try {
+    await Doctor.findByIdAndDelete(req.params.id);
+    res.json({ message: "Doctor deleted" });
+  } catch (err) {
+    console.error("Delete Doctor Error:", err);
+    res.status(500).json({ error: "Error deleting Doctor" });
+  }
+};
+
+/* ==================== UPDATE DOCTOR ==================== */
+export const updateDoctor = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, phone, password, specialization, department } =
+      req.body;
+
+    const updateData = {
+      name,
+      email,
+      phone,
+      specialization,
+      department,
+    };
+
+    if (password && password.trim()) {
+      const hashedPassword = await bcrypt.hash(password.trim(), 10);
+      updateData.password = hashedPassword;
+    }
+
+    const updatedDoctor = await Doctor.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!updatedDoctor) {
+      return res.status(404).json({ error: "Doctor not found" });
+    }
+
+    res.status(200).json({
+      message: "Doctor updated successfully",
+      doctor: updatedDoctor,
+    });
+  } catch (err) {
+    console.error("Update Doctor Error:", err);
+    res.status(500).json({ error: "Error updating doctor" });
+  }
+};
+

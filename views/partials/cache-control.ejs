@@ -1,0 +1,34 @@
+
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+
+<script>
+  (function() {
+    'use strict';
+
+    history.pushState(null, null, location.href);
+    
+    window.onpopstate = function () {
+      const hasCookies = document.cookie.includes('accessToken') || 
+                        document.cookie.includes('refreshToken') ||
+                        document.cookie.includes('token') ||
+                        document.cookie.includes('adminToken');
+      
+      if (!hasCookies) {
+        console.log("Back button - no cookies - redirecting");
+ 
+        if (window.location.pathname.includes('/admin')) {
+          window.location.replace('/admin/login');
+        } else if (window.location.pathname.includes('/doctor')) {
+          window.location.replace('/doctor/login');
+        } else {
+          window.location.replace('/patient/login');
+        }
+      } else {
+        history.pushState(null, null, location.href);
+      }
+    };
+
+  })();
+</script>

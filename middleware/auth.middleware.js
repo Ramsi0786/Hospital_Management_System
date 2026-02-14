@@ -1,7 +1,8 @@
-import jwt from 'jsonwebtoken';
+import { verifyAccessToken, verifyRefreshToken, generateAccessToken } from '../config/jwt.js';
+import RefreshToken from '../models/refreshToken.model.js';
 import Patient from '../models/patient.model.js';
 import Doctor from '../models/doctor.model.js';
-import Admin from '../models/admin.model.js';
+import jwt from 'jsonwebtoken';
 
 const setNoCacheHeaders = (res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -15,33 +16,66 @@ const protect = async (req, res, next) => {
   try {
     setNoCacheHeaders(res);
     
-    const token = req.cookies.token;
+    const accessToken = req.cookies.accessToken;
+    const refreshToken = req.cookies.refreshToken;
     
-    if (!token) {
+    if (req.user && req.user._id) {
+      return next();
+    }
+    
+    let decoded = verifyAccessToken(accessToken);
+    
+    if (!decoded && refreshToken) {
+      const refreshDecoded = verifyRefreshToken(refreshToken);
+      
+      if (!refreshDecoded) {
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        return res.redirect('/patient/login');
+      }
+      
+      const storedToken = await RefreshToken.findOne({
+        token: refreshToken,
+        userId: refreshDecoded.id
+      });
+      
+      if (!storedToken) {
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        return res.redirect('/patient/login');
+      }
+      
+      const newAccessToken = generateAccessToken({
+        id: refreshDecoded.id,
+        role: refreshDecoded.role
+      });
+      
+      res.cookie('accessToken', newAccessToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000
+      });
+      
+      decoded = refreshDecoded;
+    }
+    
+    if (!decoded) {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       return res.redirect('/patient/login');
     }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    if (decoded.role && decoded.role !== 'patient') {
-       res.clearCookie('token');
-      return res.status(403).render('error', {
-        title: 'Access Denied',
-        message: 'You do not have permission to access this page.',
-        redirectUrl: '/patient/login',
-        redirectText: 'Go to Patient Login'
-      });
-    }
-
     const patient = await Patient.findById(decoded.id).select('-password');
     
     if (!patient) {
-      res.clearCookie('token');
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       return res.redirect('/patient/login');
     }
 
     if (patient.isBlocked) {
-      res.clearCookie('token');
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       return res.status(403).render('error', {
         title: 'Account Blocked',
         message: 'Your account has been blocked. Please contact support.',
@@ -50,17 +84,20 @@ const protect = async (req, res, next) => {
     }
 
     if (!patient.isActive) {
-      res.clearCookie('token');
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       return res.status(403).render('error', {
         title: 'Account Inactive',
-        message: 'Your account has been deactivated. Please sign up again to create a new account.'
+        message: 'Your account has been deactivated.'
       });
     }
-
+    
     req.user = patient;
     next();
   } catch (error) {
-    res.clearCookie('token');
+    console.error('Auth error:', error);
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
     return res.redirect('/patient/login');
   }
 };
@@ -99,8 +136,7 @@ const protectDoctor = async (req, res, next) => {
       res.clearCookie('token');
       return res.status(403).render('error', {
         title: 'Account Blocked',
-        message: 'Your account has been blocked. Please contact the administrator.',
-        reason: 'Account violation'
+        message: 'Your account has been blocked. Please contact the administrator.'
       });
     }
 
@@ -121,69 +157,29 @@ const protectDoctor = async (req, res, next) => {
   }
 };
 
-
-// ============= ADMIN MIDDLEWARE =============
-const protectAdmin = async (req, res, next) => {
-  try {
-    setNoCacheHeaders(res);
-    
-    const token = req.cookies.adminToken;
-    
-    if (!token) {
-      return res.redirect('/admin/login');
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    if (!decoded.role || decoded.role !== 'admin') {
-      res.clearCookie('adminToken');
-      return res.status(403).render('error', {
-        title: 'Access Denied',
-        message: 'You do not have permission to access this page.',
-        redirectUrl: '/admin/login',
-        redirectText: 'Go to Admin Login'
-      });
-    }
-
-    const admin = await Admin.findById(decoded.id).select('-password');
-    
-    if (!admin) {
-      res.clearCookie('adminToken');
-      return res.redirect('/admin/login');
-    }
-
-    if (admin.status === 'blocked' || !admin.isActive) {
-      res.clearCookie('adminToken');
-      return res.status(403).render('error', {
-        title: 'Access Denied',
-        message: 'Your admin account is no longer active.'
-      });
-    }
-
-    req.user = admin;
-    req.user.role = 'admin';
-    next();
-  } catch (error) {
-    console.error('[Admin Protect] Error:', error.message);
-    res.clearCookie('adminToken');
-    return res.redirect('/admin/login');
-  }
-};
-
-
 // ============= CHECK AUTH (for login pages) =============
 const checkAuth = (req, res, next) => {
-  const token = req.cookies.token;
+  const accessToken = req.cookies.accessToken;
+  const doctorToken = req.cookies.token;
   
-  if (token) {
+  if (accessToken) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      
+      const decoded = verifyAccessToken(accessToken);
+      if (decoded && decoded.role === 'patient') {
+        return res.redirect('/patient/dashboard');
+      }
+    } catch (error) {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+    }
+  }
+  
+  if (doctorToken) {
+    try {
+      const decoded = jwt.verify(doctorToken, process.env.JWT_SECRET);
       if (decoded.role === 'doctor') {
         return res.redirect('/doctor/dashboard');
       }
-
-      return res.redirect('/patient/dashboard');
     } catch (error) {
       res.clearCookie('token');
     }
@@ -192,21 +188,4 @@ const checkAuth = (req, res, next) => {
   next();
 };
 
-const checkAdminAuth = (req, res, next) => {
-  const token = req.cookies.adminToken;
-  
-  if (token) {
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.role === 'admin') {
-        return res.redirect('/admin/dashboard');
-      }
-    } catch (error) {
-      res.clearCookie('adminToken');
-    }
-  }
-  
-  next();
-};
-
-export { protect, protectDoctor, protectAdmin, checkAuth, checkAdminAuth };
+export { protect, protectDoctor, checkAuth };
