@@ -3,10 +3,7 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import redisClient from "../../config/redis.js";
 import { sendPasswordResetEmail } from "../../utils/sendEmail.js";
-import { generateToken } from "../../config/jwt.js";
-
-
-// ============== Login ====================
+import { generateAccessToken } from "../../config/jwt.js";
 
 export const login = async (req, res) => {
   try {
@@ -45,12 +42,15 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken({ id: doctor._id, role: "doctor" });
+    const token = generateAccessToken({ 
+      id: doctor._id, 
+      role: "doctor" 
+    });
 
     const cookieOptions = {
       httpOnly: true,
       sameSite: "strict",
-      maxAge: remember ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000
+      maxAge: remember ? 30 * 24 * 60 * 60 * 1000 : 12 * 60 * 60 * 1000 // 12 hours default
     };
 
     res.cookie("token", token, cookieOptions);
@@ -61,8 +61,6 @@ export const login = async (req, res) => {
     res.status(500).json({ errors: { general: "Server error" } });
   }
 };
-
-// ============== FORGOT PASSWORD ====================
 
 export const renderForgotPassword = (req, res) => {
   res.render("doctor/forgot-password", { error: null, success: null });
@@ -112,8 +110,6 @@ export const forgotPassword = async (req, res) => {
     });
   }
 };
-
-// ==================== RESET PASSWORD ====================
 
 export const renderResetPassword = async (req, res) => {
   const { email, token } = req.query;

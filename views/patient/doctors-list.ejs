@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/patient/doctors-list.css">
+</head>
+<body>
+
+  <%- include('../partials/patient-sidebar', { currentPage: 'doctor-list' }) %>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <h1 class="page-title">Find a Doctor</h1>
+      <button class="user-profile-btn">
+        <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
+        <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
+      </button>
+    </div>
+
+    <!-- Search & Filter Section -->
+    <div class="search-filter-section">
+      <form method="GET" action="/patient/doctors" id="filterForm">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <input type="text" 
+                   name="search" 
+                   id="searchInput"
+                   class="form-control" 
+                   placeholder="Search by name or specialization..."
+                   value="<%= searchQuery %>">
+          </div>
+          
+          <div class="col-md-3">
+            <select name="department" 
+                    id="departmentSelect" 
+                    class="form-select">
+              <option value="all">All Departments</option>
+              <% departments.forEach(dept => { %>
+                <option value="<%= dept.name %>" <%= selectedDepartment === dept.name ? 'selected' : '' %>>
+                  <%= dept.name %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+          
+          <div class="col-md-3">
+            <select name="sort" 
+                    id="sortSelect" 
+                    class="form-select">
+              <option value="featured" <%= sortBy === 'featured' ? 'selected' : '' %>>Featured First</option>
+              <option value="rating" <%= sortBy === 'rating' ? 'selected' : '' %>>Highest Rated</option>
+              <option value="experience" <%= sortBy === 'experience' ? 'selected' : '' %>>Most Experienced</option>
+              <option value="fee-low" <%= sortBy === 'fee-low' ? 'selected' : '' %>>Fee: Low to High</option>
+              <option value="fee-high" <%= sortBy === 'fee-high' ? 'selected' : '' %>>Fee: High to Low</option>
+            </select>
+          </div>
+          
+          <div class="col-md-2">
+            <button type="button" 
+                    id="clearBtn"
+                    class="btn btn-primary w-100"
+                    onclick="clearFilters()"style="<%= !searchQuery && selectedDepartment === 'all' && sortBy === 'featured' ? 'display: none;' : '' %>">
+                    <i class="fas fa-times"></i> Clear
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- Results Count -->
+    <div class="results-info">
+      <p class="results-count">
+        <strong><%= doctors.length %></strong> doctor<%= doctors.length !== 1 ? 's' : '' %> found
+      </p>
+    </div>
+
+    <!-- Doctors Grid -->
+    <div class="doctors-grid">
+      <% if (doctors.length === 0) { %>
+        <div class="empty-state">
+          <i class="fas fa-user-doctor"></i>
+          <h4>No doctors found</h4>
+          <p>Try adjusting your filters or search criteria</p>
+          <a href="/patient/doctors" class="btn btn-primary">View All Doctors</a>
+        </div>
+      <% } else { %>
+        <% doctors.forEach(doctor => { %>
+          <div class="doctor-card">
+            <% if (doctor.isFeatured) { %>
+              <span class="featured-badge">
+                <i class="fas fa-star"></i> Featured
+              </span>
+            <% } %>
+            
+            <div class="doctor-photo">
+              <% if (doctor.profileImage) { %>
+                <img src="<%= doctor.profileImage %>" alt="<%= doctor.name %>">
+              <% } else { %>
+                <div class="doctor-initials">
+                  <%= doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+                </div>
+              <% } %>
+            </div>
+            
+            <h5 class="doctor-name">Dr. <%= doctor.name %></h5>
+            <p class="doctor-specialty"><%= doctor.specialization %></p>
+            <p class="doctor-department">
+              <i class="fas fa-hospital"></i> <%= doctor.department %>
+            </p>
+            
+            <div class="doctor-stats">
+              <div class="stat-item">
+                <i class="fas fa-star text-warning"></i>
+                <span><%= doctor.rating %></span>
+              </div>
+              <div class="stat-item">
+                <i class="fas fa-briefcase-medical"></i>
+                <span><%= doctor.experience %> years</span>
+              </div>
+              <div class="stat-item">
+                <i class="fas fa-indian-rupee-sign"></i>
+                <span>₹<%= doctor.consultationFee %></span>
+              </div>
+            </div>
+            
+            <% if (doctor.bio) { %>
+              <p class="doctor-bio"><%= doctor.bio.substring(0, 100) %><%= doctor.bio.length > 100 ? '...' : '' %></p>
+            <% } %>
+            
+            <div class="doctor-actions">
+              <a href="/patient/doctors/<%= doctor._id %>" class="btn btn-outline">
+                View Profile
+              </a>
+              <a href="/patient/appointments/book?doctor=<%= doctor._id %>" class="btn btn-primary">
+                Book Now
+              </a>
+            </div>
+          </div>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal-content-custom">
+      <div class="modal-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <h3>Confirm Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeLogoutModal()">Cancel</button>
+        <button class="modal-btn confirm" onclick="confirmLogout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==================== DEBOUNCED SEARCH ====================
+    let searchTimeout;
+    const searchInput = document.getElementById('searchInput');
+    const departmentSelect = document.getElementById('departmentSelect');
+    const sortSelect = document.getElementById('sortSelect');
+    const clearBtn = document.getElementById('clearBtn');
+    const filterForm = document.getElementById('filterForm');
+
+    searchInput.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+    
+      updateClearButton();
+      
+      searchTimeout = setTimeout(() => {
+        filterForm.submit();
+      }, 100); 
+    });
+
+    departmentSelect.addEventListener('change', function() {
+      updateClearButton();
+      filterForm.submit();
+    });
+
+    sortSelect.addEventListener('change', function() {
+      updateClearButton();
+      filterForm.submit();
+    });
+
+    function clearFilters() {
+      searchInput.value = '';
+      departmentSelect.value = 'all';
+      sortSelect.value = 'featured';
+      filterForm.submit();
+    }
+
+    function updateClearButton() {
+      const hasSearch = searchInput.value.trim() !== '';
+      const hasDepartment = departmentSelect.value !== 'all';
+      const hasSort = sortSelect.value !== 'featured';
+      
+      if (hasSearch || hasDepartment || hasSort) {
+        clearBtn.style.display = 'block';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+    }
+
+    // Logout functions
+    function showLogoutModal() {
+      document.getElementById('logoutModal').classList.add('show');
+    }
+
+    function closeLogoutModal() {
+      document.getElementById('logoutModal').classList.remove('show');
+    }
+
+    function confirmLogout() {
+      fetch('/patient/logout', { method: 'POST' })
+        .then(() => window.location.href = '/patient/login')
+        .catch(() => window.location.href = '/patient/login');
+    }
+
+    updateClearButton();
+  </script>
+</body>
+</html>

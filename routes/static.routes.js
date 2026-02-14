@@ -1,22 +1,29 @@
 import express from "express";
 const router = express.Router();
 import * as staticController from "../controllers/static.controller.js";
-import { checkAuth } from '../middleware/auth.middleware.js';
 
-router.get("/", staticController.landingPage);
-router.get("/login", staticController.loginPage);
-router.get("/about-us", staticController.aboutUsPage);
-router.get("/services", staticController.servicesPage);
-router.get("/contact", staticController.contactPage);
+router.route('/')
+  .get(staticController.landingPage);
 
-router.get("/patient/login", staticController.patientLoginPage);
-router.get("/patient/signup", staticController.patientSignupPage);
-router.get("/patient/verify-otp", staticController.patientOtpPage);
+router.route('/login')
+  .get(staticController.loginPage);
 
-router.get("/doctors", staticController.doctorsPage);
+router.route('/about-us')
+  .get(staticController.aboutUsPage);
 
-router.get("/doctors/:id", staticController.doctorDetailPage);
+router.route('/services')
+  .get(staticController.servicesPage);
 
-router.get("/departments/:name", staticController.departmentPage);
+router.route('/contact')
+  .get(staticController.contactPage);
+
+router.route('/doctors')
+  .get(staticController.doctorsPage);
+
+router.route('/doctors/:id')
+  .get(staticController.doctorDetailPage);
+
+router.route('/departments/:name')
+  .get(staticController.departmentPage);
 
 export default router;

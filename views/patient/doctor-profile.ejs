@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/patient/doctor-profile.css">
+</head>
+<body>
+
+  <%- include('../partials/patient-sidebar', { currentPage: 'doctor-profile' }) %>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Top Bar -->
+    <div class="top-bar">
+      <div>
+        <a href="/patient/doctors" class="back-btn">
+          <i class="fas fa-arrow-left"></i> Back to Doctors
+        </a>
+        <h1 class="page-title">Doctor Profile</h1>
+      </div>
+      <button class="user-profile-btn">
+        <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
+        <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
+      </button>
+    </div>
+
+    <!-- Doctor Profile Card -->
+    <div class="profile-container">
+      
+      <!-- Left Column - Doctor Info -->
+      <div class="doctor-info-card">
+        <div class="doctor-header">
+          <div class="doctor-photo-large">
+            <% if (doctor.profileImage) { %>
+              <img src="<%= doctor.profileImage %>" alt="<%= doctor.name %>">
+            <% } else { %>
+              <div class="doctor-initials-large">
+                <%= doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+              </div>
+            <% } %>
+          </div>
+          
+          <% if (doctor.isFeatured) { %>
+            <span class="featured-badge-large">
+              <i class="fas fa-star"></i> Featured Doctor
+            </span>
+          <% } %>
+        </div>
+
+        <div class="doctor-details">
+          <h2 class="doctor-name-large">Dr. <%= doctor.name %></h2>
+          <p class="doctor-specialty-large"><%= doctor.specialization %></p>
+          <p class="doctor-department-large">
+            <i class="fas fa-hospital"></i> <%= doctor.department %> Department
+          </p>
+
+          <div class="doctor-stats-large">
+            <div class="stat-box">
+              <i class="fas fa-star"></i>
+              <div>
+                <strong><%= doctor.rating %></strong>
+                <span>Rating</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <i class="fas fa-briefcase-medical"></i>
+              <div>
+                <strong><%= doctor.experience %>+</strong>
+                <span>Years Exp.</span>
+              </div>
+            </div>
+            <div class="stat-box">
+              <i class="fas fa-users"></i>
+              <div>
+                <strong>500+</strong>
+                <span>Patients</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="consultation-fee">
+            <span class="fee-label">Consultation Fee</span>
+            <span class="fee-amount">₹<%= doctor.consultationFee %></span>
+          </div>
+
+          <div class="action-buttons">
+            <a href="/patient/appointments/book?doctor=<%= doctor._id %>" class="btn btn-primary btn-large">
+              <i class="fas fa-calendar-plus"></i> Book Appointment
+            </a>
+            <button class="btn btn-outline btn-large" onclick="shareProfile()">
+              <i class="fas fa-share-alt"></i> Share Profile
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column - Details -->
+      <div class="doctor-details-card">
+        
+        <!-- About Section -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="fas fa-user-md"></i> About Dr. <%= doctor.name %>
+          </h3>
+          <p class="doctor-bio">
+            <%= doctor.bio || `Dr. ${doctor.name} is a highly qualified ${doctor.specialization} with ${doctor.experience} years of experience in the ${doctor.department} department. Committed to providing the best healthcare services to patients.` %>
+          </p>
+        </div>
+
+        <!-- Qualifications -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="fas fa-graduation-cap"></i> Qualifications
+          </h3>
+          <div class="qualification-box">
+            <%= doctor.qualification || 'MBBS, MD - ' + doctor.specialization %>
+          </div>
+        </div>
+
+        <!-- Specializations -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="fas fa-stethoscope"></i> Specializations
+          </h3>
+          <div class="tags">
+            <span class="tag"><%= doctor.specialization %></span>
+            <span class="tag"><%= doctor.department %></span>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="fas fa-address-card"></i> Contact Information
+          </h3>
+          <div class="contact-info">
+            <div class="contact-item">
+              <i class="fas fa-envelope"></i>
+              <span><%= doctor.email %></span>
+            </div>
+            <div class="contact-item">
+              <i class="fas fa-phone"></i>
+              <span><%= doctor.phone %></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Availability -->
+        <% if (doctor.availability && doctor.availability.length > 0) { %>
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="fas fa-clock"></i> Availability
+          </h3>
+          <div class="availability-grid">
+            <% doctor.availability.forEach(slot => { %>
+              <div class="availability-day">
+                <strong><%= slot.day %></strong>
+                <% if (slot.slots && slot.slots.length > 0) { %>
+                  <% slot.slots.forEach(time => { %>
+                    <span class="time-slot"><%= time %></span>
+                  <% }) %>
+                <% } else { %>
+                  <span class="time-slot unavailable">Not Available</span>
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+        <% } else { %>
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="fas fa-clock"></i> Availability
+          </h3>
+          <p class="text-muted">
+            Please contact the hospital or book an appointment to check availability.
+          </p>
+        </div>
+        <% } %>
+
+        <!-- Services Offered -->
+        <div class="detail-section">
+          <h3 class="section-title">
+            <i class="fas fa-check-circle"></i> Services Offered
+          </h3>
+          <ul class="services-list">
+            <li><i class="fas fa-check"></i> General Consultation</li>
+            <li><i class="fas fa-check"></i> Diagnosis & Treatment</li>
+            <li><i class="fas fa-check"></i> Follow-up Care</li>
+            <li><i class="fas fa-check"></i> Health Checkups</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Modal -->
+  <div class="modal-overlay" id="logoutModal">
+    <div class="modal-content-custom">
+      <div class="modal-icon">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+      <h3>Confirm Logout</h3>
+      <p>Are you sure you want to logout?</p>
+      <div class="modal-buttons">
+        <button class="modal-btn cancel" onclick="closeLogoutModal()">Cancel</button>
+        <button class="modal-btn confirm" onclick="confirmLogout()">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showLogoutModal() {
+      document.getElementById('logoutModal').classList.add('show');
+    }
+
+    function closeLogoutModal() {
+      document.getElementById('logoutModal').classList.remove('show');
+    }
+
+    function confirmLogout() {
+      fetch('/patient/logout', { method: 'POST' })
+        .then(() => window.location.href = '/patient/login')
+        .catch(() => window.location.href = '/patient/login');
+    }
+
+    function shareProfile() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Dr. <%= doctor.name %> - <%= doctor.specialization %>',
+          text: 'Check out this doctor profile at Healora',
+          url: window.location.href
+        });
+      } else {
+        // Fallback - copy URL
+        navigator.clipboard.writeText(window.location.href);
+        alert('Profile link copied to clipboard!');
+      }
+    }
+  </script>
+</body>
+</html>

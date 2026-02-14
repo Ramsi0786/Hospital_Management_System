@@ -11,11 +11,20 @@ const Alert = {
     return Swal.fire({
       icon: 'success',
       title: title,
-      text: message,
+      html: message, 
       timer: 2000,
       showConfirmButton: false,
       toast: false,
-      position: 'center'
+      position: 'center',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
@@ -24,9 +33,18 @@ const Alert = {
     return Swal.fire({
       icon: 'error',
       title: title,
-      text: message,
+      html: message, 
       confirmButtonColor: '#dc3545',
-      confirmButtonText: 'OK'
+      confirmButtonText: 'OK',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
@@ -35,9 +53,18 @@ const Alert = {
     return Swal.fire({
       icon: 'warning',
       title: title,
-      text: message,
+      html: message, 
       confirmButtonColor: '#ffc107',
-      confirmButtonText: 'OK'
+      confirmButtonText: 'OK',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
@@ -46,9 +73,18 @@ const Alert = {
     return Swal.fire({
       icon: 'info',
       title: title,
-      text: message,
+      html: message, 
       confirmButtonColor: '#17a2b8',
-      confirmButtonText: 'OK'
+      confirmButtonText: 'OK',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
@@ -56,13 +92,22 @@ const Alert = {
     hideLoaderIfAny();
     return Swal.fire({
       title: title,
-      text: message,
+      html: message, 
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
       cancelButtonColor: '#d33',
       confirmButtonText: 'Yes, proceed!',
-      cancelButtonText: 'Cancel'
+      cancelButtonText: 'Cancel',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
@@ -70,43 +115,68 @@ const Alert = {
     hideLoaderIfAny();
     return Swal.fire({
       title: title,
-      text: message,
+      html: message,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc3545',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Yes, delete it!',
-      cancelButtonText: 'Cancel'
+      cancelButtonText: 'Cancel',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
- 
   confirmBlock: (userName) => {
     hideLoaderIfAny();
     return Swal.fire({
       title: 'Block User?',
-      text: `${userName} will not be able to login anymore`,
+      html: `${userName} will not be able to login anymore`, 
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc3545',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Yes, block!',
-      cancelButtonText: 'Cancel'
+      cancelButtonText: 'Cancel',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
-
 
   confirmUnblock: (userName) => {
     hideLoaderIfAny();
     return Swal.fire({
       title: 'Unblock User?',
-      text: `${userName} will be able to login again`,
+      html: `${userName} will be able to login again`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#28a745',
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Yes, unblock!',
-      cancelButtonText: 'Cancel'
+      cancelButtonText: 'Cancel',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
@@ -115,8 +185,15 @@ const Alert = {
       title: message,
       allowOutsideClick: false,
       allowEscapeKey: false,
+      customClass: {
+        container: 'swal-high-z-index'
+      },
       didOpen: () => {
         Swal.showLoading();
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
       }
     });
   },
@@ -132,9 +209,16 @@ const Alert = {
       showConfirmButton: false,
       timer: 3000,
       timerProgressBar: true,
+      customClass: {
+        container: 'swal-high-z-index'
+      },
       didOpen: (toast) => {
         toast.addEventListener('mouseenter', Swal.stopTimer);
         toast.addEventListener('mouseleave', Swal.resumeTimer);
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
       }
     });
 
@@ -149,14 +233,22 @@ const Alert = {
     Swal.fire({
       icon: 'success',
       title: 'Success!',
-      text: message,
+      html: message, 
       timer: delay,
-      showConfirmButton: false
+      showConfirmButton: false,
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     }).then(() => {
       window.location.href = redirectUrl;
     });
   },
-
 
   validationErrors: (errors) => {
     hideLoaderIfAny();
@@ -168,7 +260,16 @@ const Alert = {
       icon: 'error',
       title: 'Validation Error',
       html: errorList,
-      confirmButtonColor: '#dc3545'
+      confirmButtonColor: '#dc3545',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
@@ -177,20 +278,37 @@ const Alert = {
     return Swal.fire({
       icon: 'error',
       title: 'Network Error',
-      text: 'Could not connect to server. Please check your internet connection.',
-      confirmButtonColor: '#dc3545'
+      html: 'Could not connect to server. Please check your internet connection.',
+      confirmButtonColor: '#dc3545',
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     });
   },
 
- 
   sessionExpired: () => {
     hideLoaderIfAny();
     return Swal.fire({
       icon: 'warning',
       title: 'Session Expired',
-      text: 'Your session has expired. Please login again.',
+      html: 'Your session has expired. Please login again.',
       confirmButtonColor: '#ffc107',
-      allowOutsideClick: false
+      allowOutsideClick: false,
+      customClass: {
+        container: 'swal-high-z-index'
+      },
+      didOpen: () => {
+        const container = document.querySelector('.swal2-container');
+        if (container) {
+          container.style.zIndex = '99999';
+        }
+      }
     }).then(() => {
       window.location.href = '/login';
     });

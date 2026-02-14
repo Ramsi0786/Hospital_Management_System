@@ -19,7 +19,6 @@ export const landingPage = async (req, res) => {
   }
 };
 
-// Public doctors listing page
 export const doctorsPage = async (req, res) => {
   try {
     const { department, search } = req.query;
@@ -60,7 +59,6 @@ export const doctorsPage = async (req, res) => {
   }
 };
 
-// Doctor detail page
 export const doctorDetailPage = async (req, res) => {
   try {
     const { id } = req.params;

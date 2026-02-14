@@ -438,7 +438,7 @@
       Loader.show('Updating doctor...'); 
 
       try {
-        const response = await fetch(`/admin/doctor/${doctorId}`, {
+        const response = await fetch(`/admin/api/doctors/${doctorId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
@@ -494,7 +494,7 @@
           Alert.error(data.error || `Failed to ${action} doctor`);
         }
       } catch (error) {
-        Loader.hide(); // ✅ Hide loader on error
+        Loader.hide();
         console.error('Error:', error);
         Alert.error(`Error ${action}ing doctor. Please try again.`);
       }

@@ -5,7 +5,8 @@ import passport from "passport";
 import redisClient from "../../config/redis.js";
 import generateOtp from "../../utils/generateOtp.js";
 import { sendOtpEmail, sendConfirmationEmail, sendPasswordResetEmail } from "../../utils/sendEmail.js";
-import { generateToken as jwtGenerateToken } from "../../config/jwt.js";
+import { generateAccessToken, generateRefreshToken } from '../../config/jwt.js';
+import RefreshToken from '../../models/refreshToken.model.js';
 
 // ====================== SIGNUP =====================================
 export const signup = async (req, res) => {
@@ -145,7 +146,6 @@ export const requireOtpSession = (req, res, next) => {
 export const verifyOtp = async (req, res) => {
   try {
     const { otp } = req.body;
-
     const email = req.session.otpEmail;
     
     if (!email) {
@@ -178,7 +178,6 @@ export const verifyOtp = async (req, res) => {
 
     if (storedOtp !== otp) {
       req.session.otpAttempts = (req.session.otpAttempts || 0) + 1;
-      
       const remainingAttempts = 5 - req.session.otpAttempts;
       
       if (remainingAttempts <= 0) {
@@ -202,18 +201,35 @@ export const verifyOtp = async (req, res) => {
     await patient.save();
 
     await redisClient.del(`otp:email:${cleanEmail}`);
-
     delete req.session.otpEmail;
     delete req.session.otpExpiry;
     delete req.session.otpAttempts;
     
     await sendConfirmationEmail(cleanEmail);
 
-    const token = jwtGenerateToken({ id: patient._id, role: 'patient' });
-    res.cookie("token", token, { 
-      httpOnly: true, 
-      sameSite: "strict", 
-      maxAge: 24 * 60 * 60 * 1000 
+    const accessToken = generateAccessToken({ id: patient._id, role: 'patient' });
+    const refreshToken = generateRefreshToken({ id: patient._id, role: 'patient' });
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: patient._id,
+      userModel: 'Patient',
+      expiresAt
+    });
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+    
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     return res.status(200).json({
@@ -284,6 +300,7 @@ export const resendOtp = async (req, res) => {
 
 
 // ==================== LOGIN ====================
+
 export const login = async (req, res) => {
   const { email, password, remember } = req.body;
   let errors = {};
@@ -332,14 +349,38 @@ export const login = async (req, res) => {
         errors: { password: "Incorrect password" } 
       });
     }
+    
+    const accessToken = generateAccessToken({ 
+      id: patient._id, 
+      role: 'patient' 
+    });
+    
+    const refreshToken = generateRefreshToken({ 
+      id: patient._id, 
+      role: 'patient' 
+    });
 
-    const token = jwtGenerateToken({ id: patient._id, role: 'patient'});
-    const cookieOptions = { 
-      httpOnly: true, 
-      sameSite: "strict", 
-      maxAge: remember ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000 
-    };
-    res.cookie("token", token, cookieOptions);
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); 
+    
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: patient._id,
+      userModel: 'Patient',
+      expiresAt
+    });
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+    
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000 
+    });
 
     return res.status(200).json({ redirect: "/patient/dashboard" });
   } catch (err) {
@@ -357,23 +398,21 @@ export const googleAuth = passport.authenticate("google", {
 
 export const googleCallback = async (req, res) => {
   try {
-
     if (req.user.isBlocked) {
       return res.redirect("/patient/login?error=blocked");
     }
 
     if (!req.user.password) {
-  const crypto = await import('crypto');
-  const bcrypt = await import('bcryptjs');
-  const autoPassword = crypto.randomBytes(16).toString('hex');
-  req.user.password = await bcrypt.hash(autoPassword, 10);
-  req.user.needsPasswordSetup = true;
-  await req.user.save();
-}
+      const crypto = await import('crypto');
+      const bcrypt = await import('bcryptjs');
+      const autoPassword = crypto.randomBytes(16).toString('hex');
+      req.user.password = await bcrypt.hash(autoPassword, 10);
+      req.user.needsPasswordSetup = true;
+      await req.user.save();
+    }
 
     if (!req.user.isActive) {
-      
-      const updated = await Patient.findByIdAndUpdate(
+      await Patient.findByIdAndUpdate(
         req.user._id,
         {
           isActive: true,
@@ -384,15 +423,40 @@ export const googleCallback = async (req, res) => {
       );
     }
 
-    const token = jwtGenerateToken({ id: req.user._id, role: 'patient' });
+    const accessToken = generateAccessToken({ 
+      id: req.user._id, 
+      role: 'patient' 
+    });
     
-    res.cookie("token", token, { 
-      httpOnly: true, 
+    const refreshToken = generateRefreshToken({ 
+      id: req.user._id, 
+      role: 'patient' 
+    });
+ 
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+    
+    await RefreshToken.create({
+      token: refreshToken,
+      userId: req.user._id,
+      userModel: 'Patient',
+      expiresAt
+    });
+
+    res.cookie('accessToken', accessToken, {
+      httpOnly: true,
+      sameSite: 'strict',
+      maxAge: 15 * 60 * 1000
+    });
+    
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000
     });
 
     if (req.user.needsPasswordSetup) {
+      req.session.showPasswordSetupBanner = true;
       return res.redirect("/patient/setup-password");
     }
 
@@ -575,3 +639,27 @@ export const setupPassword = async (req, res) => {
 };
 
 
+export const logout = async (req, res) => {
+  try {
+
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
+    const refreshToken = req.cookies.refreshToken;
+    
+    if (refreshToken) {
+      await RefreshToken.deleteOne({ token: refreshToken });
+    }
+
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    
+    return res.redirect('/patient/login');
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    return res.redirect('/patient/login');
+  }
+};

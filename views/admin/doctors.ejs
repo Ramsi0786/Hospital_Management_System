@@ -11,13 +11,13 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin/doctor.css">
+  <link rel="stylesheet" href="/css/custom-alerts.css">
   <link rel="stylesheet" href="/css/pagination.css">
-
 </head>
 <body>
 
-    <%- include('../partials/admin-sidebar', { currentPage: 'doctors' }) %>
-    <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Doctors' }) %>
+  <%- include('../partials/admin-sidebar', { currentPage: 'doctors' }) %>
+  <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Doctors' }) %>
 
   <div class="main-content">
     <div class="page-header">
@@ -41,12 +41,6 @@
         <i class="fas fa-building"></i>
         <select id="departmentFilter" class="filter-select">
           <option value="">All Departments</option>
-          <option value="Cardiology">Cardiology</option>
-          <option value="Neurology">Neurology</option>
-          <option value="Orthopedics">Orthopedics</option>
-          <option value="Pediatrics">Pediatrics</option>
-          <option value="Dermatology">Dermatology</option>
-          <option value="General Medicine">General Medicine</option>
         </select>
       </div>
 
@@ -57,6 +51,19 @@
           <option value="active">Active</option>
           <option value="blocked">Blocked</option>
           <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      <div class="filter-wrapper">
+        <i class="fas fa-sort"></i>
+        <select id="sortFilter" class="filter-select">
+          <option value="createdAt-desc">Latest</option>
+          <option value="name-asc">Name (A-Z)</option>
+          <option value="name-desc">Name (Z-A)</option>
+          <option value="fee-asc">Fee (Low to High)</option>
+          <option value="fee-desc">Fee (High to Low)</option>
+          <option value="experience-desc">Experience (High to Low)</option>
+          <option value="experience-asc">Experience (Low to High)</option>
         </select>
       </div>
     </div>
@@ -89,7 +96,6 @@
     <div id="pagination"></div>
   </div>
 
-  <!-- Add/Edit Doctor Modal -->
   <div class="modal-overlay" id="doctorModal">
     <div class="modal-content-custom">
       <div class="modal-header">
@@ -123,13 +129,18 @@
 
           <div class="form-group">
             <label>Password <span class="require-star">*</span></label>
-            <input type="password" id="doctorPassword" placeholder="Min 6 characters" novalidate>
+            <div style="display: flex; gap: 10px;">
+              <input type="password" id="doctorPassword" placeholder="Min 6 characters" style="flex: 1;">
+              <button type="button" onclick="generatePassword()" class="btn btn-secondary" style="white-space: nowrap;">
+                <i class="fas fa-key"></i> Generate
+              </button>
+            </div>
             <span class="error-message" id="errorPassword"></span>
           </div>
 
           <div class="form-group">
             <label>Specialization <span class="require-star">*</span></label>
-            <input type="text" id="doctorSpecialization" placeholder="e.g., Cardiologist" >
+            <input type="text" id="doctorSpecialization" placeholder="e.g., Cardiologist">
             <span class="error-message" id="errorSpecialization"></span>
           </div>
 
@@ -137,13 +148,6 @@
             <label>Department <span class="require-star">*</span></label>
             <select id="doctorDepartment">
               <option value="">Select Department</option>
-              <option value="Cardiology">Cardiology</option>
-              <option value="Neurology">Neurology</option>
-              <option value="Orthopedics">Orthopedics</option>
-              <option value="Pediatrics">Pediatrics</option>
-              <option value="Dermatology">Dermatology</option>
-              <option value="Psychiatry">Psychiatry</option>
-              <option value="General Medicine">General Medicine</option>
             </select>
             <span class="error-message" id="errorDepartment"></span>
           </div>
@@ -157,10 +161,9 @@
     </div>
   </div>
 
-<%- include('../partials/logout-modal') %>
-<%- include('../partials/loading') %>
+  <%- include('../partials/logout-modal') %>
+  <%- include('../partials/loading') %>
 
-  <!-- Load scripts in correct order -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="/js/alerts.js"></script>
@@ -172,12 +175,70 @@
   let allDoctors = []; 
   let filteredDoctors = [];
   let editingDoctorId = null;
+  let allDepartments = [];
+
+  function generatePassword() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    
+    const passwordField = document.getElementById('doctorPassword');
+    passwordField.value = password;
+    passwordField.type = 'text';
+    
+    Alert.success(`Generated password: ${password}<br><small>Password is now visible in the field</small>`);
+
+    setTimeout(() => {
+      passwordField.type = 'password';
+    }, 5000);
+  }
+
+  async function loadDepartments() {
+    try {
+      const response = await fetch('/admin/api/departments');
+      const data = await response.json();
+      
+      if (data.success) {
+        allDepartments = data.departments || [];
+        populateDepartmentDropdowns();
+      }
+    } catch (error) {
+      console.error('Error loading departments:', error);
+    }
+  }
+
+  function populateDepartmentDropdowns() {
+    const filterSelect = document.getElementById('departmentFilter');
+    const formSelect = document.getElementById('doctorDepartment');
+    
+    filterSelect.innerHTML = '<option value="">All Departments</option>';
+    formSelect.innerHTML = '<option value="">Select Department</option>';
+    
+    allDepartments.forEach(dept => {
+      if (!dept.isDeleted) {
+        const filterOption = document.createElement('option');
+        filterOption.value = dept.name;
+        filterOption.textContent = dept.name;
+        filterSelect.appendChild(filterOption);
+
+        const formOption = document.createElement('option');
+        formOption.value = dept.name;
+        formOption.textContent = dept.name;
+        formSelect.appendChild(formOption);
+      }
+    });
+  }
 
   async function loadDoctors() {
     Loader.show('Loading doctors...'); 
     
     try {
-      const response = await fetch('/admin/doctors');
+      const sortFilter = document.getElementById('sortFilter')?.value || 'createdAt-desc';
+      const [sortBy, sortOrder] = sortFilter.split('-');
+
+      const response = await fetch(`/admin/api/doctors?sortBy=${sortBy}&sortOrder=${sortOrder}`);
       const data = await response.json();
       allDoctors = data.doctors || [];
       filteredDoctors = allDoctors; 
@@ -302,7 +363,10 @@
     document.getElementById('modalTitle').textContent = 'Add New Doctor';
     document.getElementById('doctorForm').reset();
     clearErrors();
-    document.getElementById('doctorModal').classList.add('show');
+
+    loadDepartments().then(() => {
+      document.getElementById('doctorModal').classList.add('show');
+    });
   }
 
   function closeDoctorModal() {
@@ -332,7 +396,7 @@
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      document.getElementById('errorEmail').textContent = 'Invalid email format (including @ and domain)';
+      document.getElementById('errorEmail').textContent = 'Invalid email format';
       hasError = true;
     }
 
@@ -362,7 +426,7 @@
     Loader.show('Adding doctor...');
 
     try {
-      const response = await fetch('/admin/add-doctor', {
+      const response = await fetch('/admin/api/doctors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -374,7 +438,8 @@
 
       if (response.ok) {
         closeDoctorModal();
-        Alert.success(data.message || 'Doctor added successfully!');
+        loadDoctors();
+        Alert.success(data.message || 'Doctor added successfully and welcome email sent!');
       } else {
         if (data.errors) {
           if (data.errors.email) document.getElementById('errorEmail').textContent = data.errors.email;
@@ -390,43 +455,17 @@
     }
   });
 
-  async function deleteDoctor(id) {
-    event.stopPropagation();
-    
-    const result = await Alert.confirmDelete('Are you sure you want to delete this doctor? This action cannot be undone.');
-    
-    if (!result.isConfirmed) return;
-
-    Loader.show('Deleting doctor...');
-
-    try {
-      const response = await fetch(`/admin/doctor/${id}`, {
-        method: 'DELETE'
-      });
-
-      const data = await response.json();
-      
-      Loader.hide();
-
-      if (response.ok) {
-        loadDoctors(); 
-        Alert.success('Doctor deleted successfully!');
-      } else {
-        Alert.error(data.error || 'Failed to delete doctor');
-      }
-    } catch (error) {
-      Loader.hide();
-      console.error('Error deleting doctor:', error);
-      Alert.error('Error deleting doctor. Please try again.');
-    }
-  }
-
   function clearErrors() {
     document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
   }
 
-  document.addEventListener('DOMContentLoaded', loadDoctors);
-</script>
+  document.addEventListener('DOMContentLoaded', async function() {
+    await loadDepartments();
+    await loadDoctors();
+
+    document.getElementById('sortFilter')?.addEventListener('change', loadDoctors);
+  });
+  </script>
 
 </body>
 </html>

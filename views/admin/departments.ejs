@@ -1,20 +1,397 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Departments Management - Healora</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/admin/departments.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin/doctor.css">
+  <link rel="stylesheet" href="/css/pagination.css">
 </head>
 <body>
 
-    <%- include('../partials/admin-sidebar', { currentPage: 'departments' }) %>
-    <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Departments' }) %>    
+  <%- include('../partials/admin-sidebar', { currentPage: 'departments' }) %>
+  <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Departments' }) %>
 
-    <%- include('../partials/logout-modal') %>
-    <%- include('../partials/admin-scripts') %>
+  <div class="main-content">
+    <div class="page-header">
+      <div>
+        <h1>Department Management</h1>
+        <p>Manage all departments</p>
+      </div>
+      <button class="btn-add" onclick="showAddModal()">
+        <i class="fas fa-plus"></i>
+        Add Department
+      </button>
+    </div>
+    
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" class="search-input" placeholder="Search departments...">
+      </div>
+
+      <div class="filter-wrapper">
+        <i class="fas fa-filter"></i>
+        <select id="statusFilter" class="filter-select">
+          <option value="active">Active Departments</option>
+          <option value="deleted">Deleted Departments</option>
+          <option value="all">All Departments</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="doctors-table-container">
+      <table class="doctors-table">
+        <thead>
+          <tr>
+            <th>Department</th>
+            <th>Department Head</th>
+            <th>Number of Doctors</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="departmentsTableBody">
+          <tr>
+            <td colspan="5">
+              <div class="empty-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading departments...</p>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="pagination"></div>
+  </div>
+
+  <div class="modal-overlay" id="departmentModal">
+    <div class="modal-content-custom">
+      <div class="modal-header">
+        <h3>Add New Department</h3>
+        <button class="btn-close-modal" onclick="closeModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="departmentForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Department Name <span class="require-star">*</span></label>
+            <input type="text" id="departmentName" placeholder="e.g., Cardiology">
+            <span class="error-message" id="errorName"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Description <span class="require-star">*</span></label>
+            <textarea id="departmentDescription" rows="3" placeholder="Brief description..."></textarea>
+            <span class="error-message" id="errorDescription"></span>
+          </div>
+
+          <div class="form-group">
+            <label>Icon</label>
+            <select id="departmentIcon">
+              <option value="fa-hospital">Hospital</option>
+              <option value="fa-heart-pulse">Cardiology</option>
+              <option value="fa-brain">Neurology</option>
+              <option value="fa-bone">Orthopedics</option>
+              <option value="fa-baby">Pediatrics</option>
+              <option value="fa-user-doctor">General Medicine</option>
+              <option value="fa-eye">Ophthalmology</option>
+              <option value="fa-tooth">Dentistry</option>
+              <option value="fa-lungs">Pulmonology</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <%- include('../partials/logout-modal') %>
+  <%- include('../partials/loading') %>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="/js/alerts.js"></script>
+  <script src="/js/loader.js"></script>
+  <script src="/js/pagination.js"></script>
+  <%- include('../partials/admin-scripts') %>
+    
+  <script>
+  let allDepartments = [];
+  let filteredDepartments = [];
+
+  async function loadDepartments() {
+    Loader.show('Loading departments...');
+    
+    try {
+      const statusFilter = document.getElementById('statusFilter').value;
+      const includeDeleted = statusFilter === 'all' ? 'true' : 'false';
+      
+      const response = await fetch(`/admin/api/departments?includeDeleted=${includeDeleted}`);
+      const data = await response.json();
+      
+      allDepartments = data.departments || [];
+      filterDepartments(); 
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.error('Failed to load departments');
+    } finally {
+      Loader.hide();
+    }
+  }
+
+  function renderCurrentPage() {
+    const startIndex = Pagination.getOffset();
+    const endIndex = startIndex + Pagination.limit;
+    const currentDepts = filteredDepartments.slice(startIndex, endIndex);
+    
+    renderDepartments(currentDepts);
+    Pagination.render('pagination');
+  }
+
+  function renderDepartments(deptsList) {
+    const tbody = document.getElementById('departmentsTableBody');
+    
+    if (deptsList.length === 0) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="fas fa-building"></i>
+              <h3>No departments found</h3>
+            </div>
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = deptsList.map(dept => {
+      const isDeleted = dept.isDeleted;
+      const statusBadge = isDeleted 
+        ? '<span class="badge blocked">Deleted</span>'
+        : '<span class="badge active">Active</span>';
+      
+      const actions = isDeleted
+        ? `
+          <button class="btn-action btn-edit" onclick="restoreDepartment('${dept._id}')" title="Restore">
+            <i class="fas fa-undo"></i> Restore
+          </button>
+          <button class="btn-action btn-delete" onclick="permanentlyDelete('${dept._id}')" title="Permanent Delete">
+            <i class="fas fa-trash-alt"></i> Delete Forever
+          </button>
+        `
+        : `
+          <button class="btn-action btn-view" onclick="viewDepartment('${dept._id}')" title="View">
+            View
+          </button>
+        `;
+
+      return `
+        <tr ${isDeleted ? 'style="opacity: 0.6; background-color: #fff3cd;"' : ''}>
+          <td>
+            <div class="doctor-name">
+              <div class="doctor-avatar"><i class="fas ${dept.icon}"></i></div>
+              <div class="doctor-info">
+                <h4>${dept.name} ${isDeleted ? '<i class="fas fa-trash text-danger" style="font-size: 12px;"></i>' : ''}</h4>
+                <p>${dept.description.substring(0, 50)}...</p>
+              </div>
+            </div>
+          </td>
+          <td>${dept.departmentHead ? 'Dr. ' + dept.departmentHead.name : '-'}</td>
+          <td>${dept.doctorCount || 0}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div class="action-buttons">
+              ${actions}
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  function viewDepartment(id) {
+    window.location.href = `/admin/department/${id}`;
+  }
+
+  async function restoreDepartment(id) {
+    const result = await Alert.confirm(
+      'Restore this department? It will become active again.',
+      'Restore Department'
+    );
+    
+    if (!result.isConfirmed) return;
+
+    Loader.show('Restoring department...');
+
+    try {
+      const response = await fetch(`/admin/api/departments/${id}/restore`, {
+        method: 'PATCH'
+      });
+
+      const data = await response.json();
+      Loader.hide();
+
+      if (response.ok) {
+        Alert.success(data.message);
+        loadDepartments();
+      } else {
+        Alert.error(data.error);
+      }
+    } catch (error) {
+      Loader.hide();
+      Alert.error('Error restoring department');
+    }
+  }
+
+  async function permanentlyDelete(id) {
+    const result = await Alert.confirmDelete(
+      'PERMANENTLY delete this department? This action CANNOT be undone and will remove all historical data!'
+    );
+    
+    if (!result.isConfirmed) return;
+
+    Loader.show('Deleting permanently...');
+
+    try {
+      const response = await fetch(`/admin/api/departments/${id}/permanent`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+      Loader.hide();
+
+      if (response.ok) {
+        Alert.success(data.message);
+        loadDepartments();
+      } else {
+        Alert.error(data.error);
+      }
+    } catch (error) {
+      Loader.hide();
+      Alert.error('Error deleting department');
+    }
+  }
+
+  let searchTimeout;
+  document.getElementById('searchInput').addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(filterDepartments, 300);
+  });
+
+  document.getElementById('statusFilter').addEventListener('change', loadDepartments);
+
+  function filterDepartments() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    filteredDepartments = allDepartments.filter(dept => {
+      const matchesSearch = dept.name.toLowerCase().includes(searchTerm) ||
+                           dept.description.toLowerCase().includes(searchTerm);
+      
+      let matchesStatus = true;
+      if (statusFilter === 'active') {
+        matchesStatus = !dept.isDeleted;
+      } else if (statusFilter === 'deleted') {
+        matchesStatus = dept.isDeleted;
+      }
+      
+      return matchesSearch && matchesStatus;
+    });
+    
+    Pagination.init({
+      totalItems: filteredDepartments.length,
+      limit: 20,
+      currentPage: 1,
+      onPageChange: renderCurrentPage
+    });
+    
+    renderCurrentPage();
+  }
+
+  function showAddModal() {
+    document.getElementById('departmentForm').reset();
+    clearErrors();
+    document.getElementById('departmentModal').classList.add('show');
+  }
+
+  function closeModal() {
+    document.getElementById('departmentModal').classList.remove('show');
+  }
+
+  document.getElementById('departmentForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    clearErrors();
+
+    const formData = {
+      name: document.getElementById('departmentName').value.trim(),
+      description: document.getElementById('departmentDescription').value.trim(),
+      icon: document.getElementById('departmentIcon').value
+    };
+
+    let hasError = false;
+
+    if (formData.name.length < 3) {
+      document.getElementById('errorName').textContent = 'Name must be at least 3 characters';
+      hasError = true;
+    }
+
+    if (formData.description.length < 10) {
+      document.getElementById('errorDescription').textContent = 'Description must be at least 10 characters';
+      hasError = true;
+    }
+
+    if (hasError) return;
+
+    Loader.show('Adding department...');
+
+    try {
+      const response = await fetch('/admin/api/departments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await response.json();
+      Loader.hide();
+
+      if (response.ok) {
+        closeModal();
+        loadDepartments();
+        Alert.success(data.message);
+      } else {
+        if (data.errors) {
+          if (data.errors.name) document.getElementById('errorName').textContent = data.errors.name;
+          if (data.errors.description) document.getElementById('errorDescription').textContent = data.errors.description;
+        } else if (data.canRestore) {
+          Alert.error(data.errors.name);
+        } else {
+          Alert.error(data.error);
+        }
+      }
+    } catch (error) {
+      Loader.hide();
+      Alert.error('Error saving department');
+    }
+  });
+
+  function clearErrors() {
+    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+  }
+
+  document.addEventListener('DOMContentLoaded', loadDepartments);
+</script>
+
 </body>
 </html>

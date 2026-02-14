@@ -1,4 +1,4 @@
-import { generateToken } from "../../config/jwt.js";
+import { generateAccessToken } from "../../config/jwt.js";
 import Admin from "../../models/admin.model.js";
 import bcrypt from "bcryptjs";
 
@@ -8,7 +8,7 @@ export const login = async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({
-        error: { general: "Email and Password Required" }
+        errors: { general: "Email and Password Required" }
       });
     }
 
@@ -16,12 +16,15 @@ export const login = async (req, res) => {
       email === process.env.MAIN_ADMIN_EMAIL &&
       password === process.env.MAIN_ADMIN_PASSWORD
     ) {
-      const token = generateToken({ id: "superAdmin", role: "superadmin" });
+      const token = generateAccessToken({ 
+        id: "superAdmin", 
+        role: "superadmin" 
+      });
 
-      res.cookie("token", token, {
+      res.cookie("adminToken", token, { 
         httpOnly: true,
         sameSite: "strict",
-        maxAge: 24 * 60 * 60 * 1000
+        maxAge: 8 * 60 * 60 * 1000 
       });
 
       return res.status(200).json({ redirect: "/admin/dashboard" });
@@ -42,12 +45,15 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken({ id: admin._id, role: "admin" });
+    const token = generateAccessToken({ 
+      id: admin._id, 
+      role: "admin" 
+    });
 
-    res.cookie("token", token, {
+    res.cookie("adminToken", token, { 
       httpOnly: true,
       sameSite: "strict",
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 8 * 60 * 60 * 1000 
     });
 
     res.status(200).json({ redirect: "/admin/dashboard" });
