@@ -1,4 +1,5 @@
 import Doctor from "../models/doctor.model.js";
+import Patient from '../models/patient.model.js';
 import Department from "../models/department.model.js";
 
 
@@ -13,8 +14,11 @@ export const getDashboard = (req, res) => {
 
 export const getAllDoctors = async (req, res) => {
   try {
-    const { department, search, sort } = req.query;
-    
+    const { department, search, sort, page = 1 } = req.query;
+    const limitNum = 12;
+    const pageNum = Math.max(1, parseInt(page));
+    const skip = (pageNum - 1) * limitNum;
+
     let query = { status: 'active' };
 
     if (department && department !== 'all') {
@@ -27,20 +31,24 @@ export const getAllDoctors = async (req, res) => {
         { specialization: { $regex: search, $options: 'i' } }
       ];
     }
-    
-    let sortOption = { isFeatured: -1, rating: -1 }; 
+
+    let sortOption = { isFeatured: -1, rating: -1 };
     if (sort === 'fee-low') sortOption = { consultationFee: 1 };
     if (sort === 'fee-high') sortOption = { consultationFee: -1 };
     if (sort === 'experience') sortOption = { experience: -1 };
     if (sort === 'rating') sortOption = { rating: -1 };
-    
+
+    const total = await Doctor.countDocuments(query);
+
     const doctors = await Doctor.find(query)
       .select('name email specialization department bio qualification experience consultationFee profileImage rating isFeatured')
-      .sort(sortOption);
-    
+      .sort(sortOption)
+      .limit(limitNum)
+      .skip(skip);
+
     const departments = await Department.find({ isActive: true, isDeleted: false })
       .select('name icon');
-    
+
     res.render('patient/doctors-list', {
       title: 'Our Doctors - Healora',
       user: req.user,
@@ -48,7 +56,10 @@ export const getAllDoctors = async (req, res) => {
       departments,
       selectedDepartment: department || 'all',
       searchQuery: search || '',
-      sortBy: sort || 'featured'
+      sortBy: sort || 'featured',
+      currentPage: pageNum,
+      totalPages: Math.ceil(total / limitNum),
+      total
     });
   } catch (error) {
     console.error('Get doctors error:', error);
@@ -86,6 +97,99 @@ export const getDoctorDetails = async (req, res) => {
       title: 'Error',
       message: 'Failed to load doctor profile',
       user: req.user
+    });
+  }
+};
+
+export const updatePatientProfile = async (req, res) => {
+  try {
+    const userId = req.user?._id;
+    const { 
+      name, 
+      phone, 
+      dateOfBirth, 
+      gender, 
+      bloodGroup, 
+      address, 
+      emergencyContactName, 
+      emergencyContactPhone 
+    } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        success: false,
+        error: 'Authentication required'
+      });
+    }
+
+    if (!name || name.trim().length < 3) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Name must be at least 3 characters' 
+      });
+    }
+
+    if (phone && !/^[0-9]{10}$/.test(phone)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Phone must be 10 digits' 
+      });
+    }
+
+    if (emergencyContactPhone && !/^[0-9]{10}$/.test(emergencyContactPhone)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Emergency contact phone must be 10 digits' 
+      });
+    }
+
+    let calculatedAge = null;
+    if (dateOfBirth) {
+      const birthDate = new Date(dateOfBirth);
+      const today = new Date();
+      calculatedAge = today.getFullYear() - birthDate.getFullYear();
+      const monthDiff = today.getMonth() - birthDate.getMonth();
+      if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+        calculatedAge--;
+      }
+    }
+
+    const updateData = {
+      name: name.trim(),
+      phone: phone || null,
+      dateOfBirth: dateOfBirth || null,
+      age: calculatedAge,
+      gender: gender || null,
+      bloodGroup: bloodGroup || null,
+      address: address?.trim() || null,
+      emergencyContactName: emergencyContactName?.trim() || null,
+      emergencyContactPhone: emergencyContactPhone || null
+    };
+
+    const updatedPatient = await Patient.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedPatient) {
+      return res.status(404).json({
+        success: false,
+        error: 'Patient not found'
+      });
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      message: 'Profile updated successfully',
+      patient: updatedPatient
+    });
+
+  } catch (error) {
+    console.error('Update patient profile error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Failed to update profile' 
     });
   }
 };

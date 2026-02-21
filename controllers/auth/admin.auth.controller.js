@@ -1,13 +1,15 @@
 import { generateAccessToken } from "../../config/jwt.js";
 import Admin from "../../models/admin.model.js";
 import bcrypt from "bcryptjs";
+import { USER_ROLES, HTTP_STATUS, TIME } from "../../constants/index.js";
+import logger from "../../utils/logger.js";
 
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
         errors: { general: "Email and Password Required" }
       });
     }
@@ -18,48 +20,54 @@ export const login = async (req, res) => {
     ) {
       const token = generateAccessToken({ 
         id: "superAdmin", 
-        role: "superadmin" 
+        role: USER_ROLES.SUPER_ADMIN
       });
 
       res.cookie("adminToken", token, { 
         httpOnly: true,
         sameSite: "strict",
-        maxAge: 8 * 60 * 60 * 1000 
+        maxAge: TIME.ADMIN_TOKEN_EXPIRY
       });
 
-      return res.status(200).json({ redirect: "/admin/dashboard" });
+      logger.auth('Admin Login', 'superAdmin', true, 'Super Admin access');
+      return res.status(HTTP_STATUS.OK).json({ redirect: "/admin/dashboard" });
     }
 
     const admin = await Admin.findOne({ email });
 
     if (!admin) {
-      return res.status(404).json({
+      logger.warn('Admin login attempt failed', 'Auth', { email, reason: 'Not found' });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
         errors: { email: "No admin account found" }
       });
     }
 
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) {
-      return res.status(400).json({
+      logger.warn('Admin login attempt failed', 'Auth', { email, reason: 'Invalid password' });
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({
         errors: { password: "Incorrect Password" }
       });
     }
 
     const token = generateAccessToken({ 
       id: admin._id, 
-      role: "admin" 
+      role: USER_ROLES.ADMIN
     });
 
     res.cookie("adminToken", token, { 
       httpOnly: true,
       sameSite: "strict",
-      maxAge: 8 * 60 * 60 * 1000 
+      maxAge: TIME.ADMIN_TOKEN_EXPIRY
     });
 
-    res.status(200).json({ redirect: "/admin/dashboard" });
+    logger.auth('Admin Login', admin._id.toString(), true, `Admin: ${admin.email}`);
+    res.status(HTTP_STATUS.OK).json({ redirect: "/admin/dashboard" });
 
   } catch (err) {
-    console.error("Admin Login error:", err);
-    res.status(500).json({ errors: { general: "Server error" } });
+    logger.error("Admin login error", "Auth", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
+      errors: { general: "Server error" } 
+    });
   }
 };

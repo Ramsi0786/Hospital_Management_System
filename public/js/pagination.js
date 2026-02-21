@@ -1,156 +1,126 @@
+/**
+ * Pagination Utility
+ * Works with backend-driven pagination — no frontend filtering.
+ * Always visible as long as there is at least 1 result.
+ * Page buttons are disabled when on a single page.
+ */
 
+const Pagination = (() => {
+  let config = {
+    totalItems: 0,
+    limit: 10,
+    currentPage: 1,
+    onPageChange: null,
+    maxVisiblePages: 5
+  };
 
-const Pagination = {
-  currentPage: 1,
-  totalPages: 1,
-  totalItems: 0,
-  limit: 10,
-  onPageChange: null, 
+  function init(options) {
+    config = { ...config, ...options };
+  }
 
-  init(config = {}) {
-    this.totalItems = config.totalItems || 0;
-    this.limit = config.limit || 10;
-    this.currentPage = config.currentPage || 1;
-    this.onPageChange = config.onPageChange || null;
-    this.totalPages = Math.ceil(this.totalItems / this.limit);
-  },
+  function getTotalPages() {
+    return Math.max(1, Math.ceil(config.totalItems / config.limit));
+  }
 
-  update(totalItems, currentPage = null) {
-    this.totalItems = totalItems;
-    this.totalPages = Math.ceil(totalItems / this.limit);
-    if (currentPage !== null) {
-      this.currentPage = currentPage;
+  function getPageRange() {
+    const totalPages = getTotalPages();
+    const half = Math.floor(config.maxVisiblePages / 2);
+
+    let start = Math.max(1, config.currentPage - half);
+    let end = Math.min(totalPages, start + config.maxVisiblePages - 1);
+
+    if (end - start + 1 < config.maxVisiblePages) {
+      start = Math.max(1, end - config.maxVisiblePages + 1);
     }
 
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
-      this.currentPage = 1;
+    const pages = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
     }
-  },
+    return { pages, totalPages };
+  }
 
-  render(containerId = 'pagination') {
+  /**
+   * Always visible when totalItems > 0.
+   * Buttons are disabled (not hidden) on a single page.
+   */
+  function render(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    if (this.totalPages <= 1) {
+    // Hide only when no results
+    if (config.totalItems === 0) {
       container.innerHTML = '';
-      container.style.display = 'none';
       return;
     }
 
-    container.style.display = 'flex';
+    const tp = getTotalPages();
+    const { pages } = getPageRange();
+    const current = config.currentPage;
+    const singlePage = tp === 1;
 
-    const pages = this.getPageNumbers();
-    const startItem = (this.currentPage - 1) * this.limit + 1;
-    const endItem = Math.min(this.currentPage * this.limit, this.totalItems);
+    let html = '<div class="pagination-wrapper">';
+    html += '<nav class="pagination-nav">';
 
-    let html = `
-      <div class="pagination-container">
-        <div class="pagination-info">
-          Showing ${startItem}-${endItem} of ${this.totalItems}
-        </div>
-        <div class="pagination-buttons">
-          <button class="pagination-btn" 
-            ${this.currentPage === 1 ? 'disabled' : ''}
-            onclick="Pagination.goToPage(1)"
-            title="First Page">
-            <i class="fas fa-angles-left"></i>
-          </button>
-          
-          <button class="pagination-btn" 
-            ${this.currentPage === 1 ? 'disabled' : ''}
-            onclick="Pagination.goToPage(${this.currentPage - 1})"
-            title="Previous">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-    `;
+    // Prev — disabled on page 1
+    html += `
+      <button class="page-btn page-prev ${current === 1 ? 'disabled' : ''}"
+        onclick="Pagination._goToPage(${current - 1})"
+        ${current === 1 ? 'disabled' : ''}
+        title="Previous page">
+        <i class="fas fa-chevron-left"></i>
+      </button>`;
 
+    // First + ellipsis
+    if (!singlePage && pages[0] > 1) {
+      html += `<button class="page-btn" onclick="Pagination._goToPage(1)">1</button>`;
+      if (pages[0] > 2) html += `<span class="page-ellipsis">...</span>`;
+    }
+
+    // Page buttons
     pages.forEach(page => {
-      if (page === '...') {
-        html += `<span class="pagination-ellipsis">...</span>`;
-      } else {
-        html += `
-          <button class="pagination-btn ${page === this.currentPage ? 'active' : ''}"
-            onclick="Pagination.goToPage(${page})">
-            ${page}
-          </button>
-        `;
-      }
+      html += `
+        <button class="page-btn ${page === current ? 'active' : ''}"
+          onclick="Pagination._goToPage(${page})"
+          ${singlePage ? 'disabled' : ''}>
+          ${page}
+        </button>`;
     });
 
+    // Last + ellipsis
+    if (!singlePage && pages[pages.length - 1] < tp) {
+      if (pages[pages.length - 1] < tp - 1) html += `<span class="page-ellipsis">...</span>`;
+      html += `<button class="page-btn" onclick="Pagination._goToPage(${tp})">${tp}</button>`;
+    }
+
+    // Next — disabled on last page
     html += `
-          <button class="pagination-btn" 
-            ${this.currentPage === this.totalPages ? 'disabled' : ''}
-            onclick="Pagination.goToPage(${this.currentPage + 1})"
-            title="Next">
-            <i class="fas fa-chevron-right"></i>
-          </button>
-          
-          <button class="pagination-btn" 
-            ${this.currentPage === this.totalPages ? 'disabled' : ''}
-            onclick="Pagination.goToPage(${this.totalPages})"
-            title="Last Page">
-            <i class="fas fa-angles-right"></i>
-          </button>
-        </div>
-      </div>
-    `;
+      <button class="page-btn page-next ${current === tp ? 'disabled' : ''}"
+        onclick="Pagination._goToPage(${current + 1})"
+        ${current === tp ? 'disabled' : ''}
+        title="Next page">
+        <i class="fas fa-chevron-right"></i>
+      </button>`;
 
+    html += '</nav>';
+
+    // Info line — always shown
+    html += `<div class="page-info">Page ${current} of ${tp} &nbsp;·&nbsp; ${config.totalItems} total</div>`;
+
+    html += '</div>';
     container.innerHTML = html;
-  },
-
-  getPageNumbers() {
-    const pages = [];
-    const current = this.currentPage;
-    const total = this.totalPages;
-
-    pages.push(1);
-
-    if (total <= 7) {
-      for (let i = 2; i <= total; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (current <= 3) {
-        for (let i = 2; i <= 4; i++) pages.push(i);
-        pages.push('...');
-        pages.push(total);
-      } else if (current >= total - 2) {
-        pages.push('...');
-        for (let i = total - 3; i <= total; i++) pages.push(i);
-      } else {
-        pages.push('...');
-        pages.push(current - 1);
-        pages.push(current);
-        pages.push(current + 1);
-        pages.push('...');
-        pages.push(total);
-      }
-    }
-
-    return pages;
-  },
-
-  goToPage(page) {
-    if (page < 1 || page > this.totalPages || page === this.currentPage) {
-      return;
-    }
-
-    this.currentPage = page;
-    this.render();
-
-    if (typeof this.onPageChange === 'function') {
-      this.onPageChange(page);
-    }
-  },
-
-  getOffset() {
-    return (this.currentPage - 1) * this.limit;
-  },
-
-  reset() {
-    this.currentPage = 1;
-    this.render();
   }
-};
 
-window.Pagination = Pagination;
+  function _goToPage(page) {
+    const totalPages = getTotalPages();
+    if (page < 1 || page > totalPages) return;
+    if (page === config.currentPage) return;
+
+    config.currentPage = page;
+    if (typeof config.onPageChange === 'function') {
+      config.onPageChange(page);
+    }
+  }
+
+  return { init, render, _goToPage };
+})();

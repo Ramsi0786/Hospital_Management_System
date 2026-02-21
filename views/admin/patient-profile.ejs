@@ -48,14 +48,22 @@
         <div class="profile-top">
           <div class="profile-main">
             <div class="profile-avatar-large">
-              <% 
-                const initials = patient.name
-                  ? patient.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
-                  : '--';
-              %>
-              <%= initials %>
-              <div class="status-indicator <%= badgeClass %>"></div>
-            </div>
+  <% if (patient.profileImage) { %>
+    <img 
+      src="<%= patient.profileImage %>" 
+      alt="<%= patient.name %>"
+      class="avatar-img"
+    >
+  <% } else { %>
+    <% 
+      const initials = patient.name
+        ? patient.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+        : '--';
+    %>
+    <div class="avatar-initials"><%= initials %></div>
+  <% } %>
+  <div class="status-indicator <%= badgeClass %>"></div>
+</div>
 
             <div class="profile-info">
               <div class="profile-name-row">

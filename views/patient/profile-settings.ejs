@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile Settings - Healora</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f5f7fa;
+    }
+
+    .main-content {
+      margin-left: 240px;
+      margin-top: 65px;
+      padding: 30px;
+      min-height: calc(100vh - 65px);
+    }
+
+    .profile-card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      margin-bottom: 20px;
+    }
+
+    .profile-card h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .profile-card h2 .title-with-icon {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .profile-card h2 i {
+      color: #203f6a;
+    }
+
+    /* Image Upload Section */
+    .image-upload-section {
+      display: flex;
+      gap: 30px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .current-avatar {
+      flex-shrink: 0;
+    }
+
+    .avatar-display {
+      width: 150px;
+      height: 150px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 4px solid #e2e8f0;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .avatar-display img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .avatar-display i {
+      font-size: 60px;
+      color: #cbd5e1;
+    }
+
+    .upload-controls {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .upload-controls h3 {
+      font-size: 16px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 12px;
+    }
+
+    .upload-controls p {
+      font-size: 14px;
+      color: #64748b;
+      margin-bottom: 16px;
+    }
+
+    .upload-buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-upload {
+      background: #203f6a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-upload:hover {
+      background: #1a3357;
+    }
+
+    .btn-delete-image {
+      background: #ef4444;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-delete-image:hover {
+      background: #dc2626;
+    }
+
+    .btn-edit-profile {
+      background: #203f6a;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.2s;
+    }
+
+    .btn-edit-profile:hover {
+      background: #1a3357;
+    }
+
+    #imageInput {
+      display: none;
+    }
+
+    /* View Mode - Read-only Display */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+    }
+
+    .info-row {
+      padding: 12px 0;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .info-value {
+      font-size: 15px;
+      color: #1e293b;
+      font-weight: 500;
+    }
+
+    .info-value.empty {
+      color: #94a3b8;
+      font-style: italic;
+    }
+
+    /* Edit Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 9998;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal-content-custom {
+      background: white;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin: 0;
+    }
+
+    .btn-close-modal {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: color 0.2s;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .btn-close-modal:hover {
+      color: #64748b;
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /* Image Crop Modal */
+    .image-crop-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      z-index: 9999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .image-crop-modal.show {
+      display: flex;
+    }
+
+    .crop-container-wrapper {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      max-width: 90vw;
+      max-height: 90vh;
+      overflow: auto;
+      width: 600px;
+    }
+
+    .crop-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .crop-modal-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .btn-close-crop {
+      background: none;
+      border: none;
+      font-size: 24px;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+
+    .btn-close-crop:hover {
+      color: #1e293b;
+    }
+
+    #imagePreview {
+      max-width: 100%;
+      max-height: 500px;
+      display: none;
+    }
+
+    .crop-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-crop-action {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-rotate {
+      background: #f1f5f9;
+      color: #374151;
+    }
+
+    .btn-rotate:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-do-crop {
+      background: #22c55e;
+      color: white;
+      font-weight: 500;
+    }
+
+    .btn-do-crop:hover {
+      background: #16a34a;
+    }
+
+    .btn-cancel-crop {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .btn-cancel-crop:hover {
+      background: #e2e8f0;
+    }
+
+    /* Form inside modal */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #1e293b;
+      outline: none;
+      transition: border-color 0.2s;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: #203f6a;
+    }
+
+    .form-group input:disabled {
+      background: #f8fafc;
+      cursor: not-allowed;
+    }
+
+    .btn-modal {
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-cancel {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .btn-cancel:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-submit {
+      background: #203f6a;
+      color: white;
+    }
+
+    .btn-submit:hover {
+      background: #1a3357;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .main-content {
+        margin-left: 0;
+        padding: 16px;
+      }
+      
+      .image-upload-section {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .form-grid,
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .crop-container-wrapper {
+        max-width: 95vw;
+        padding: 16px;
+        width: 100%;
+      }
+
+      .crop-controls {
+        flex-direction: column;
+      }
+
+      .btn-crop-action {
+        width: 100%;
+        justify-content: center;
+      }
+
+      .modal-content-custom {
+        width: 95%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('../partials/patient-sidebar', { user: patient }) %>
+  <%- include('../partials/loading') %>
+
+  <div class="main-content">
+    <!-- Profile Image -->
+    <div class="profile-card">
+      <h2><i class="fas fa-user-circle"></i> Profile Photo</h2>
+      
+      <div class="image-upload-section">
+        <div class="current-avatar">
+          <div class="avatar-display" id="avatarDisplay">
+            <% if (patient.profileImage) { %>
+              <img src="<%= patient.profileImage %>" alt="Profile">
+            <% } else { %>
+              <i class="fas fa-user"></i>
+            <% } %>
+          </div>
+        </div>
+
+        <div class="upload-controls">
+          <h3>Change Profile Photo</h3>
+          <p>JPG, PNG or WEBP. Max size 5MB. Recommended 400x400px.</p>
+          
+          <div class="upload-buttons">
+            <label for="imageInput" class="btn-upload">
+              <i class="fas fa-upload"></i>
+              Upload New Photo
+            </label>
+            <input type="file" id="imageInput" accept="image/*">
+            
+            <% if (patient.profileImage) { %>
+              <button class="btn-delete-image" onclick="deleteProfileImage()">
+                <i class="fas fa-trash"></i> Remove
+              </button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile Info (VIEW MODE) -->
+    <div class="profile-card">
+      <h2>
+        <div class="title-with-icon">
+          <i class="fas fa-user-edit"></i>
+          <span>Profile Information</span>
+        </div>
+        <button class="btn-edit-profile" onclick="showEditModal()">
+          <i class="fas fa-edit"></i> Edit Profile
+        </button>
+      </h2>
+      
+      <div class="info-grid">
+        <div class="info-row">
+          <div class="info-label">Full Name</div>
+          <div class="info-value"><%= patient.name %></div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Email</div>
+          <div class="info-value"><%= patient.email %></div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Phone</div>
+          <div class="info-value <%= !patient.phone ? 'empty' : '' %>">
+            <%= patient.phone || 'Not provided' %>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Date of Birth</div>
+          <div class="info-value <%= !patient.dateOfBirth ? 'empty' : '' %>">
+            <%= patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Not provided' %>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Age</div>
+          <div class="info-value <%= !patient.age ? 'empty' : '' %>">
+            <%= patient.age || 'Not provided' %>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Gender</div>
+          <div class="info-value <%= !patient.gender ? 'empty' : '' %>">
+            <%= patient.gender || 'Not provided' %>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Blood Group</div>
+          <div class="info-value <%= !patient.bloodGroup ? 'empty' : '' %>">
+            <%= patient.bloodGroup || 'Not provided' %>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Address</div>
+          <div class="info-value <%= !patient.address ? 'empty' : '' %>">
+            <%= patient.address || 'Not provided' %>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Emergency Contact Name</div>
+          <div class="info-value <%= !patient.emergencyContactName ? 'empty' : '' %>">
+            <%= patient.emergencyContactName || 'Not provided' %>
+          </div>
+        </div>
+
+        <div class="info-row">
+          <div class="info-label">Emergency Contact Phone</div>
+          <div class="info-value <%= !patient.emergencyContactPhone ? 'empty' : '' %>">
+            <%= patient.emergencyContactPhone || 'Not provided' %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Profile Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal-content-custom">
+      <div class="modal-header">
+        <h3>Edit Profile Information</h3>
+        <button class="btn-close-modal" onclick="closeEditModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+     
+<form id="profileForm" novalidate>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Full Name *</label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name"
+          value="<%= patient.name %>" 
+          required
+          minlength="3"
+          maxlength="100"
+          pattern="[a-zA-Z\s]+"
+          title="Name can only contain letters and spaces"
+        >
+        <span class="error-message" id="errorName"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Email</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email"
+          value="<%= patient.email %>" 
+          disabled
+        >
+      </div>
+
+      <div class="form-group">
+        <label>Phone</label>
+        <input 
+          type="tel" 
+          id="phone" 
+          name="phone"
+          value="<%= patient.phone || '' %>" 
+          placeholder="10-digit phone"
+          pattern="[0-9]{10}"
+          maxlength="10"
+          title="Phone must be exactly 10 digits"
+        >
+        <span class="error-message" id="errorPhone"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Date of Birth</label>
+        <input 
+          type="date" 
+          id="dateOfBirth" 
+          name="dateOfBirth"
+          value="<%= patient.dateOfBirth ? new Date(patient.dateOfBirth).toISOString().split('T')[0] : '' %>"
+          max="<%= new Date().toISOString().split('T')[0] %>"
+        >
+        <span class="error-message" id="errorDateOfBirth"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Gender</label>
+        <select id="gender" name="gender">
+          <option value="">Select Gender</option>
+          <option value="Male" <%= patient.gender === 'Male' ? 'selected' : '' %>>Male</option>
+          <option value="Female" <%= patient.gender === 'Female' ? 'selected' : '' %>>Female</option>
+          <option value="Other" <%= patient.gender === 'Other' ? 'selected' : '' %>>Other</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Blood Group</label>
+        <select id="bloodGroup" name="bloodGroup">
+          <option value="">Select Blood Group</option>
+          <option value="A+" <%= patient.bloodGroup === 'A+' ? 'selected' : '' %>>A+</option>
+          <option value="A-" <%= patient.bloodGroup === 'A-' ? 'selected' : '' %>>A-</option>
+          <option value="B+" <%= patient.bloodGroup === 'B+' ? 'selected' : '' %>>B+</option>
+          <option value="B-" <%= patient.bloodGroup === 'B-' ? 'selected' : '' %>>B-</option>
+          <option value="O+" <%= patient.bloodGroup === 'O+' ? 'selected' : '' %>>O+</option>
+          <option value="O-" <%= patient.bloodGroup === 'O-' ? 'selected' : '' %>>O-</option>
+          <option value="AB+" <%= patient.bloodGroup === 'AB+' ? 'selected' : '' %>>AB+</option>
+          <option value="AB-" <%= patient.bloodGroup === 'AB-' ? 'selected' : '' %>>AB-</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Address</label>
+      <textarea 
+        id="address" 
+        name="address"
+        placeholder="Enter your complete address"
+        maxlength="500"
+        rows="3"
+      ><%= patient.address || '' %></textarea>
+      <span class="error-message" id="errorAddress"></span>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Emergency Contact Name</label>
+        <input 
+          type="text" 
+          id="emergencyContactName" 
+          name="emergencyContactName"
+          value="<%= patient.emergencyContactName || '' %>" 
+          placeholder="Contact person name"
+          minlength="3"
+          maxlength="100"
+          pattern="[a-zA-Z\s]+"
+        >
+        <span class="error-message" id="errorEmergencyContactName"></span>
+      </div>
+
+      <div class="form-group">
+        <label>Emergency Contact Phone</label>
+        <input 
+          type="tel" 
+          id="emergencyContactPhone" 
+          name="emergencyContactPhone"
+          value="<%= patient.emergencyContactPhone || '' %>" 
+          placeholder="10-digit phone"
+          pattern="[0-9]{10}"
+          maxlength="10"
+        >
+        <span class="error-message" id="errorEmergencyContactPhone"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer">
+    <button type="button" class="btn-modal btn-cancel" onclick="closeEditModal()">
+      Cancel
+    </button>
+    <button type="submit" class="btn-modal btn-submit">
+      <i class="fas fa-save"></i> Save Changes
+    </button>
+  </div>
+</form>
+    </div>
+  </div>
+
+  <!-- Image Crop Modal -->
+  <div class="image-crop-modal" id="cropperModal">
+    <div class="crop-container-wrapper">
+      <div class="crop-modal-header">
+        <h3>Crop Your Photo</h3>
+        <button class="btn-close-crop" onclick="closeCropperModal()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      
+      <img id="imagePreview" alt="Preview">
+      
+      <div class="crop-controls">
+        <button class="btn-crop-action btn-rotate" onclick="cropper.rotate(-90)">
+          <i class="fas fa-undo"></i> Rotate Left
+        </button>
+        <button class="btn-crop-action btn-rotate" onclick="cropper.rotate(90)">
+          <i class="fas fa-redo"></i> Rotate Right
+        </button>
+        <button class="btn-crop-action btn-rotate" onclick="cropper.zoom(0.1)">
+          <i class="fas fa-search-plus"></i> Zoom In
+        </button>
+        <button class="btn-crop-action btn-rotate" onclick="cropper.zoom(-0.1)">
+          <i class="fas fa-search-minus"></i> Zoom Out
+        </button>
+        <button class="btn-crop-action btn-do-crop" onclick="uploadCroppedImage()">
+          <i class="fas fa-check"></i> Crop & Upload
+        </button>
+        <button class="btn-crop-action btn-cancel-crop" onclick="closeCropperModal()">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
+  <script src="/js/alerts.js"></script>
+  <script src="/js/loader.js"></script>
+  <script src="/js/image-cropper.js"></script>
+
+ 
+<script src="/js/formValidation.js"></script>
+
+<script>
+  let cropper;
+
+  cropper = new ImageCropper({
+    inputId: 'imageInput',
+    previewId: 'imagePreview',
+    aspectRatio: 1,
+    minWidth: 200,
+    minHeight: 200
+  });
+
+  function showEditModal() {
+    document.getElementById('editModal').classList.add('show');
+  }
+
+  function closeEditModal() {
+    document.getElementById('editModal').classList.remove('show');
+    FormValidator.clearAllErrors('error');
+  }
+
+  document.getElementById('editModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+      closeEditModal();
+    }
+  });
+
+  document.getElementById('imageInput').addEventListener('change', () => {
+    setTimeout(() => {
+      document.getElementById('cropperModal').classList.add('show');
+    }, 100);
+  });
+
+  function closeCropperModal() {
+    document.getElementById('cropperModal').classList.remove('show');
+    cropper.reset();
+  }
+
+  async function uploadCroppedImage() {
+    cropper.getCroppedImage(async (croppedBase64) => {
+      Loader.show('Uploading image...');
+      closeCropperModal();
+
+      try {
+        const response = await fetch('/patient/upload-profile-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ croppedImage: croppedBase64 })
+        });
+
+        const data = await response.json();
+        Loader.hide();
+
+        if (data.success) {
+          Alert.success(data.message);
+          document.getElementById('avatarDisplay').innerHTML = 
+            `<img src="${data.imageUrl}" alt="Profile">`;
+          cropper.reset();
+        } else {
+          Alert.error(data.error || 'Upload failed');
+        }
+      } catch (error) {
+        Loader.hide();
+        Alert.error('Network error. Please try again.');
+      }
+    });
+  }
+
+  async function deleteProfileImage() {
+    const result = await Swal.fire({
+      title: 'Delete profile photo?',
+      text: 'This cannot be undone.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, Delete'
+    });
+
+    if (!result.isConfirmed) return;
+
+    Loader.show('Deleting...');
+
+    try {
+      const response = await fetch('/patient/delete-profile-image', {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+      Loader.hide();
+
+      if (data.success) {
+        Alert.success(data.message);
+        document.getElementById('avatarDisplay').innerHTML = 
+          '<i class="fas fa-user"></i>';
+        window.location.reload();
+      } else {
+        Alert.error(data.error || 'Delete failed');
+      }
+    } catch (error) {
+      Loader.hide();
+      Alert.error('Network error');
+    }
+  }
+
+  
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    FormValidator.clearAllErrors('error');
+
+    const formData = new FormData(e.target);
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = typeof value === 'string' ? value.trim() : value;
+    });
+
+    let hasError = false;
+
+    const nameError = FormValidator.validateName(data.name, 3);
+    if (nameError) {
+      FormValidator.showError('errorName', nameError);
+      hasError = true;
+    }
+
+    if (data.phone) {
+      const phoneError = FormValidator.validatePhone(data.phone);
+      if (phoneError) {
+        FormValidator.showError('errorPhone', phoneError);
+        hasError = true;
+      }
+    }
+
+    if (data.dateOfBirth) {
+      const dob = new Date(data.dateOfBirth);
+      const today = new Date();
+      const age = today.getFullYear() - dob.getFullYear();
+      
+      if (dob > today) {
+        FormValidator.showError('errorDateOfBirth', 'Date cannot be in the future');
+        hasError = true;
+      } else if (age > 150) {
+        FormValidator.showError('errorDateOfBirth', 'Please enter a valid date');
+        hasError = true;
+      }
+    }
+
+    if (data.emergencyContactName) {
+      const nameError = FormValidator.validateName(data.emergencyContactName, 3);
+      if (nameError) {
+        FormValidator.showError('errorEmergencyContactName', nameError);
+        hasError = true;
+      }
+    }
+
+    if (data.emergencyContactPhone) {
+      const phoneError = FormValidator.validatePhone(data.emergencyContactPhone);
+      if (phoneError) {
+        FormValidator.showError('errorEmergencyContactPhone', phoneError);
+        hasError = true;
+      }
+    }
+
+    if ((data.emergencyContactName && !data.emergencyContactPhone) || 
+        (!data.emergencyContactName && data.emergencyContactPhone)) {
+      if (!data.emergencyContactPhone) {
+        FormValidator.showError('errorEmergencyContactPhone', 'Emergency contact phone is required when name is provided');
+      }
+      if (!data.emergencyContactName) {
+        FormValidator.showError('errorEmergencyContactName', 'Emergency contact name is required when phone is provided');
+      }
+      hasError = true;
+    }
+
+    if (hasError) {
+      Alert.error('Please fix the errors in the form');
+      return;
+    }
+
+    const payload = {
+      name: data.name,
+      phone: data.phone || null,
+      dateOfBirth: data.dateOfBirth || null,
+      gender: data.gender || null,
+      bloodGroup: data.bloodGroup || null,
+      address: data.address || null,
+      emergencyContactName: data.emergencyContactName || null,
+      emergencyContactPhone: data.emergencyContactPhone || null
+    };
+
+    Loader.show('Saving...');
+
+    try {
+      const response = await fetch('/patient/update-profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      Loader.hide();
+
+      if (result.success) {
+        Alert.success(result.message);
+        closeEditModal();
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        if (result.errors) {
+          Object.keys(result.errors).forEach(field => {
+            const errorId = `error${field.charAt(0).toUpperCase() + field.slice(1)}`;
+            FormValidator.showError(errorId, result.errors[field]);
+          });
+        } else {
+          Alert.error(result.error || 'Update failed');
+        }
+      }
+    } catch (error) {
+      Loader.hide();
+      Alert.error('Network error. Please try again.');
+    }
+  });
+</script>
+</body>
+</html>

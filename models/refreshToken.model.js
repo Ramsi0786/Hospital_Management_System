@@ -16,6 +16,16 @@ const refreshTokenSchema = new mongoose.Schema({
     required: true,
     enum: ['Patient', 'Doctor', 'Admin']
   },
+  family: {
+    type: String,
+    required: true,
+    index: true
+  },
+  isUsed: {
+    type: Boolean,
+    default: false
+  },
+  
   expiresAt: {
     type: Date,
     required: true
@@ -23,7 +33,7 @@ const refreshTokenSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 604800 
+    expires: 604800   
   }
 });
 

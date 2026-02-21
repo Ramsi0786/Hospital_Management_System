@@ -4,6 +4,7 @@ import passport from "../config/passport.js";
 import Patient from "../models/patient.model.js";
 import { generateAccessToken, generateRefreshToken } from "../config/jwt.js";
 import RefreshToken from "../models/refreshToken.model.js";
+import crypto from 'crypto';
 
 router.get("/google", (req, res, next) => {
   passport.authenticate("google", { 
@@ -31,7 +32,6 @@ router.get(
       }
 
       if (!req.user.password) {
-        const crypto = await import('crypto');
         const bcrypt = await import('bcryptjs');
         const autoPassword = crypto.randomBytes(16).toString('hex');
         req.user.password = await bcrypt.hash(autoPassword, 10);
@@ -64,6 +64,7 @@ router.get(
         token: refreshToken,
         userId: req.user._id,
         userModel: 'Patient',
+        family: crypto.randomUUID(), 
         expiresAt
       });
 
