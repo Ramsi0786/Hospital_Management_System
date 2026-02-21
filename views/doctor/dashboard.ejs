@@ -8,68 +8,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  
   <link rel="stylesheet" href="/css/doctor/dashboard.css">
 </head>
 <body>
 
-  <div class="sidebar">
-    <div class="logo">
-      <span>Healora</span>
-    </div>
-
-    <ul class="nav-menu">
-      <li class="nav-item">
-        <a href="/doctor/dashboard" class="nav-link active">
-          <i class="fas fa-home"></i>
-          <span>Dashboard</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="/doctor/profile" class="nav-link">
-          <i class="fas fa-user"></i>
-          <span>Profile</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="/doctor/appointments" class="nav-link">
-          <i class="fas fa-calendar-check"></i>
-          <span>Appointments</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="/doctor/consultation" class="nav-link">
-          <i class="fas fa-stethoscope"></i>
-          <span>Consultation History</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="/doctor/transactions" class="nav-link">
-          <i class="fas fa-file-invoice-dollar"></i>
-          <span>Transaction History</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="/doctor/settings" class="nav-link">
-          <i class="fas fa-cog"></i>
-          <span>Settings</span>
-        </a>
-      </li>
-      <li class="nav-item">
-        <a href="#" class="nav-link" onclick="showLogoutModal(); return false;">
-          <i class="fas fa-sign-out-alt"></i>
-          <span>Logout</span>
-        </a>
-      </li>
-    </ul>
-  </div>
-
+  <%- include('../partials/doctor-sidebar') %>
+  
   <div class="main-content">
 
     <div class="top-bar">
       <h1 class="page-title"><%= user.name %>'s Dashboard</h1>
       <div class="user-profile">
-        <div class="user-avatar"><%= user.name.charAt(0).toUpperCase() %></div>
+        <div class="user-avatar">
+  <% if (user.profileImage) { %>
+    <img src="<%= user.profileImage %>" alt="<%= user.name %>" 
+         style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+  <% } else { %>
+    <%= user.name.charAt(0).toUpperCase() %>
+  <% } %>
+</div>
         <div class="user-info">
           <span>Hello <%= user.name.split(' ')[0] %></span>
         </div>
@@ -80,9 +37,13 @@
 
       <div class="profile-card">
         <div class="doctor-profile">
-          <div class="doctor-avatar">
-            <%= user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
-          </div>
+          <div class="doctor-avatar <%= user.profileImage ? 'has-image' : 'has-initials' %>">
+  <% if (user.profileImage) { %>
+    <img src="<%= user.profileImage %>" alt="<%= user.name %>" class="doctor-avatar-img">
+  <% } else { %>
+    <%= user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+  <% } %>
+</div>
           <div class="doctor-info">
             <h2>Dr. <%= user.name %></h2>
             <div class="doctor-meta">

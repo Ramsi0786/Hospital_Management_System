@@ -3,6 +3,9 @@ import Doctor from "../models/doctor.model.js";
 import Appointment from "../models/appointment.model.js";
 import bcrypt from "bcryptjs";
 import { sendDoctorWelcomeEmail } from "../utils/sendEmail.js";
+import { HTTP_STATUS, PAGINATION, sanitizePagination } from "../constants/index.js";
+import logger from "../utils/logger.js";
+import cloudinary from "../config/cloudinary.js";
 
 /* ==================== GET DASHBOARD ==================== */
 
@@ -66,8 +69,7 @@ export const getDashboard = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Dashboard error:", error);
-
+    logger.error("Dashboard error", "Admin", error);
     res.render("admin/dashboard", {
       admin: req.admin || req.user,
       title: "Dashboard - Healora",
@@ -87,7 +89,7 @@ export const addPatient = async (req, res) => {
 
     const existingPatient = await Patient.findOne({ email });
     if (existingPatient) {
-      return res.status(400).json({ 
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
         success: false,
         error: "Patient email already exists" 
       });
@@ -108,14 +110,16 @@ export const addPatient = async (req, res) => {
 
     await newPatient.save();
 
-    res.status(201).json({ 
+    logger.info(`New patient added: ${email}`, "Admin");
+
+    res.status(HTTP_STATUS.CREATED).json({ 
       success: true,
       message: "Patient added successfully",
       patient: newPatient
     });
   } catch (err) {
-    console.error("Add Patient Error:", err);
-    res.status(500).json({ 
+    logger.error("Add Patient Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
       success: false,
       error: "Error adding Patient" 
     });
@@ -127,13 +131,16 @@ export const getAllPatients = async (req, res) => {
   try {
     const {
       search = "",
-      page = 1,
-      limit = 10,
-      status = "all", 
+      page,
+      limit,
+      status = "all",
+      gender = ""
     } = req.query;
 
-    const pageNum = Number(page);
-    const limitNum = Number(limit);
+    const { page: pageNum, limit: limitNum, skip } = sanitizePagination(
+      page,
+      limit || PAGINATION.PATIENTS_PER_PAGE
+    );
 
     let query = {};
 
@@ -148,15 +155,15 @@ export const getAllPatients = async (req, res) => {
     if (status === "active") {
       query.isActive = true;
       query.isBlocked = false;
-    }
-
-    if (status === "blocked") {
+    } else if (status === "blocked") {
       query.isBlocked = true;
-    }
-
-    if (status === "inactive") {
+    } else if (status === "inactive") {
       query.isActive = false;
       query.isBlocked = false;
+    }
+
+    if (gender && gender !== "") {
+      query.gender = gender;
     }
 
     const total = await Patient.countDocuments(query);
@@ -165,9 +172,9 @@ export const getAllPatients = async (req, res) => {
       .select("-password -googleId")
       .sort({ createdAt: -1 })
       .limit(limitNum)
-      .skip((pageNum - 1) * limitNum);
+      .skip(skip);
 
-    res.status(200).json({
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       patients,
       pagination: {
@@ -178,8 +185,8 @@ export const getAllPatients = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("Get Patients Error:", err);
-    res.status(500).json({
+    logger.error("Get Patients Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Error fetching patients",
     });
@@ -192,7 +199,7 @@ export const getPatientById = async (req, res) => {
     const patient = await Patient.findById(req.params.id).select("-password");
     
     if (!patient) {
-      return res.status(404).send("Patient not found");
+      return res.status(HTTP_STATUS.NOT_FOUND).send("Patient not found");
     }
 
     const appointments = await Appointment.find({ 
@@ -219,8 +226,8 @@ export const getPatientById = async (req, res) => {
       title: "Patient Profile - Healora"
     });
   } catch (err) {
-    console.error("Get Patient Error:", err);
-    res.status(500).send("Error loading patient profile");
+    logger.error("Get Patient Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Error loading patient profile");
   }
 };
 
@@ -240,20 +247,22 @@ export const blockPatient = async (req, res) => {
     ).select("-password");
 
     if (!patient) {
-      return res.status(404).json({
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         error: "Patient not found",
       });
     }
 
-    res.status(200).json({
+    logger.info(`Patient ${block ? 'blocked' : 'unblocked'}: ${id}`, "Admin");
+
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       message: `Patient ${block ? 'blocked' : 'unblocked'} successfully`,
       patient,
     });
   } catch (err) {
-    console.error("Block Patient Error:", err);
-    res.status(500).json({
+    logger.error("Block Patient Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Error updating patient status",
     });
@@ -277,20 +286,22 @@ export const unblockPatient = async (req, res) => {
     ).select("-password");
 
     if (!patient) {
-      return res.status(404).json({
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         error: "Patient not found",
       });
     }
 
-    res.status(200).json({
+    logger.info(`Patient unblocked: ${id}`, "Admin");
+
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       message: "Patient unblocked successfully",
       patient,
     });
   } catch (err) {
-    console.error("Unblock Patient Error:", err);
-    res.status(500).json({
+    logger.error("Unblock Patient Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Error unblocking patient",
     });
@@ -305,7 +316,7 @@ export const deletePatient = async (req, res) => {
     const patient = await Patient.findById(id);
 
     if (!patient) {
-      return res.status(404).json({
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         error: "Patient not found",
       });
@@ -313,16 +324,17 @@ export const deletePatient = async (req, res) => {
 
     patient.isActive = false;
     patient.isBlocked = false;
-
     await patient.save();
 
-    res.status(200).json({
+    logger.info(`Patient soft deleted: ${id}`, "Admin");
+
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       message: "Patient marked as inactive successfully",
     });
   } catch (err) {
-    console.error("Delete Patient Error:", err);
-    res.status(500).json({
+    logger.error("Delete Patient Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Error deleting patient",
     });
@@ -353,20 +365,22 @@ export const updatePatient = async (req, res) => {
     }).select("-password");
 
     if (!patient) {
-      return res.status(404).json({
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         error: "Patient not found",
       });
     }
 
-    res.status(200).json({
+    logger.info(`Patient updated: ${id}`, "Admin");
+
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       message: "Patient updated successfully",
       patient,
     });
   } catch (err) {
-    console.error("Update Patient Error:", err);
-    res.status(500).json({
+    logger.error("Update Patient Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Error updating patient",
     });
@@ -389,20 +403,22 @@ export const reactivatePatient = async (req, res) => {
     ).select("-password");
 
     if (!patient) {
-      return res.status(404).json({
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         error: "Patient not found",
       });
     }
 
-    res.status(200).json({
+    logger.info(`Patient reactivated: ${id}`, "Admin");
+
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       message: "Patient reactivated successfully",
       patient,
     });
   } catch (err) {
-    console.error("Reactivate Patient Error:", err);
-    res.status(500).json({
+    logger.error("Reactivate Patient Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Error reactivating patient",
     });
@@ -410,14 +426,21 @@ export const reactivatePatient = async (req, res) => {
 };
 
 /* ==================== ADD DOCTOR ==================== */
-
 export const addDoctor = async (req, res) => {
   try {
-    const { name, email, phone, password, specialization, department } = req.body;
+    const { 
+      name, 
+      email, 
+      phone, 
+      password, 
+      specialization, 
+      department,
+      profileImage 
+    } = req.body;
 
     const existingDoctor = await Doctor.findOne({ email });
     if (existingDoctor) {
-      return res.status(400).json({ 
+      return res.status(HTTP_STATUS.BAD_REQUEST).json({ 
         success: false,
         error: "Doctor email already exists" 
       });
@@ -426,6 +449,24 @@ export const addDoctor = async (req, res) => {
     const plainPassword = password;
     const hashedPassword = await bcrypt.hash(password, 10);
 
+   let finalImageUrl = profileImage || ''; 
+
+    if (profileImage && profileImage.startsWith('data:image')) {
+      try {
+        const uploadResult = await cloudinary.uploader.upload(profileImage, {
+          folder: 'healora/doctors',
+          transformation: [
+            { width: 400, height: 400, crop: 'fill', gravity: 'face' }
+          ]
+        });
+        finalImageUrl = uploadResult.secure_url;
+        logger.info(`Profile image uploaded to Cloudinary: ${finalImageUrl}`, "Admin");
+      } catch (uploadError) {
+        logger.error("Cloudinary upload error", "Admin", uploadError);
+        finalImageUrl = profileImage; 
+      }
+    }
+
     const newDoctor = new Doctor({
       name,
       email,
@@ -433,6 +474,7 @@ export const addDoctor = async (req, res) => {
       specialization,
       department,
       password: hashedPassword,
+      profileImage: finalImageUrl 
     });
 
     await newDoctor.save();
@@ -440,16 +482,24 @@ export const addDoctor = async (req, res) => {
     try {
       await sendDoctorWelcomeEmail(email, name, plainPassword);
     } catch (emailError) {
-      console.error('Failed to send welcome email:', emailError);
+      logger.warn("Failed to send welcome email", "Email", emailError);
     }
 
-    res.status(201).json({ 
+    logger.info(`New doctor added: ${email} with profile image`, "Admin");
+
+    res.status(HTTP_STATUS.CREATED).json({ 
       success: true,
-      message: "Doctor added successfully and welcome email sent!" 
+      message: "Doctor added successfully and welcome email sent!",
+      doctor: {
+        _id: newDoctor._id,
+        name: newDoctor.name,
+        email: newDoctor.email,
+        profileImage: newDoctor.profileImage
+      }
     });
   } catch (err) {
-    console.error("Add Doctor Error:", err);
-    res.status(500).json({ 
+    logger.error("Add Doctor Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({ 
       success: false,
       error: "Error adding Doctor" 
     });
@@ -459,10 +509,40 @@ export const addDoctor = async (req, res) => {
 /* ==================== GET ALL DOCTORS ==================== */
 export const getAllDoctors = async (req, res) => {
   try {
-    const { sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
-    
+    const {
+      search = "",
+      page,
+      limit,
+      status = "",
+      department = "",
+      sortBy = "createdAt",
+      sortOrder = "desc"
+    } = req.query;
+
+    const { page: pageNum, limit: limitNum, skip } = sanitizePagination(
+      page,
+      limit || PAGINATION.DOCTORS_PER_PAGE
+    );
+
+    let query = {};
+
+    if (search.trim()) {
+      query.$or = [
+        { name: { $regex: search.trim(), $options: "i" } },
+        { email: { $regex: search.trim(), $options: "i" } },
+        { specialization: { $regex: search.trim(), $options: "i" } },
+      ];
+    }
+
+    if (status && status !== "") {
+      query.status = status;
+    }
+
+    if (department && department !== "") {
+      query.department = department;
+    }
+
     let sortOptions = {};
-    
     switch(sortBy) {
       case 'name':
         sortOptions = { name: sortOrder === 'asc' ? 1 : -1 };
@@ -476,15 +556,31 @@ export const getAllDoctors = async (req, res) => {
       default:
         sortOptions = { createdAt: -1 };
     }
-    
-    const doctors = await Doctor.find()
+
+    const total = await Doctor.countDocuments(query);
+
+    const doctors = await Doctor.find(query)
       .select("-password")
-      .sort(sortOptions);
-      
-    res.json({ doctors });
+      .sort(sortOptions)
+      .limit(limitNum)
+      .skip(skip);
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      doctors,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
   } catch (err) {
-    console.error("Get Doctors Error:", err);
-    res.status(500).json({ error: "Error fetching doctors" });
+    logger.error("Get Doctors Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: "Error fetching doctors"
+    });
   }
 };
 
@@ -494,7 +590,7 @@ export const getDoctorById = async (req, res) => {
     const doctor = await Doctor.findById(req.params.id).select("-password");
     
     if (!doctor) {
-      return res.status(404).send("Doctor not found");
+      return res.status(HTTP_STATUS.NOT_FOUND).send("Doctor not found");
     }
 
     const appointments = await Appointment.find({ 
@@ -521,8 +617,8 @@ export const getDoctorById = async (req, res) => {
       title: "Doctor Profile - Healora"
     });
   } catch (err) {
-    console.error("Get Doctor Error:", err);
-    res.status(500).send("Error loading doctor profile");
+    logger.error("Get Doctor Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).send("Error loading doctor profile");
   }
 };
 
@@ -541,20 +637,22 @@ export const blockDoctor = async (req, res) => {
     ).select("-password");
 
     if (!doctor) {
-      return res.status(404).json({
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
         success: false,
         error: "Doctor not found",
       });
     }
 
-    res.status(200).json({
+    logger.info(`Doctor ${block ? 'blocked' : 'unblocked'}: ${id}`, "Admin");
+
+    res.status(HTTP_STATUS.OK).json({
       success: true,
       message: `Doctor ${block ? 'blocked' : 'unblocked'} successfully`,
       doctor,
     });
   } catch (err) {
-    console.error("Block Doctor Error:", err);
-    res.status(500).json({
+    logger.error("Block Doctor Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
       success: false,
       error: "Error updating doctor status",
     });
@@ -564,11 +662,29 @@ export const blockDoctor = async (req, res) => {
 /* ==================== DELETE DOCTOR ==================== */
 export const deleteDoctor = async (req, res) => {
   try {
+    const doctor = await Doctor.findById(req.params.id);
+
+    if (!doctor) {
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        error: "Doctor not found"
+      });
+    }
+
     await Doctor.findByIdAndDelete(req.params.id);
-    res.json({ message: "Doctor deleted" });
+
+    logger.info(`Doctor deleted: ${req.params.id}`, "Admin");
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
+      message: "Doctor deleted successfully"
+    });
   } catch (err) {
-    console.error("Delete Doctor Error:", err);
-    res.status(500).json({ error: "Error deleting Doctor" });
+    logger.error("Delete Doctor Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: "Error deleting Doctor"
+    });
   }
 };
 
@@ -576,8 +692,15 @@ export const deleteDoctor = async (req, res) => {
 export const updateDoctor = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, phone, password, specialization, department } =
-      req.body;
+    const { 
+      name, 
+      email, 
+      phone, 
+      password, 
+      specialization, 
+      department,
+      profileImage 
+    } = req.body;
 
     const updateData = {
       name,
@@ -588,26 +711,52 @@ export const updateDoctor = async (req, res) => {
     };
 
     if (password && password.trim()) {
-      const hashedPassword = await bcrypt.hash(password.trim(), 10);
-      updateData.password = hashedPassword;
+      updateData.password = await bcrypt.hash(password.trim(), 10);
+    }
+
+    if (profileImage) {
+      if (profileImage.startsWith('data:image')) {
+        try {
+          const uploadResult = await cloudinary.uploader.upload(profileImage, {
+            folder: 'healora/doctors',
+            transformation: [
+              { width: 400, height: 400, crop: 'fill', gravity: 'face' }
+            ]
+          });
+          updateData.profileImage = uploadResult.secure_url;
+          logger.info(`Profile image updated in Cloudinary: ${uploadResult.secure_url}`, "Admin");
+        } catch (uploadError) {
+          logger.error("Cloudinary upload error during update", "Admin", uploadError);
+        }
+      } else {
+        updateData.profileImage = profileImage;
+      }
     }
 
     const updatedDoctor = await Doctor.findByIdAndUpdate(id, updateData, {
       new: true,
       runValidators: true,
-    });
+    }).select("-password");
 
     if (!updatedDoctor) {
-      return res.status(404).json({ error: "Doctor not found" });
+      return res.status(HTTP_STATUS.NOT_FOUND).json({
+        success: false,
+        error: "Doctor not found"
+      });
     }
 
-    res.status(200).json({
+    logger.info(`Doctor updated: ${id}`, "Admin");
+
+    res.status(HTTP_STATUS.OK).json({
+      success: true,
       message: "Doctor updated successfully",
       doctor: updatedDoctor,
     });
   } catch (err) {
-    console.error("Update Doctor Error:", err);
-    res.status(500).json({ error: "Error updating doctor" });
+    logger.error("Update Doctor Error", "Admin", err);
+    res.status(HTTP_STATUS.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      error: "Error updating doctor"
+    });
   }
 };
-

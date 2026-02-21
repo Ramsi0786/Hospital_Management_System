@@ -200,6 +200,14 @@ body {
   font-weight: 600;
 }
 
+.patient-avatar-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #e2e8f0;
+}
+
 .patient-info {
   display: flex;
   flex-direction: column;

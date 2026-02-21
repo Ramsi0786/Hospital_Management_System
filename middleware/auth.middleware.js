@@ -1,8 +1,8 @@
-import { verifyAccessToken, verifyRefreshToken, generateAccessToken } from '../config/jwt.js';
+import { verifyAccessToken, verifyRefreshToken, generateAccessToken, generateRefreshToken } from '../config/jwt.js';
 import RefreshToken from '../models/refreshToken.model.js';
 import Patient from '../models/patient.model.js';
 import Doctor from '../models/doctor.model.js';
-import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 
 const setNoCacheHeaders = (res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -18,11 +18,7 @@ const protect = async (req, res, next) => {
     
     const accessToken = req.cookies.accessToken;
     const refreshToken = req.cookies.refreshToken;
-    
-    if (req.user && req.user._id) {
-      return next();
-    }
-    
+
     let decoded = verifyAccessToken(accessToken);
     
     if (!decoded && refreshToken) {
@@ -44,16 +40,46 @@ const protect = async (req, res, next) => {
         res.clearCookie('refreshToken');
         return res.redirect('/patient/login');
       }
-      
+
+      if (storedToken.isUsed) {
+        await RefreshToken.deleteMany({ family: storedToken.family });
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        return res.redirect('/patient/login');
+      }
+
+      storedToken.isUsed = true;
+      await storedToken.save();
+
       const newAccessToken = generateAccessToken({
         id: refreshDecoded.id,
         role: refreshDecoded.role
       });
-      
+
+      const newRefreshToken = generateRefreshToken({
+        id: refreshDecoded.id,
+        role: refreshDecoded.role
+      });
+
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      await RefreshToken.create({
+        token: newRefreshToken,
+        userId: refreshDecoded.id,
+        userModel: 'Patient',
+        family: storedToken.family, 
+        expiresAt
+      });
+
       res.cookie('accessToken', newAccessToken, {
         httpOnly: true,
         sameSite: 'strict',
         maxAge: 15 * 60 * 1000
+      });
+
+      res.cookie('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
       });
       
       decoded = refreshDecoded;
@@ -107,16 +133,88 @@ const protectDoctor = async (req, res, next) => {
   try {
     setNoCacheHeaders(res);
     
-    const token = req.cookies.token;
-    
-    if (!token) {
+    const accessToken = req.cookies.accessToken;
+    const refreshToken = req.cookies.refreshToken;
+
+    if (!accessToken && !refreshToken) {
       return res.redirect('/doctor/login');
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    let decoded = verifyAccessToken(accessToken);
+
+    if (!decoded && refreshToken) {
+      const refreshDecoded = verifyRefreshToken(refreshToken);
+
+      if (!refreshDecoded) {
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        return res.redirect('/doctor/login');
+      }
+
+      const storedToken = await RefreshToken.findOne({
+        token: refreshToken,
+        userId: refreshDecoded.id
+      });
+
+      if (!storedToken) {
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        return res.redirect('/doctor/login');
+      }
+
+      if (storedToken.isUsed) {
+        await RefreshToken.deleteMany({ family: storedToken.family });
+        res.clearCookie('accessToken');
+        res.clearCookie('refreshToken');
+        return res.redirect('/doctor/login');
+      }
+
+      storedToken.isUsed = true;
+      await storedToken.save();
+
+      const newAccessToken = generateAccessToken({
+        id: refreshDecoded.id,
+        role: refreshDecoded.role
+      });
+
+      const newRefreshToken = generateRefreshToken({
+        id: refreshDecoded.id,
+        role: refreshDecoded.role
+      });
+
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      await RefreshToken.create({
+        token: newRefreshToken,
+        userId: refreshDecoded.id,
+        userModel: 'Doctor',
+        family: storedToken.family, 
+        expiresAt
+      });
+
+      res.cookie('accessToken', newAccessToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 15 * 60 * 1000
+      });
+
+      res.cookie('refreshToken', newRefreshToken, {
+        httpOnly: true,
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+
+      decoded = refreshDecoded;
+    }
+
+    if (!decoded) {
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
+      return res.redirect('/doctor/login');
+    }
 
     if (!decoded.role || decoded.role !== 'doctor') {
-      res.clearCookie('token');
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       return res.status(403).render('error', {
         title: 'Access Denied',
         message: 'You do not have permission to access this page.',
@@ -126,14 +224,16 @@ const protectDoctor = async (req, res, next) => {
     }
 
     const doctor = await Doctor.findById(decoded.id).select('-password');
-    
+
     if (!doctor) {
-      res.clearCookie('token');
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       return res.redirect('/doctor/login');
     }
 
     if (doctor.status === 'blocked') {
-      res.clearCookie('token');
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       return res.status(403).render('error', {
         title: 'Account Blocked',
         message: 'Your account has been blocked. Please contact the administrator.'
@@ -141,7 +241,8 @@ const protectDoctor = async (req, res, next) => {
     }
 
     if (doctor.status === 'inactive') {
-      res.clearCookie('token');
+      res.clearCookie('accessToken');
+      res.clearCookie('refreshToken');
       return res.status(403).render('error', {
         title: 'Account Inactive',
         message: 'Your account is inactive. Please contact the administrator.'
@@ -149,10 +250,13 @@ const protectDoctor = async (req, res, next) => {
     }
 
     req.user = doctor;
+    res.locals.user = doctor;
     req.user.role = 'doctor';
     next();
   } catch (error) {
-    res.clearCookie('token');
+    console.error('Doctor auth error:', error);
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
     return res.redirect('/doctor/login');
   }
 };
@@ -160,31 +264,22 @@ const protectDoctor = async (req, res, next) => {
 // ============= CHECK AUTH (for login pages) =============
 const checkAuth = (req, res, next) => {
   const accessToken = req.cookies.accessToken;
-  const doctorToken = req.cookies.token;
-  
+
   if (accessToken) {
     try {
       const decoded = verifyAccessToken(accessToken);
       if (decoded && decoded.role === 'patient') {
         return res.redirect('/patient/dashboard');
       }
+      if (decoded && decoded.role === 'doctor') {
+        return res.redirect('/doctor/dashboard');
+      }
     } catch (error) {
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
     }
   }
-  
-  if (doctorToken) {
-    try {
-      const decoded = jwt.verify(doctorToken, process.env.JWT_SECRET);
-      if (decoded.role === 'doctor') {
-        return res.redirect('/doctor/dashboard');
-      }
-    } catch (error) {
-      res.clearCookie('token');
-    }
-  }
-  
+
   next();
 };
 

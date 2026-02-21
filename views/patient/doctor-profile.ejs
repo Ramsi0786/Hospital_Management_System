@@ -14,9 +14,8 @@
 
   <%- include('../partials/patient-sidebar', { currentPage: 'doctor-profile' }) %>
 
-  <!-- Main Content -->
   <div class="main-content">
-    <!-- Top Bar -->
+
     <div class="top-bar">
       <div>
         <a href="/patient/doctors" class="back-btn">
@@ -30,10 +29,8 @@
       </button>
     </div>
 
-    <!-- Doctor Profile Card -->
     <div class="profile-container">
-      
-      <!-- Left Column - Doctor Info -->
+
       <div class="doctor-info-card">
         <div class="doctor-header">
           <div class="doctor-photo-large">
@@ -238,7 +235,6 @@
           url: window.location.href
         });
       } else {
-        // Fallback - copy URL
         navigator.clipboard.writeText(window.location.href);
         alert('Profile link copied to clipboard!');
       }

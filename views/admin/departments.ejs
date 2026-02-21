@@ -7,7 +7,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/css/admin/doctor.css">
+  <link rel="stylesheet" href="/css/admin/departments.css">
+  <link rel="stylesheet" href="/css/custom-alerts.css">
   <link rel="stylesheet" href="/css/pagination.css">
 </head>
 <body>
@@ -18,45 +19,47 @@
   <div class="main-content">
     <div class="page-header">
       <div>
-        <h1>Department Management</h1>
-        <p>Manage all departments</p>
+        <h1>Departments Management</h1>
+        <p>Manage all hospital departments</p>
       </div>
-      <button class="btn-add" onclick="showAddModal()">
+      <button class="btn-add" onclick="showAddDepartmentModal()">
         <i class="fas fa-plus"></i>
         Add Department
       </button>
     </div>
-    
+
     <div class="toolbar">
       <div class="search-wrapper">
         <i class="fas fa-search"></i>
         <input type="text" id="searchInput" class="search-input" placeholder="Search departments...">
       </div>
-
       <div class="filter-wrapper">
         <i class="fas fa-filter"></i>
         <select id="statusFilter" class="filter-select">
-          <option value="active">Active Departments</option>
-          <option value="deleted">Deleted Departments</option>
-          <option value="all">All Departments</option>
+          <option value="active">Active</option>
+          <option value="deleted">Deleted</option>
+          <option value="all">All</option>
         </select>
       </div>
     </div>
 
-    <div class="doctors-table-container">
-      <table class="doctors-table">
+    <div id="resultsInfo" class="results-info"></div>
+
+    <div class="departments-table-container">
+      <table class="departments-table">
         <thead>
           <tr>
             <th>Department</th>
+            <th>Description</th>
             <th>Department Head</th>
-            <th>Number of Doctors</th>
+            <th>Doctors</th>
             <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="departmentsTableBody">
           <tr>
-            <td colspan="5">
+            <td colspan="6">
               <div class="empty-state">
                 <i class="fas fa-spinner fa-spin"></i>
                 <p>Loading departments...</p>
@@ -66,51 +69,41 @@
         </tbody>
       </table>
     </div>
+
     <div id="pagination"></div>
   </div>
 
+  <!-- Add / Edit Department Modal -->
   <div class="modal-overlay" id="departmentModal">
     <div class="modal-content-custom">
       <div class="modal-header">
-        <h3>Add New Department</h3>
-        <button class="btn-close-modal" onclick="closeModal()">
+        <h3 id="modalTitle">Add New Department</h3>
+        <button class="btn-close-modal" onclick="closeDepartmentModal()">
           <i class="fas fa-times"></i>
         </button>
       </div>
-
       <form id="departmentForm">
         <div class="modal-body">
+          <input type="hidden" id="departmentId">
           <div class="form-group">
             <label>Department Name <span class="require-star">*</span></label>
-            <input type="text" id="departmentName" placeholder="e.g., Cardiology">
+            <input type="text" id="deptName" placeholder="e.g., Cardiology">
             <span class="error-message" id="errorName"></span>
           </div>
-
           <div class="form-group">
             <label>Description <span class="require-star">*</span></label>
-            <textarea id="departmentDescription" rows="3" placeholder="Brief description..."></textarea>
+            <textarea id="deptDescription" rows="3" placeholder="Describe the department services..."></textarea>
             <span class="error-message" id="errorDescription"></span>
           </div>
-
           <div class="form-group">
-            <label>Icon</label>
-            <select id="departmentIcon">
-              <option value="fa-hospital">Hospital</option>
-              <option value="fa-heart-pulse">Cardiology</option>
-              <option value="fa-brain">Neurology</option>
-              <option value="fa-bone">Orthopedics</option>
-              <option value="fa-baby">Pediatrics</option>
-              <option value="fa-user-doctor">General Medicine</option>
-              <option value="fa-eye">Ophthalmology</option>
-              <option value="fa-tooth">Dentistry</option>
-              <option value="fa-lungs">Pulmonology</option>
-            </select>
+            <label>Icon (FontAwesome class)</label>
+            <input type="text" id="deptIcon" placeholder="e.g., fa-heart" value="fa-hospital">
+            <small style="color:#64748b;">Visit <a href="https://fontawesome.com/icons" target="_blank">fontawesome.com/icons</a> for icons</small>
           </div>
         </div>
-
         <div class="modal-footer">
-          <button type="button" class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
-          <button type="submit" class="btn-modal btn-submit">Save</button>
+          <button type="button" class="btn-modal btn-cancel" onclick="closeDepartmentModal()">Cancel</button>
+          <button type="submit" class="btn-modal btn-submit">Save Department</button>
         </div>
       </form>
     </div>
@@ -125,273 +118,298 @@
   <script src="/js/loader.js"></script>
   <script src="/js/pagination.js"></script>
   <%- include('../partials/admin-scripts') %>
-    
+
   <script>
-  let allDepartments = [];
-  let filteredDepartments = [];
+    const state = {
+      search: '',
+      status: 'active',
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0
+    };
 
-  async function loadDepartments() {
-    Loader.show('Loading departments...');
-    
-    try {
-      const statusFilter = document.getElementById('statusFilter').value;
-      const includeDeleted = statusFilter === 'all' ? 'true' : 'false';
-      
-      const response = await fetch(`/admin/api/departments?includeDeleted=${includeDeleted}`);
-      const data = await response.json();
-      
-      allDepartments = data.departments || [];
-      filterDepartments(); 
-    } catch (error) {
-      console.error('Error:', error);
-      Alert.error('Failed to load departments');
-    } finally {
-      Loader.hide();
+    async function loadDepartments() {
+      Loader.show('Loading departments...');
+      try {
+        const params = new URLSearchParams({
+          search: state.search,
+          status: state.status,
+          includeDeleted: state.status === 'all' ? 'true' : 'false',
+          page: state.page,
+          limit: state.limit
+        });
+
+        const response = await fetch(`/admin/api/departments?${params}`);
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error);
+
+        state.total = data.pagination.total;
+        state.totalPages = data.pagination.totalPages;
+
+        renderDepartments(data.departments);
+        renderPagination();
+        updateResultsInfo();
+      } catch (error) {
+        Alert.error('Failed to load departments');
+      } finally {
+        Loader.hide();
+      }
     }
-  }
 
-  function renderCurrentPage() {
-    const startIndex = Pagination.getOffset();
-    const endIndex = startIndex + Pagination.limit;
-    const currentDepts = filteredDepartments.slice(startIndex, endIndex);
-    
-    renderDepartments(currentDepts);
-    Pagination.render('pagination');
-  }
+    function renderDepartments(departments) {
+      const tbody = document.getElementById('departmentsTableBody');
 
-  function renderDepartments(deptsList) {
-    const tbody = document.getElementById('departmentsTableBody');
-    
-    if (deptsList.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="5">
+      if (!departments || departments.length === 0) {
+        tbody.innerHTML = `
+          <tr><td colspan="6">
             <div class="empty-state">
               <i class="fas fa-building"></i>
               <h3>No departments found</h3>
+              <p>Try adjusting your search or filters</p>
             </div>
-          </td>
-        </tr>
-      `;
-      return;
-    }
+          </td></tr>`;
+        return;
+      }
 
-    tbody.innerHTML = deptsList.map(dept => {
-      const isDeleted = dept.isDeleted;
-      const statusBadge = isDeleted 
-        ? '<span class="badge blocked">Deleted</span>'
-        : '<span class="badge active">Active</span>';
-      
-      const actions = isDeleted
-        ? `
-          <button class="btn-action btn-edit" onclick="restoreDepartment('${dept._id}')" title="Restore">
-            <i class="fas fa-undo"></i> Restore
-          </button>
-          <button class="btn-action btn-delete" onclick="permanentlyDelete('${dept._id}')" title="Permanent Delete">
-            <i class="fas fa-trash-alt"></i> Delete Forever
-          </button>
-        `
-        : `
-          <button class="btn-action btn-view" onclick="viewDepartment('${dept._id}')" title="View">
-            View
-          </button>
-        `;
+      tbody.innerHTML = departments.map(dept => {
+        const headName = dept.departmentHead
+          ? `<div class="head-info">
+               <div class="head-avatar">${dept.departmentHead.name.charAt(0).toUpperCase()}</div>
+               <span>Dr. ${dept.departmentHead.name}</span>
+             </div>`
+          : `<span class="not-assigned">Not Assigned</span>`;
 
-      return `
-        <tr ${isDeleted ? 'style="opacity: 0.6; background-color: #fff3cd;"' : ''}>
-          <td>
-            <div class="doctor-name">
-              <div class="doctor-avatar"><i class="fas ${dept.icon}"></i></div>
-              <div class="doctor-info">
-                <h4>${dept.name} ${isDeleted ? '<i class="fas fa-trash text-danger" style="font-size: 12px;"></i>' : ''}</h4>
-                <p>${dept.description.substring(0, 50)}...</p>
+        const statusBadge = dept.isDeleted
+          ? `<span class="badge badge-danger">Deleted</span>`
+          : `<span class="badge badge-success">Active</span>`;
+
+        const actions = dept.isDeleted
+  ? `<div class="action-buttons">
+       <button class="btn-action btn-view" onclick="viewDept('${dept._id}')">
+         <i class="fas fa-eye"></i> View
+       </button>
+       <button class="btn-action btn-restore" onclick="restoreDepartment('${dept._id}', '${dept.name}')">
+         <i class="fas fa-undo"></i> Restore
+       </button>
+     </div>`
+  : `<div class="action-buttons">
+       <button class="btn-action btn-view" onclick="viewDept('${dept._id}')">
+         <i class="fas fa-eye"></i> View
+       </button>
+       <button class="btn-action btn-delete" onclick="deleteDepartment('${dept._id}', '${dept.name}', ${dept.doctorCount || 0})">
+         <i class="fas fa-trash"></i> Delete
+       </button>
+     </div>`;
+
+        return `
+          <tr class="${dept.isDeleted ? 'row-deleted' : ''}">
+            <td>
+              <div class="dept-name-cell">
+                <div class="dept-icon-sm">
+                  <i class="fas ${dept.icon || 'fa-hospital'}"></i>
+                </div>
+                <span class="dept-name">${dept.name}</span>
               </div>
-            </div>
-          </td>
-          <td>${dept.departmentHead ? 'Dr. ' + dept.departmentHead.name : '-'}</td>
-          <td>${dept.doctorCount || 0}</td>
-          <td>${statusBadge}</td>
-          <td>
-            <div class="action-buttons">
-              ${actions}
-            </div>
-          </td>
-        </tr>
-      `;
-    }).join('');
-  }
-
-  function viewDepartment(id) {
-    window.location.href = `/admin/department/${id}`;
-  }
-
-  async function restoreDepartment(id) {
-    const result = await Alert.confirm(
-      'Restore this department? It will become active again.',
-      'Restore Department'
-    );
-    
-    if (!result.isConfirmed) return;
-
-    Loader.show('Restoring department...');
-
-    try {
-      const response = await fetch(`/admin/api/departments/${id}/restore`, {
-        method: 'PATCH'
-      });
-
-      const data = await response.json();
-      Loader.hide();
-
-      if (response.ok) {
-        Alert.success(data.message);
-        loadDepartments();
-      } else {
-        Alert.error(data.error);
-      }
-    } catch (error) {
-      Loader.hide();
-      Alert.error('Error restoring department');
-    }
-  }
-
-  async function permanentlyDelete(id) {
-    const result = await Alert.confirmDelete(
-      'PERMANENTLY delete this department? This action CANNOT be undone and will remove all historical data!'
-    );
-    
-    if (!result.isConfirmed) return;
-
-    Loader.show('Deleting permanently...');
-
-    try {
-      const response = await fetch(`/admin/api/departments/${id}/permanent`, {
-        method: 'DELETE'
-      });
-
-      const data = await response.json();
-      Loader.hide();
-
-      if (response.ok) {
-        Alert.success(data.message);
-        loadDepartments();
-      } else {
-        Alert.error(data.error);
-      }
-    } catch (error) {
-      Loader.hide();
-      Alert.error('Error deleting department');
-    }
-  }
-
-  let searchTimeout;
-  document.getElementById('searchInput').addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(filterDepartments, 300);
-  });
-
-  document.getElementById('statusFilter').addEventListener('change', loadDepartments);
-
-  function filterDepartments() {
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const statusFilter = document.getElementById('statusFilter').value;
-    
-    filteredDepartments = allDepartments.filter(dept => {
-      const matchesSearch = dept.name.toLowerCase().includes(searchTerm) ||
-                           dept.description.toLowerCase().includes(searchTerm);
-      
-      let matchesStatus = true;
-      if (statusFilter === 'active') {
-        matchesStatus = !dept.isDeleted;
-      } else if (statusFilter === 'deleted') {
-        matchesStatus = dept.isDeleted;
-      }
-      
-      return matchesSearch && matchesStatus;
-    });
-    
-    Pagination.init({
-      totalItems: filteredDepartments.length,
-      limit: 20,
-      currentPage: 1,
-      onPageChange: renderCurrentPage
-    });
-    
-    renderCurrentPage();
-  }
-
-  function showAddModal() {
-    document.getElementById('departmentForm').reset();
-    clearErrors();
-    document.getElementById('departmentModal').classList.add('show');
-  }
-
-  function closeModal() {
-    document.getElementById('departmentModal').classList.remove('show');
-  }
-
-  document.getElementById('departmentForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    clearErrors();
-
-    const formData = {
-      name: document.getElementById('departmentName').value.trim(),
-      description: document.getElementById('departmentDescription').value.trim(),
-      icon: document.getElementById('departmentIcon').value
-    };
-
-    let hasError = false;
-
-    if (formData.name.length < 3) {
-      document.getElementById('errorName').textContent = 'Name must be at least 3 characters';
-      hasError = true;
+            </td>
+            <td class="dept-desc">${dept.description}</td>
+            <td>${headName}</td>
+            <td>
+              <span class="doctor-count">
+                <i class="fas fa-user-doctor"></i>
+                ${dept.doctorCount || 0}
+              </span>
+            </td>
+            <td>${statusBadge}</td>
+            <td>${actions}</td>
+          </tr>`;
+      }).join('');
     }
 
-    if (formData.description.length < 10) {
-      document.getElementById('errorDescription').textContent = 'Description must be at least 10 characters';
-      hasError = true;
+    function viewDept(id) {
+      window.location.href = `/admin/department/${id}`;
     }
 
-    if (hasError) return;
-
-    Loader.show('Adding department...');
-
-    try {
-      const response = await fetch('/admin/api/departments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-
-      const data = await response.json();
-      Loader.hide();
-
-      if (response.ok) {
-        closeModal();
-        loadDepartments();
-        Alert.success(data.message);
-      } else {
-        if (data.errors) {
-          if (data.errors.name) document.getElementById('errorName').textContent = data.errors.name;
-          if (data.errors.description) document.getElementById('errorDescription').textContent = data.errors.description;
-        } else if (data.canRestore) {
-          Alert.error(data.errors.name);
-        } else {
-          Alert.error(data.error);
+    function renderPagination() {
+      Pagination.init({
+        totalItems: state.total,
+        limit: state.limit,
+        currentPage: state.page,
+        onPageChange: (newPage) => {
+          state.page = newPage;
+          loadDepartments();
         }
-      }
-    } catch (error) {
-      Loader.hide();
-      Alert.error('Error saving department');
+      });
+      Pagination.render('pagination');
     }
-  });
 
-  function clearErrors() {
-    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
-  }
+    function updateResultsInfo() {
+      const start = (state.page - 1) * state.limit + 1;
+      const end = Math.min(state.page * state.limit, state.total);
+      const info = state.total > 0
+        ? `Showing <strong>${start}–${end}</strong> of <strong>${state.total}</strong> departments`
+        : 'No departments found';
+      document.getElementById('resultsInfo').innerHTML = info;
+    }
 
-  document.addEventListener('DOMContentLoaded', loadDepartments);
-</script>
+    let searchTimeout;
+    document.getElementById('searchInput').addEventListener('input', e => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        state.search = e.target.value.trim();
+        state.page = 1;
+        loadDepartments();
+      }, 400);
+    });
 
+    document.getElementById('statusFilter').addEventListener('change', e => {
+      state.status = e.target.value;
+      state.page = 1;
+      loadDepartments();
+    });
+
+    function showAddDepartmentModal() {
+      document.getElementById('modalTitle').textContent = 'Add New Department';
+      document.getElementById('departmentId').value = '';
+      document.getElementById('departmentForm').reset();
+      document.getElementById('deptIcon').value = 'fa-hospital';
+      clearErrors();
+      document.getElementById('departmentModal').classList.add('show');
+    }
+
+    function showEditDepartmentModal(id, name, description, icon) {
+      document.getElementById('modalTitle').textContent = 'Edit Department';
+      document.getElementById('departmentId').value = id;
+      document.getElementById('deptName').value = name;
+      document.getElementById('deptDescription').value = description;
+      document.getElementById('deptIcon').value = icon;
+      clearErrors();
+      document.getElementById('departmentModal').classList.add('show');
+    }
+
+    function closeDepartmentModal() {
+      document.getElementById('departmentModal').classList.remove('show');
+      clearErrors();
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+    }
+
+    document.getElementById('departmentForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearErrors();
+
+      const id = document.getElementById('departmentId').value;
+      const name = document.getElementById('deptName').value.trim();
+      const description = document.getElementById('deptDescription').value.trim();
+      const icon = document.getElementById('deptIcon').value.trim();
+
+      let hasError = false;
+      if (name.length < 3) { document.getElementById('errorName').textContent = 'Name must be at least 3 characters'; hasError = true; }
+      if (description.length < 10) { document.getElementById('errorDescription').textContent = 'Description must be at least 10 characters'; hasError = true; }
+      if (hasError) return;
+
+      const isEdit = !!id;
+      Loader.show(isEdit ? 'Updating...' : 'Adding...');
+
+      try {
+        const response = await fetch(isEdit ? `/admin/api/departments/${id}` : '/admin/api/departments', {
+          method: isEdit ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, description, icon })
+        });
+
+        const data = await response.json();
+        Loader.hide();
+
+        if (response.ok && data.success) {
+          closeDepartmentModal();
+          Alert.success(data.message);
+          state.page = 1;
+          loadDepartments();
+        } else {
+          if (data.errors) {
+            Object.keys(data.errors).forEach(field => {
+              const el = document.getElementById(`error${field.charAt(0).toUpperCase() + field.slice(1)}`);
+              if (el) el.textContent = data.errors[field];
+            });
+          } else {
+            Alert.error(data.error || 'Operation failed');
+          }
+        }
+      } catch (error) {
+        Loader.hide();
+        Alert.error('An error occurred. Please try again.');
+      }
+    });
+
+    async function deleteDepartment(id, name, doctorCount) {
+      if (doctorCount > 0) {
+        Alert.error(`Cannot delete "${name}" — it has ${doctorCount} active doctor(s). Please reassign them first.`);
+        return;
+      }
+
+      const confirmed = await Swal.fire({
+        title: `Delete "${name}"?`,
+        text: 'This will be soft-deleted and can be restored later.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, Delete'
+      });
+
+      if (!confirmed.isConfirmed) return;
+
+      Loader.show('Deleting...');
+      try {
+        const response = await fetch(`/admin/api/departments/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+        Loader.hide();
+        if (response.ok && data.success) {
+          Alert.success(data.message);
+          loadDepartments();
+        } else {
+          Alert.error(data.error || 'Failed to delete');
+        }
+      } catch (error) {
+        Loader.hide();
+        Alert.error('An error occurred.');
+      }
+    }
+
+    async function restoreDepartment(id, name) {
+      const confirmed = await Swal.fire({
+        title: `Restore "${name}"?`,
+        text: 'This department will become active again.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#22c55e',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, Restore'
+      });
+
+      if (!confirmed.isConfirmed) return;
+
+      Loader.show('Restoring...');
+      try {
+        const response = await fetch(`/admin/api/departments/${id}/restore`, { method: 'PATCH' });
+        const data = await response.json();
+        Loader.hide();
+        if (response.ok && data.success) {
+          Alert.success(data.message);
+          loadDepartments();
+        } else {
+          Alert.error(data.error || 'Failed to restore');
+        }
+      } catch (error) {
+        Loader.hide();
+        Alert.error('An error occurred.');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadDepartments);
+  </script>
 </body>
 </html>

@@ -9,11 +9,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <link rel="stylesheet" href="/css/style.css">
+
 </head>
 <body>
 
+  <!-- Loading Spinner -->
   <div id="spinner" class="show bg-white position-fixed w-100 vh-100 d-flex align-items-center justify-content-center">
     <div class="spinner-grow text-primary m-1" role="status">
       <span class="visually-hidden">Loading...</span>
@@ -28,6 +29,9 @@
 
   <%- include('partials/navbar') %>
 
+  <!-- ====================================
+       HERO CAROUSEL
+  ==================================== -->
   <div id="header-carousel" class="carousel slide" data-bs-ride="carousel">
     <div class="carousel-inner">
 
@@ -65,22 +69,20 @@
       </div>
 
     </div>
-    
+
     <div class="carousel-vertical-controls">
-  <div class="carousel-left">
-    <button type="button" data-bs-target="#header-carousel" data-bs-slide="prev"></button>
+      <div class="carousel-left">
+        <button type="button" data-bs-target="#header-carousel" data-bs-slide="prev"></button>
+      </div>
+      <div class="carousel-right">
+        <button type="button" data-bs-target="#header-carousel" data-bs-slide="next"></button>
+      </div>
+    </div>
   </div>
 
-  <div class="carousel-right">
-    <button type="button" data-bs-target="#header-carousel" data-bs-slide="next"></button>
-  </div>
-</div>
-
-  </div>
-
-  <!-- ==========================
-       About Us Section (Preview)
-  ========================== -->
+  <!-- ====================================
+       ABOUT PREVIEW SECTION
+  ==================================== -->
   <section class="about-preview-section py-5">
     <div class="container d-flex flex-column flex-md-row align-items-center justify-content-between">
       
@@ -101,7 +103,9 @@
     </div>
   </section>
 
-
+  <!-- ====================================
+       WHY CHOOSE HEALORA SECTION
+  ==================================== -->
   <section class="why-healora-section py-6 bg-light">
     <div class="container">
 
@@ -120,7 +124,7 @@
             </div>
             <h5 class="fw-bold mb-3" style="color: #1B365D;">Faster, Smarter Workflows</h5>
             <p class="text-muted">
-              Our system automates repetitive tasks, reduces paperwork, and helps doctors, nurses, and staff focus more on patients; not processes.
+              Our system automates repetitive tasks, reduces paperwork, and helps doctors, nurses, and staff focus more on patients — not processes.
             </p>
           </div>
         </div>
@@ -152,6 +156,70 @@
     </div>
   </section>
 
+  <!-- ====================================
+       HOSPITAL STATS SECTION
+  ==================================== -->
+  <section class="stats-section">
+    <div class="container">
+      <div class="stats-grid">
+
+        <div class="stat-item">
+          <div class="stat-icon">
+            <i class="fas fa-hospital"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-number" data-target="<%= stats.experience %>">0</div>
+            <div class="stat-plus">+</div>
+            <div class="stat-label">Years of Experience</div>
+          </div>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat-item">
+          <div class="stat-icon">
+            <i class="fas fa-user-md"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-number" data-target="<%= stats.doctors %>">0</div>
+            <div class="stat-plus">+</div>
+            <div class="stat-label">Expert Doctors</div>
+          </div>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat-item">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-number" data-target="<%= stats.patients %>">0</div>
+            <div class="stat-plus">+</div>
+            <div class="stat-label">Happy Patients</div>
+          </div>
+        </div>
+
+        <div class="stat-divider"></div>
+
+        <div class="stat-item">
+          <div class="stat-icon">
+            <i class="fas fa-award"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-number" data-target="<%= stats.awards %>">0</div>
+            <div class="stat-plus">+</div>
+            <div class="stat-label">Awards Won</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================================
+       SERVICES SECTION
+  ==================================== -->
   <section class="container py-5">
     <div class="text-center mb-5">
       <h2 class="fw-bold text-primary">Our Core Healthcare Services</h2>
@@ -221,91 +289,131 @@
     </div>
 
     <div class="text-center mt-5">
-      <a href="/services" class="btn service-cta-btn">
-        View More
-      </a>
+      <a href="/services" class="btn service-cta-btn">View More</a>
     </div>
-
   </section>
 
   <!-- ====================================
-       MEET OUR DOCTORS SECTION 
+       MEET OUR DOCTORS SECTION
   ==================================== -->
   <section id="doctors" class="py-5">
-  <div class="container text-center">
-    <div class="mb-5">
-      <h6 class="text-uppercase text-primary fw-bold">Our Team</h6>
-      <h1 class="fw-bold mb-4">Meet Our <span class="text-primary">Doctors</span></h1>
-      <p class="text-muted w-75 mx-auto">
-        Our experienced and friendly doctors are dedicated to providing you with the best medical care possible.
-      </p>
-    </div>
+    <div class="container text-center">
+      <div class="mb-5">
+        <h6 class="text-uppercase text-primary fw-bold">Our Team</h6>
+        <h1 class="fw-bold mb-4">Meet Our <span class="text-primary">Doctors</span></h1>
+        <p class="text-muted w-75 mx-auto">
+          Our experienced and friendly doctors are dedicated to providing you with the best medical care possible.
+        </p>
+      </div>
 
-    <% if (doctors && doctors.length > 0) { %>
+      <% if (doctors && doctors.length > 0) { %>
 
-      <div id="doctorCarousel" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-inner">
+        <div id="doctorCarousel" class="carousel slide" data-bs-ride="carousel">
+          <div class="carousel-inner">
 
-          <% for (let i = 0; i < doctors.length; i += 4) { %>
-            <div class="carousel-item <%= i === 0 ? 'active' : '' %>">
-              <div class="row g-4 justify-content-center">
+            <% for (let i = 0; i < doctors.length; i += 4) { %>
+              <div class="carousel-item <%= i === 0 ? 'active' : '' %>">
+                <div class="row g-4 justify-content-center">
 
-                <% doctors.slice(i, i + 4).forEach(doctor => { %>
-                  <div class="col-lg-3 col-md-6 col-sm-6">
-                    <div class="doctor-card">
-                      
-                      <div class="doctor-avatar">
-                        <%= doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+                  <% doctors.slice(i, i + 4).forEach(doctor => { %>
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                      <div class="doctor-card">
+                      <div class="doctor-avatar <%= doctor.profileImage ? 'has-image' : 'has-initials' %>">
+                        <% if (doctor.profileImage) { %>
+                          <img src="<%= doctor.profileImage %>" alt="Dr. <%= doctor.name %>" class="doctor-avatar-img">
+                          <% } else { %>
+                            <%= doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+                          <% } %>
                       </div>
-
-                      <h5 class="doctor-name">Dr. <%= doctor.name %></h5>
-                      <p class="doctor-specialty"><%= doctor.specialization %></p>
-                      <p class="doctor-dept"><%= doctor.department %> Department</p>
-                      
-                      <a href="/doctors/<%= doctor._id %>" class="btn btn-primary btn-sm">View Profile</a>
-
+                        <h5 class="doctor-name">Dr. <%= doctor.name %></h5>
+                        <p class="doctor-specialty"><%= doctor.specialization %></p>
+                        <p class="doctor-dept"><%= doctor.department %> Department</p>
+                        <a href="/doctors/<%= doctor._id %>" class="btn btn-primary btn-sm">View Profile</a>
+                      </div>
                     </div>
-                  </div>
-                <% }) %>
+                  <% }) %>
 
+                </div>
               </div>
-            </div>
-          <% } %>
+            <% } %>
 
+          </div>
         </div>
-      </div>
 
-      <!-- Navigation Buttons -->
-      <div class="doctor-carousel-nav">
-        <button class="doctor-nav-btn" type="button" data-bs-target="#doctorCarousel" data-bs-slide="prev">
-          <i class="fas fa-angle-double-left"></i>
-        </button>
-        <button class="doctor-nav-btn" type="button" data-bs-target="#doctorCarousel" data-bs-slide="next">
-          <i class="fas fa-angle-double-right"></i>
-        </button>
-      </div>
+        <!-- Navigation Buttons -->
+        <div class="doctor-carousel-nav">
+          <button class="doctor-nav-btn" type="button" data-bs-target="#doctorCarousel" data-bs-slide="prev">
+            <i class="fas fa-angle-double-left"></i>
+          </button>
+          <button class="doctor-nav-btn" type="button" data-bs-target="#doctorCarousel" data-bs-slide="next">
+            <i class="fas fa-angle-double-right"></i>
+          </button>
+        </div>
 
-      <!-- View All Button -->
-      <div class="text-center mt-5">
-        <a href="/doctors" class="btn btn-primary px-5 py-2 rounded-pill">View All Doctors</a>
-      </div>
+        <!-- View All Button -->
+        <div class="text-center mt-5">
+          <a href="/doctors" class="btn btn-primary px-5 py-2 rounded-pill">View All Doctors</a>
+        </div>
 
-    <% } else { %>
-      <p class="text-muted">No doctors available at the moment.</p>
-    <% } %>
+      <% } else { %>
+        <p class="text-muted">No doctors available at the moment.</p>
+      <% } %>
 
-  </div>
-</section>
+    </div>
+  </section>
 
   <%- include('partials/footer') %>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  
+
   <script>
     window.addEventListener('load', () => {
       const spinner = document.getElementById('spinner');
       if (spinner) spinner.classList.remove('show');
     });
+
+    const animateCounter = (el) => {
+      const target = parseInt(el.getAttribute('data-target'));
+
+      if (!target || target === 0) {
+        el.textContent = 0;
+        return;
+      }
+
+      const duration    = 2000;    
+      const frameRate   = 60;
+      const totalFrames = (duration / 1000) * frameRate;
+      const increment   = target / totalFrames;
+      let current = 0;
+
+      const update = () => {
+        current += increment;
+        if (current < target) {
+          el.textContent = Math.floor(current);
+          requestAnimationFrame(update);
+        } else {
+          el.textContent = target; 
+        }
+      };
+
+      update();
+    };
+
+    const counters     = document.querySelectorAll('.stat-number');
+    const statsSection = document.querySelector('.stats-section');
+
+    if (statsSection && counters.length > 0) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            counters.forEach(animateCounter);
+            observer.disconnect(); 
+          }
+        });
+      }, { threshold: 0.3 });
+
+      observer.observe(statsSection);
+    }
   </script>
 </body>
 </html>

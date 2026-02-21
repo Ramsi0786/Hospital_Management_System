@@ -78,7 +78,7 @@
     <!-- Results Count -->
     <div class="results-info">
       <p class="results-count">
-        <strong><%= doctors.length %></strong> doctor<%= doctors.length !== 1 ? 's' : '' %> found
+        <strong><%= total %></strong> doctor<%= total !== 1 ? 's' : '' %> found
       </p>
     </div>
 
@@ -147,6 +147,20 @@
         <% }) %>
       <% } %>
     </div>
+    <% if (totalPages > 1) { %>
+  <div class="pagination-wrapper" style="display:flex; justify-content:center; gap:8px; margin-top:30px;">
+    <% if (currentPage > 1) { %>
+      <a href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>&department=<%= selectedDepartment %>&sort=<%= sortBy %>" class="btn btn-outline">Previous</a>
+    <% } %>
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <a href="?page=<%= i %>&search=<%= searchQuery %>&department=<%= selectedDepartment %>&sort=<%= sortBy %>" 
+         class="btn <%= i === currentPage ? 'btn-primary' : 'btn-outline' %>"><%= i %></a>
+    <% } %>
+    <% if (currentPage < totalPages) { %>
+      <a href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>&department=<%= selectedDepartment %>&sort=<%= sortBy %>" class="btn btn-outline">Next</a>
+    <% } %>
+  </div>
+<% } %>
   </div>
 
   <!-- Logout Modal -->
@@ -180,7 +194,7 @@
       
       searchTimeout = setTimeout(() => {
         filterForm.submit();
-      }, 100); 
+      }, 400); 
     });
 
     departmentSelect.addEventListener('change', function() {
@@ -212,7 +226,6 @@
       }
     }
 
-    // Logout functions
     function showLogoutModal() {
       document.getElementById('logoutModal').classList.add('show');
     }
