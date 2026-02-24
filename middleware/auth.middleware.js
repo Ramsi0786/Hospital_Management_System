@@ -18,7 +18,7 @@ const protect = async (req, res, next) => {
     
     const accessToken = req.cookies.accessToken;
     const refreshToken = req.cookies.refreshToken;
-
+ 
     let decoded = verifyAccessToken(accessToken);
     
     if (!decoded && refreshToken) {

@@ -35,7 +35,7 @@ app.use(
   })
 );
 app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.session());
 
 app.set("view engine", "ejs");
 app.set("views", path.join(process.cwd(), "views"));

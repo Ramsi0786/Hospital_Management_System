@@ -42,18 +42,7 @@ router.delete('/delete-profile-image', deleteProfileImage);
 router.put('/update-profile', doctorController.updateDoctorProfile);
 
 router.route('/logout')
-  .get((req, res) => {
-    res.clearCookie('token', { httpOnly: true, sameSite: 'strict' });
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.redirect('/doctor/login');
-  })
-  .post((req, res) => {
-    res.clearCookie('token', { httpOnly: true, sameSite: 'strict' });
-    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'strict' });
-    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'strict' });
-    res.json({ success: true });
-  });
+  .get(authController.logout)
+  .post(authController.logout);
 
 export default router;

@@ -148,18 +148,7 @@
       <% } %>
     </div>
     <% if (totalPages > 1) { %>
-  <div class="pagination-wrapper" style="display:flex; justify-content:center; gap:8px; margin-top:30px;">
-    <% if (currentPage > 1) { %>
-      <a href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>&department=<%= selectedDepartment %>&sort=<%= sortBy %>" class="btn btn-outline">Previous</a>
-    <% } %>
-    <% for (let i = 1; i <= totalPages; i++) { %>
-      <a href="?page=<%= i %>&search=<%= searchQuery %>&department=<%= selectedDepartment %>&sort=<%= sortBy %>" 
-         class="btn <%= i === currentPage ? 'btn-primary' : 'btn-outline' %>"><%= i %></a>
-    <% } %>
-    <% if (currentPage < totalPages) { %>
-      <a href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>&department=<%= selectedDepartment %>&sort=<%= sortBy %>" class="btn btn-outline">Next</a>
-    <% } %>
-  </div>
+  <%- include('../partials/pagination', { currentPage, totalPages, searchQuery, selectedDepartment, sortBy }) %>
 <% } %>
   </div>
 
