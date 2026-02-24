@@ -33,12 +33,12 @@ const issueTokens = async (userId, family = null) => {
 const setAuthCookies = (res, accessToken, refreshToken) => {
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 15 * 60 * 1000  
   });
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    sameSite: 'strict',
+    sameSite: 'lax',
     maxAge: 7 * 24 * 60 * 60 * 1000 
   });
 };
@@ -381,15 +381,17 @@ export const googleAuth = passport.authenticate("google", {
 
 export const googleCallback = async (req, res) => {
   try {
+    if (!req.user) {
+      return res.redirect("/patient/login?error=no_user");
+    }
+
     if (req.user.isBlocked) {
       return res.redirect("/patient/login?error=blocked");
     }
 
     if (!req.user.password) {
-      const cryptoMod = await import('crypto');
-      const bcryptMod = await import('bcryptjs');
-      const autoPassword = cryptoMod.randomBytes(16).toString('hex');
-      req.user.password = await bcryptMod.hash(autoPassword, 10);
+      const autoPassword = crypto.randomBytes(16).toString('hex'); 
+      req.user.password = await bcrypt.hash(autoPassword, 10);    
       req.user.needsPasswordSetup = true;
       await req.user.save();
     }
@@ -402,7 +404,6 @@ export const googleCallback = async (req, res) => {
       });
     }
 
-    // ── Fresh Google login, new family ──
     const { accessToken, refreshToken } = await issueTokens(req.user._id);
     setAuthCookies(res, accessToken, refreshToken);
 
@@ -414,7 +415,7 @@ export const googleCallback = async (req, res) => {
     return res.redirect("/patient/dashboard");
   } catch (err) {
     console.error("Google callback error:", err);
-    return res.redirect("/patient/login?error=auth_failed");
+    return res.redirect("/patient/login?error=server_error");
   }
 };
 

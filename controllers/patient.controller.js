@@ -1,6 +1,7 @@
 import Doctor from "../models/doctor.model.js";
 import Patient from '../models/patient.model.js';
 import Department from "../models/department.model.js";
+import { sanitizePagination, PAGINATION } from '../constants/index.js';
 
 
 export const getDashboard = (req, res) => {
@@ -14,10 +15,9 @@ export const getDashboard = (req, res) => {
 
 export const getAllDoctors = async (req, res) => {
   try {
-    const { department, search, sort, page = 1 } = req.query;
-    const limitNum = 12;
-    const pageNum = Math.max(1, parseInt(page));
-    const skip = (pageNum - 1) * limitNum;
+    const { department, search, sort, page } = req.query; 
+    const { page: pageNum, skip } = sanitizePagination(page, PAGINATION.DOCTORS_PER_PAGE);
+    const limitNum = PAGINATION.DOCTORS_PER_PAGE;
 
     let query = { status: 'active' };
 

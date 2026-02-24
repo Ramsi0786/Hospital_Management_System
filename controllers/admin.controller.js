@@ -1,5 +1,6 @@
 import Patient from "../models/patient.model.js";
 import Doctor from "../models/doctor.model.js";
+import Settings from "../models/settings.model.js"
 import Appointment from "../models/appointment.model.js";
 import bcrypt from "bcryptjs";
 import { sendDoctorWelcomeEmail } from "../utils/sendEmail.js";
@@ -758,5 +759,74 @@ export const updateDoctor = async (req, res) => {
       success: false,
       error: "Error updating doctor"
     });
+  }
+};
+
+
+export const getHospitalStats = async (req, res) => {
+  try {
+    const [expSetting, awardsSetting, totalDoctors, totalPatients] = await Promise.all([
+      Settings.findOne({ key: 'stats_experience' }),
+      Settings.findOne({ key: 'stats_awards' }),
+      Doctor.countDocuments(),
+      Patient.countDocuments()
+    ]);
+
+    res.json({
+      success: true,
+      stats: {
+        experience: expSetting?.value ?? 10,
+        awards:     awardsSetting?.value ?? 15,
+        doctors:    totalDoctors,
+        patients:   totalPatients
+      }
+    });
+  } catch (error) {
+    console.error('Get hospital stats error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch stats' });
+  }
+};
+
+export const updateHospitalStats = async (req, res) => {
+  try {
+    const { experience, awards } = req.body;
+
+    const errors = {};
+    if (experience === undefined || experience === '') {
+      errors.experience = 'Experience is required';
+    } else if (isNaN(Number(experience)) || Number(experience) < 0) {
+      errors.experience = 'Experience must be a positive number';
+    }
+
+    if (awards === undefined || awards === '') {
+      errors.awards = 'Awards is required';
+    } else if (isNaN(Number(awards)) || Number(awards) < 0) {
+      errors.awards = 'Awards must be a positive number';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ success: false, errors });
+    }
+
+    await Promise.all([
+      Settings.findOneAndUpdate(
+        { key: 'stats_experience' },
+        { value: Number(experience) },
+        { upsert: true, new: true }
+      ),
+      Settings.findOneAndUpdate(
+        { key: 'stats_awards' },
+        { value: Number(awards) },
+        { upsert: true, new: true }
+      )
+    ]);
+
+    res.json({
+      success: true,
+      message: 'Hospital stats updated successfully'
+    });
+  } catch (error) {
+    console.error('Update hospital stats error:', error);
+    res.status(500).json({ success: false, error: 'Failed to update stats' });
   }
 };

@@ -1,5 +1,8 @@
 import Doctor from "../models/doctor.model.js";
 import Patient from "../models/patient.model.js";
+import Settings from '../models/settings.model.js'
+import { sanitizePagination, PAGINATION } from '../constants/index.js';
+
 
 export const landingPage = async (req, res) => {
   try {
@@ -9,14 +12,19 @@ export const landingPage = async (req, res) => {
     const totalDoctors    = await Doctor.countDocuments();
     const totalPatients   = await Patient.countDocuments(); 
     
+    const [expSetting, awardsSetting] = await Promise.all([
+      Settings.findOne({ key: 'stats_experience' }),
+      Settings.findOne({ key: 'stats_awards' })
+    ]);
+
     res.render("landing_page", { 
       title: "Healora - Smarter Healthcare, Simplified for Everyone",
       doctors,
       stats: {
-        experience: 10,           
+        experience: expSetting?.value ?? 10,           
         doctors:    totalDoctors,
         patients:   totalPatients,
-        awards:     15           
+        awards:     awardsSetting?.value ?? 15           
       }
     });
   } catch (error) {
@@ -32,9 +40,8 @@ export const landingPage = async (req, res) => {
 export const doctorsPage = async (req, res) => {
   try {
     const { department, search, page = 1 } = req.query;
-    const limitNum = 12;
-    const pageNum = Math.max(1, parseInt(page));
-    const skip = (pageNum - 1) * limitNum;
+    const { page: pageNum, skip } = sanitizePagination(page, PAGINATION.DOCTORS_PER_PAGE);
+    const limitNum = PAGINATION.DOCTORS_PER_PAGE;
 
     let query = {};
     if (department && department !== 'all') query.department = department;

@@ -63,9 +63,7 @@
       flex-wrap: wrap;
     }
 
-    .current-avatar {
-      flex-shrink: 0;
-    }
+    .current-avatar { flex-shrink: 0; }
 
     .avatar-display {
       width: 150px;
@@ -129,9 +127,7 @@
       transition: background 0.2s;
     }
 
-    .btn-upload:hover, .btn-edit-profile:hover {
-      background: #1a3357;
-    }
+    .btn-upload:hover, .btn-edit-profile:hover { background: #1a3357; }
 
     .btn-delete-image {
       background: #ef4444;
@@ -145,13 +141,9 @@
       transition: background 0.2s;
     }
 
-    .btn-delete-image:hover {
-      background: #dc2626;
-    }
+    .btn-delete-image:hover { background: #dc2626; }
 
-    #imageInput {
-      display: none;
-    }
+    #imageInput { display: none; }
 
     /* View Mode */
     .info-grid {
@@ -165,9 +157,7 @@
       border-bottom: 1px solid #f1f5f9;
     }
 
-    .info-row:last-child {
-      border-bottom: none;
-    }
+    .info-row:last-child { border-bottom: none; }
 
     .info-label {
       font-size: 13px;
@@ -187,6 +177,35 @@
       font-style: italic;
     }
 
+   .readonly-field {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #64748b;
+      background: #f8fafc;
+      cursor: not-allowed;
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .readonly-field i {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .readonly-hint {
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
     /* Modal */
     .modal-overlay {
       display: none;
@@ -201,9 +220,7 @@
       justify-content: center;
     }
 
-    .modal-overlay.show {
-      display: flex;
-    }
+    .modal-overlay.show { display: flex; }
 
     .modal-content-custom {
       background: white;
@@ -241,13 +258,9 @@
       line-height: 1;
     }
 
-    .btn-close-modal:hover {
-      color: #64748b;
-    }
+    .btn-close-modal:hover { color: #64748b; }
 
-    .modal-body {
-      padding: 24px;
-    }
+    .modal-body { padding: 24px; }
 
     .modal-footer {
       padding: 16px 24px;
@@ -271,9 +284,7 @@
       justify-content: center;
     }
 
-    .image-crop-modal.show {
-      display: flex;
-    }
+    .image-crop-modal.show { display: flex; }
 
     .crop-container-wrapper {
       background: white;
@@ -308,9 +319,7 @@
       line-height: 1;
     }
 
-    .btn-close-crop:hover {
-      color: #1e293b;
-    }
+    .btn-close-crop:hover { color: #1e293b; }
 
     #imagePreview {
       max-width: 100%;
@@ -338,33 +347,14 @@
       gap: 6px;
     }
 
-    .btn-rotate {
-      background: #f1f5f9;
-      color: #374151;
-    }
+    .btn-rotate { background: #f1f5f9; color: #374151; }
+    .btn-rotate:hover { background: #e2e8f0; }
 
-    .btn-rotate:hover {
-      background: #e2e8f0;
-    }
+    .btn-do-crop { background: #22c55e; color: white; font-weight: 500; }
+    .btn-do-crop:hover { background: #16a34a; }
 
-    .btn-do-crop {
-      background: #22c55e;
-      color: white;
-      font-weight: 500;
-    }
-
-    .btn-do-crop:hover {
-      background: #16a34a;
-    }
-
-    .btn-cancel-crop {
-      background: #f1f5f9;
-      color: #64748b;
-    }
-
-    .btn-cancel-crop:hover {
-      background: #e2e8f0;
-    }
+    .btn-cancel-crop { background: #f1f5f9; color: #64748b; }
+    .btn-cancel-crop:hover { background: #e2e8f0; }
 
     /* Form */
     .form-grid {
@@ -373,9 +363,7 @@
       gap: 16px;
     }
 
-    .form-group {
-      margin-bottom: 16px;
-    }
+    .form-group { margin-bottom: 16px; }
 
     .form-group label {
       display: block;
@@ -412,6 +400,7 @@
 
     .form-group input:disabled {
       background: #f8fafc;
+      color: #64748b;
       cursor: not-allowed;
     }
 
@@ -425,23 +414,11 @@
       transition: all 0.2s;
     }
 
-    .btn-cancel {
-      background: #f1f5f9;
-      color: #64748b;
-    }
+    .btn-cancel { background: #f1f5f9; color: #64748b; }
+    .btn-cancel:hover { background: #e2e8f0; }
 
-    .btn-cancel:hover {
-      background: #e2e8f0;
-    }
-
-    .btn-submit {
-      background: #203f6a;
-      color: white;
-    }
-
-    .btn-submit:hover {
-      background: #1a3357;
-    }
+    .btn-submit { background: #203f6a; color: white; }
+    .btn-submit:hover { background: #1a3357; }
 
     .error-message {
       color: #ef4444;
@@ -450,9 +427,7 @@
       display: none;
     }
 
-    .error-message.show {
-      display: block;
-    }
+    .error-message.show { display: block; }
 
     /* Responsive */
     @media (max-width: 768px) {
@@ -460,7 +435,7 @@
         margin-left: 0;
         padding: 16px;
       }
-      
+
       .image-upload-section {
         flex-direction: column;
         align-items: center;
@@ -471,9 +446,7 @@
         grid-template-columns: 1fr;
       }
 
-      .modal-content-custom {
-        width: 95%;
-      }
+      .modal-content-custom { width: 95%; }
     }
   </style>
 </head>
@@ -483,8 +456,8 @@
   <%- include('../partials/loading') %>
 
   <div class="main-content">
-    <!-- Profile Image -->
 
+    <!-- Profile Image -->
     <div class="profile-card">      
       <div class="image-upload-section">
         <div class="current-avatar">
@@ -554,7 +527,12 @@
         </div>
 
         <div class="info-row">
-          <div class="info-label">Department</div>
+          <div class="info-label">
+            Department
+            <span style="font-size:11px; color:#94a3b8; margin-left:4px;">
+              <i class="fas fa-lock"></i> Admin only
+            </span>
+          </div>
           <div class="info-value"><%= doctor.department %></div>
         </div>
 
@@ -598,118 +576,75 @@
       <form id="profileForm" novalidate>
         <div class="modal-body">
           <div class="form-grid">
+
             <div class="form-group">
               <label>Full Name *</label>
-              <input 
-                type="text" 
-                id="name" 
-                name="name"
-                value="<%= doctor.name %>" 
-                required
-                minlength="3"
-                maxlength="100"
-              >
+              <input type="text" id="name" name="name"
+                value="<%= doctor.name %>" required minlength="3" maxlength="100">
               <span class="error-message" id="errorName"></span>
             </div>
 
             <div class="form-group">
               <label>Email</label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email"
-                value="<%= doctor.email %>" 
-                disabled
-              >
+              <input type="email" id="email" name="email"
+                value="<%= doctor.email %>" disabled>
             </div>
 
             <div class="form-group">
               <label>Phone *</label>
-              <input 
-                type="tel" 
-                id="phone" 
-                name="phone"
-                value="<%= doctor.phone %>" 
-                required
-                pattern="[0-9]{10}"
-                maxlength="10"
-              >
+              <input type="tel" id="phone" name="phone"
+                value="<%= doctor.phone %>" required pattern="[0-9]{10}" maxlength="10">
               <span class="error-message" id="errorPhone"></span>
             </div>
 
             <div class="form-group">
               <label>Specialization *</label>
-              <input 
-                type="text" 
-                id="specialization" 
-                name="specialization"
-                value="<%= doctor.specialization %>" 
-                required
-                maxlength="100"
-              >
+              <input type="text" id="specialization" name="specialization"
+                value="<%= doctor.specialization %>" required maxlength="100">
               <span class="error-message" id="errorSpecialization"></span>
             </div>
 
             <div class="form-group">
-              <label>Department *</label>
-              <input 
-                type="text" 
-                id="department" 
-                name="department"
-                value="<%= doctor.department %>" 
-                required
-              >
-              <span class="error-message" id="errorDepartment"></span>
+              <label>Department</label>
+              <div class="readonly-field">
+                <i class="fas fa-lock"></i>
+                <%= doctor.department %>
+              </div>
+              <p class="readonly-hint">
+                <i class="fas fa-info-circle"></i>
+                Department can only be changed by an admin
+              </p>
             </div>
 
             <div class="form-group">
               <label>Qualification</label>
-              <input 
-                type="text" 
-                id="qualification" 
-                name="qualification"
-                value="<%= doctor.qualification || '' %>" 
-                placeholder="e.g., MBBS, MD"
-                maxlength="200"
-              >
+              <input type="text" id="qualification" name="qualification"
+                value="<%= doctor.qualification || '' %>"
+                placeholder="e.g., MBBS, MD" maxlength="200">
               <span class="error-message" id="errorQualification"></span>
             </div>
 
             <div class="form-group">
               <label>Experience (years)</label>
-              <input 
-                type="number" 
-                id="experience" 
-                name="experience"
-                value="<%= doctor.experience || 0 %>" 
-                min="0"
-                max="70"
-              >
+              <input type="number" id="experience" name="experience"
+                value="<%= doctor.experience || 0 %>" min="0" max="70">
               <span class="error-message" id="errorExperience"></span>
             </div>
 
             <div class="form-group">
               <label>Consultation Fee (₹)</label>
-              <input 
-                type="number" 
-                id="consultationFee" 
-                name="consultationFee"
-                value="<%= doctor.consultationFee || 500 %>" 
-                min="0"
-                max="50000"
-              >
+              <input type="number" id="consultationFee" name="consultationFee"
+                value="<%= doctor.consultationFee || 500 %>" min="0" max="50000">
               <span class="error-message" id="errorConsultationFee"></span>
             </div>
+
           </div>
 
           <div class="form-group">
             <label>Bio / About Yourself</label>
-            <textarea 
-              id="bio" 
-              name="bio"
+            <textarea id="bio" name="bio"
               placeholder="Tell patients about your expertise, approach, and experience..."
-              maxlength="1000"
-            ><%= doctor.bio || '' %></textarea>
+              maxlength="1000"><%= doctor.bio || '' %></textarea>
             <span class="error-message" id="errorBio"></span>
           </div>
         </div>
@@ -771,7 +706,6 @@
   <script>
     let cropper;
 
-    // Initialize ImageCropper
     cropper = new ImageCropper({
       inputId: 'imageInput',
       previewId: 'imagePreview',
@@ -780,7 +714,6 @@
       minHeight: 200
     });
 
-    // Show/hide edit modal
     function showEditModal() {
       document.getElementById('editModal').classList.add('show');
     }
@@ -794,14 +727,10 @@
       document.querySelectorAll('.error-message').forEach(el => el.classList.remove('show'));
     }
 
-    // Close modal on overlay click
     document.getElementById('editModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeEditModal();
-      }
+      if (e.target === this) closeEditModal();
     });
 
-    // Show crop modal when image selected
     document.getElementById('imageInput').addEventListener('change', () => {
       setTimeout(() => {
         document.getElementById('cropperModal').classList.add('show');
@@ -859,17 +788,13 @@
       Loader.show('Deleting...');
 
       try {
-        const response = await fetch('/doctor/delete-profile-image', {
-          method: 'DELETE'
-        });
-
+        const response = await fetch('/doctor/delete-profile-image', { method: 'DELETE' });
         const data = await response.json();
         Loader.hide();
 
         if (data.success) {
           Alert.success(data.message);
-          document.getElementById('avatarDisplay').innerHTML = 
-            '<i class="fas fa-user-md"></i>';
+          document.getElementById('avatarDisplay').innerHTML = '<i class="fas fa-user-md"></i>';
           window.location.reload();
         } else {
           Alert.error(data.error || 'Delete failed');
@@ -880,7 +805,6 @@
       }
     }
 
-    // Profile form submission with basic validation
     document.getElementById('profileForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       clearErrors();
@@ -891,7 +815,6 @@
         data[key] = typeof value === 'string' ? value.trim() : value;
       });
 
-      // Basic frontend validation
       let hasError = false;
 
       if (!data.name || data.name.length < 3) {
@@ -918,14 +841,13 @@
       }
 
       const payload = {
-        name: data.name,
-        phone: data.phone,
-        specialization: data.specialization,
-        department: data.department,
-        qualification: data.qualification || null,
-        experience: data.experience || 0,
+        name:            data.name,
+        phone:           data.phone,
+        specialization:  data.specialization,
+        qualification:   data.qualification || null,
+        experience:      data.experience || 0,
         consultationFee: data.consultationFee || 500,
-        bio: data.bio || null
+        bio:             data.bio || null
       };
 
       Loader.show('Saving...');

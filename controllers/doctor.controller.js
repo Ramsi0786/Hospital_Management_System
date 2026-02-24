@@ -15,7 +15,6 @@ export const updateDoctorProfile = async (req, res) => {
       name, 
       phone, 
       specialization,
-      department,
       bio, 
       qualification, 
       experience, 
@@ -64,16 +63,6 @@ export const updateDoctorProfile = async (req, res) => {
         errors.specialization = 'Specialization must be at least 3 characters';
       } else if (trimmed.length > 100) {
         errors.specialization = 'Specialization must be less than 100 characters';
-      }
-    }
-
-   if (!department || typeof department !== 'string') {
-      errors.department = 'Department is required';
-    } else {
-      const trimmed = department.trim();
-      
-      if (trimmed.length < 3) {
-        errors.department = 'Department must be at least 3 characters';
       }
     }
 
@@ -129,7 +118,6 @@ export const updateDoctorProfile = async (req, res) => {
       name: name.trim(),
       phone: phone.trim(),
       specialization: specialization.trim(),
-      department: department.trim(),
       qualification: qualification ? qualification.trim() : '',
       experience: experience ? Number(experience) : 0,
       consultationFee: consultationFee ? Number(consultationFee) : 500,
