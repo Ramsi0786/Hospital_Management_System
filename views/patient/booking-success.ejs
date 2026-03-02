@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
+    .main-content { margin-left:260px; padding:30px; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+
+    .success-wrap { max-width:600px; width:100%; }
+
+    /* Success icon */
+    .success-icon-wrap { text-align:center; margin-bottom:28px; }
+    .success-circle { width:90px; height:90px; border-radius:50%; background:linear-gradient(135deg,#059669,#10b981); display:inline-flex; align-items:center; justify-content:center; font-size:40px; color:white; box-shadow:0 8px 30px rgba(5,150,105,.3); animation:popIn .4s cubic-bezier(.175,.885,.32,1.275); }
+    @keyframes popIn { from { transform:scale(0); opacity:0; } to { transform:scale(1); opacity:1; } }
+
+    .success-title { font-size:28px; font-weight:800; color:#1a202c; text-align:center; margin-bottom:6px; }
+    .success-sub   { font-size:15px; color:#64748b; text-align:center; margin-bottom:28px; }
+
+    /* Main card */
+    .booking-card { background:white; border-radius:20px; padding:28px; box-shadow:0 4px 20px rgba(0,0,0,.08); margin-bottom:20px; }
+
+    /* Status badge */
+    .status-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid #f0f2f5; }
+    .booking-id { font-size:13px; color:#94a3b8; font-weight:600; }
+    .booking-id span { color:#374151; }
+    .status-badge { padding:5px 14px; border-radius:20px; font-size:12px; font-weight:800; text-transform:uppercase; }
+    .status-badge.confirmed { background:#ecfdf5; color:#059669; }
+    .status-badge.pending   { background:#fffbeb; color:#d97706; }
+
+    /* Doctor row */
+    .doctor-row { display:flex; align-items:center; gap:14px; margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid #f0f2f5; }
+    .doc-img { width:60px; height:60px; border-radius:50%; object-fit:cover; border:3px solid #e2e8f0; }
+    .doc-initials { width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg,#203f6a,#1a7f8e); color:white; font-size:20px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .doc-name { font-size:17px; font-weight:800; color:#1a202c; }
+    .doc-spec { font-size:13px; color:#64748b; }
+
+    /* Details grid */
+    .details-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .detail-item { background:#f8fafc; border-radius:10px; padding:14px; }
+    .detail-label { font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px; }
+    .detail-value { font-size:15px; font-weight:700; color:#1a202c; }
+    .detail-value.fee { color:#203f6a; font-size:18px; }
+
+    /* Payment info */
+    .payment-row { display:flex; align-items:center; justify-content:space-between; background:#f8fafc; border-radius:12px; padding:14px 18px; margin-top:16px; }
+    .pay-left { display:flex; align-items:center; gap:10px; font-size:14px; font-weight:700; color:#374151; }
+    .pay-left i { color:#203f6a; font-size:18px; }
+    .pay-status { font-size:12px; font-weight:800; padding:4px 10px; border-radius:20px; }
+    .pay-status.paid    { background:#ecfdf5; color:#059669; }
+    .pay-status.pending { background:#fffbeb; color:#d97706; }
+
+    /* Cash note */
+    .cash-note { background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; font-size:13px; color:#92400e; margin-top:14px; display:flex; gap:10px; }
+    .cash-note i { color:#d97706; flex-shrink:0; margin-top:1px; }
+
+    /* Action buttons */
+    .action-row { display:flex; gap:12px; }
+    .btn-primary { flex:1; padding:14px; background:#203f6a; color:white; border:none; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s; }
+    .btn-primary:hover { background:#1a3456; color:white; transform:translateY(-1px); }
+    .btn-outline { flex:1; padding:14px; background:white; color:#203f6a; border:2px solid #203f6a; border-radius:12px; font-size:15px; font-weight:700; cursor:pointer; font-family:inherit; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:8px; transition:all .2s; }
+    .btn-outline:hover { background:#eff6ff; color:#203f6a; }
+
+    @media (max-width:768px) { .main-content { margin-left:70px; } .details-grid { grid-template-columns:1fr; } .action-row { flex-direction:column; } }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/patient-sidebar', { currentPage: 'appointments' }) %>
+
+<div class="main-content">
+  <div class="success-wrap">
+
+    <div class="success-icon-wrap">
+      <div class="success-circle"><i class="fas fa-check"></i></div>
+    </div>
+
+    <% if (appointment.paymentMethod === 'cash') { %>
+      <div class="success-title">Appointment Booked!</div>
+      <div class="success-sub">Your appointment is pending confirmation. Please pay at the clinic.</div>
+    <% } else { %>
+      <div class="success-title">Booking Confirmed!</div>
+      <div class="success-sub">Your appointment has been confirmed and payment received.</div>
+    <% } %>
+
+    <!-- Booking Card -->
+    <div class="booking-card">
+
+      <div class="status-row">
+        <div class="booking-id">
+          Booking ID: <span>#<%= appointment._id.toString().slice(-8).toUpperCase() %></span>
+        </div>
+        <span class="status-badge <%= appointment.status %>">
+          <%= appointment.status.toUpperCase() %>
+        </span>
+      </div>
+
+      <!-- Doctor -->
+      <div class="doctor-row">
+        <% if (appointment.doctor.profileImage) { %>
+          <img class="doc-img" src="<%= appointment.doctor.profileImage %>" alt="">
+        <% } else { %>
+          <div class="doc-initials">
+            <%= appointment.doctor.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) %>
+          </div>
+        <% } %>
+        <div>
+          <div class="doc-name">Dr. <%= appointment.doctor.name %></div>
+          <div class="doc-spec"><%= appointment.doctor.specialization %> · <%= appointment.doctor.department %></div>
+        </div>
+      </div>
+
+      <!-- Details -->
+      <div class="details-grid">
+        <div class="detail-item">
+          <div class="detail-label"><i class="fas fa-calendar"></i> Date</div>
+          <div class="detail-value">
+            <%= new Date(appointment.date + 'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'}) %>
+          </div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label"><i class="fas fa-clock"></i> Time</div>
+          <div class="detail-value"><%= appointment.timeSlot %></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label"><i class="fas fa-hospital"></i> Department</div>
+          <div class="detail-value"><%= appointment.department || appointment.doctor.department %></div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label"><i class="fas fa-indian-rupee-sign"></i> Consultation Fee</div>
+          <div class="detail-value fee">₹<%= appointment.consultationFee %></div>
+        </div>
+      </div>
+
+      <!-- Payment -->
+      <div class="payment-row">
+        <div class="pay-left">
+          <% if (appointment.paymentMethod === 'cash') { %>
+            <i class="fas fa-money-bill-wave"></i> Pay at Clinic
+          <% } else if (appointment.paymentMethod === 'wallet') { %>
+            <i class="fas fa-wallet"></i> Healora Wallet
+          <% } else { %>
+            <i class="fas fa-credit-card"></i> Online Payment
+          <% } %>
+        </div>
+        <span class="pay-status <%= appointment.paymentStatus === 'paid' ? 'paid' : 'pending' %>">
+          <%= appointment.paymentStatus === 'paid' ? 'PAID' : 'PAY AT CLINIC' %>
+        </span>
+      </div>
+
+      <% if (appointment.paymentMethod === 'cash') { %>
+        <div class="cash-note">
+          <i class="fas fa-info-circle"></i>
+          <span>Please carry ₹<%= appointment.consultationFee %> in cash to your appointment. Payment is due at the time of your visit.</span>
+        </div>
+      <% } %>
+
+    </div>
+    
+         <!-- Email notice -->
+<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px;">
+  <i class="fas fa-envelope" style="color:#2563eb;font-size:18px;flex-shrink:0;"></i>
+  <div>
+    <p style="margin:0;font-size:13px;font-weight:700;color:#1e40af;">Confirmation email sent!</p>
+    <p style="margin:3px 0 0;font-size:12px;color:#3b82f6;">
+      Your invoice PDF has been sent to your email. Check your inbox to download it.
+    </p>
+  </div>
+</div>
+
+    <!-- Action Buttons -->
+    <div class="action-row">
+      <a href="/patient/appointments" class="btn-primary">
+        <i class="fas fa-calendar-alt"></i> My Appointments
+      </a>
+      <a href="/patient/doctors" class="btn-outline">
+        <i class="fas fa-search"></i> Find More Doctors
+      </a>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

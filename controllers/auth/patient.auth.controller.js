@@ -1,4 +1,6 @@
 import Patient from "../../models/patient.model.js";
+import Wallet from "../../models/wallet.model.js";
+import WalletTransaction from "../../models/walletTransaction.model.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import passport from "passport";
@@ -8,8 +10,7 @@ import { sendOtpEmail, sendConfirmationEmail, sendPasswordResetEmail } from "../
 import { generateAccessToken, generateRefreshToken } from '../../config/jwt.js';
 import RefreshToken from '../../models/refreshToken.model.js';
 
-// ──────────────── issue a brand-new token pair ────────────────
-
+// ════════════════════════ Helpers════════════════════════
 const issueTokens = async (userId, family = null) => {
   const tokenFamily = family || crypto.randomUUID();
 
@@ -34,34 +35,53 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     sameSite: 'lax',
-    maxAge: 15 * 60 * 1000  
+    maxAge: 15 * 60 * 1000
   });
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 
+    maxAge: 7 * 24 * 60 * 60 * 1000
   });
 };
 
-// ====================== SIGNUP =====================================
+/* ════════════════════════ Wallet ════════════════════════ */
+
+const ensureWallet = async (patientId) => {
+  const existing = await Wallet.findOne({ patient: patientId });
+  if (existing) return existing;
+
+  const wallet = await Wallet.create({ patient: patientId, balance: 0 });
+
+  await WalletTransaction.create({
+    patient:         patientId,
+    type:            'credit',
+    amount:          0,
+    description:     'Wallet created on account registration',
+    balanceBefore:   0,
+    balanceAfter:    0,
+    transactionType: 'topup'
+  });
+
+  return wallet;
+};
+
+// ════════════════════════ SIGNUP ════════════════════════
+
 export const signup = async (req, res) => {
   const { name, email, phone, password, confirmPassword } = req.body;
   let errors = {};
 
-  if (!name || name.trim().length < 3) {
-    errors.name = "Name must be at least 3 characters long";
-  } else if (!/^[a-zA-Z\s]+$/.test(name.trim())) {
-    errors.name = "Name can only contain letters and spaces";
-  }
+  if (!name || name.trim().length < 3)          errors.name = "Name must be at least 3 characters long";
+  else if (!/^[a-zA-Z\s]+$/.test(name.trim()))  errors.name = "Name can only contain letters and spaces";
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || !emailRegex.test(email)) errors.email = "Invalid email address";
+  if (!email || !emailRegex.test(email))         errors.email = "Invalid email address";
 
   const phoneRegex = /^[0-9]{10}$/;
-  if (!phone || !phoneRegex.test(phone)) errors.phone = "Phone number must be 10 digits";
+  if (!phone || !phoneRegex.test(phone))         errors.phone = "Phone number must be 10 digits";
 
-  if (!password || password.length < 6) errors.password = "Password must be at least 6 characters";
-  if (password !== confirmPassword) errors.confirmPassword = "Passwords do not match";
+  if (!password || password.length < 6)          errors.password = "Password must be at least 6 characters";
+  if (password !== confirmPassword)              errors.confirmPassword = "Passwords do not match";
 
   if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
 
@@ -76,13 +96,15 @@ export const signup = async (req, res) => {
 
     if (existing && !existing.isActive && !existing.isBlocked) {
       const hashedPassword = await bcrypt.hash(password.trim(), 10);
-      existing.name = name.trim();
-      existing.phone = phone;
-      existing.password = hashedPassword;
-      existing.isActive = true;
+      existing.name         = name.trim();
+      existing.phone        = phone;
+      existing.password     = hashedPassword;
+      existing.isActive     = true;
       existing.deactivatedAt = null;
-      existing.isVerified = false;
+      existing.isVerified   = false;
       await existing.save();
+
+      await ensureWallet(existing._id);
 
       const otp = generateOtp();
       req.session.otpEmail    = email.toLowerCase().trim();
@@ -96,7 +118,7 @@ export const signup = async (req, res) => {
 
       return res.status(200).json({
         message: "Account reactivated! Please verify your email with the OTP sent.",
-        requiresOtp: true,
+        requiresOtp: true
       });
     }
 
@@ -107,15 +129,14 @@ export const signup = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
-    const newPatient = new Patient({
-      name: name.trim(),
+    const newPatient = await Patient.create({
+      name:       name.trim(),
       email,
       phone,
-      password: hashedPassword,
+      password:   hashedPassword,
       isVerified: false,
-      isActive: true
+      isActive:   true
     });
-    await newPatient.save();
 
     const otp = generateOtp();
     req.session.otpEmail    = email.toLowerCase().trim();
@@ -129,7 +150,7 @@ export const signup = async (req, res) => {
 
     return res.status(201).json({
       message: "OTP sent to your email",
-      requiresOtp: true,
+      requiresOtp: true
     });
   } catch (err) {
     console.error("Signup Error:", err);
@@ -138,6 +159,8 @@ export const signup = async (req, res) => {
     });
   }
 };
+
+// ════════════════════════ OTP ════════════════════════
 
 export const requireOtpSession = (req, res, next) => {
   if (req.session.otpVerified === true) {
@@ -182,12 +205,8 @@ export const verifyOtp = async (req, res) => {
     }
 
     const patient = await Patient.findOne({ email: cleanEmail });
-    if (!patient) {
-      return res.status(404).json({ errors: { general: "User not found." } });
-    }
-    if (patient.isBlocked) {
-      return res.status(403).json({ errors: { general: "Your account is blocked." } });
-    }
+    if (!patient)        return res.status(404).json({ errors: { general: "User not found." } });
+    if (patient.isBlocked) return res.status(403).json({ errors: { general: "Your account is blocked." } });
 
     if (storedOtp !== otp) {
       req.session.otpAttempts = (req.session.otpAttempts || 0) + 1;
@@ -210,6 +229,8 @@ export const verifyOtp = async (req, res) => {
     patient.deactivatedAt = null;
     await patient.save();
 
+    await ensureWallet(patient._id);
+
     await redisClient.del(`otp:email:${cleanEmail}`);
     delete req.session.otpEmail;
     delete req.session.otpExpiry;
@@ -217,7 +238,6 @@ export const verifyOtp = async (req, res) => {
 
     await sendConfirmationEmail(cleanEmail);
 
-    // ── Fresh login, new family ──
     const { accessToken, refreshToken } = await issueTokens(patient._id);
     setAuthCookies(res, accessToken, refreshToken);
 
@@ -243,12 +263,8 @@ export const resendOtp = async (req, res) => {
     const cleanEmail = email.toLowerCase().trim();
     const patient    = await Patient.findOne({ email: cleanEmail });
 
-    if (!patient) {
-      return res.status(404).json({ errors: { general: "User not found." } });
-    }
-    if (patient.isVerified) {
-      return res.status(400).json({ errors: { general: "Email already verified." } });
-    }
+    if (!patient)           return res.status(404).json({ errors: { general: "User not found." } });
+    if (patient.isVerified) return res.status(400).json({ errors: { general: "Email already verified." } });
 
     req.session.resendCount = (req.session.resendCount || 0) + 1;
     if (req.session.resendCount > 3) {
@@ -273,14 +289,15 @@ export const resendOtp = async (req, res) => {
   }
 };
 
-// ==================== LOGIN ====================
+// ════════════════════════ LOGIN ════════════════════════
+
 export const login = async (req, res) => {
-  const { email, password, remember } = req.body;
+  const { email, password } = req.body;
   let errors = {};
 
-  if (!email) errors.email = "Email is required";
+  if (!email)                                           errors.email = "Email is required";
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errors.email = "Invalid email format";
-  if (!password) errors.password = "Password is required";
+  if (!password)                                        errors.password = "Password is required";
   if (Object.keys(errors).length > 0) return res.status(400).json({ errors });
 
   try {
@@ -290,24 +307,16 @@ export const login = async (req, res) => {
       return res.status(404).json({ errors: { email: "No account found with this email" } });
     }
     if (patient.isBlocked) {
-      return res.status(403).json({
-        errors: { general: "Your account is blocked. Please contact support." }
-      });
+      return res.status(403).json({ errors: { general: "Your account is blocked. Please contact support." } });
     }
     if (!patient.isActive) {
-      return res.status(403).json({
-        errors: { general: "Your account is inactive. Please sign up again or use Google Sign-In." }
-      });
+      return res.status(403).json({ errors: { general: "Your account is inactive. Please sign up again or use Google Sign-In." } });
     }
     if (!patient.password) {
-      return res.status(400).json({
-        errors: { general: "This account only uses Google Sign-In. Please click 'Sign in with Google' button." }
-      });
+      return res.status(400).json({ errors: { general: "This account only uses Google Sign-In. Please click 'Sign in with Google' button." } });
     }
     if (!patient.googleId && !patient.isVerified) {
-      return res.status(403).json({
-        errors: { general: "Please verify your email before logging in." }
-      });
+      return res.status(403).json({ errors: { general: "Please verify your email before logging in." } });
     }
 
     const isMatch = await bcrypt.compare(password.trim(), patient.password);
@@ -315,20 +324,20 @@ export const login = async (req, res) => {
       return res.status(400).json({ errors: { password: "Incorrect password" } });
     }
 
-    // ── Fresh login, new family ──
+    await ensureWallet(patient._id);
+
     const { accessToken, refreshToken } = await issueTokens(patient._id);
     setAuthCookies(res, accessToken, refreshToken);
 
     return res.status(200).json({ redirect: "/patient/dashboard" });
   } catch (err) {
     console.error("Login Error:", err);
-    return res.status(500).json({
-      errors: { general: "Server error. Please try again later." }
-    });
+    return res.status(500).json({ errors: { general: "Server error. Please try again later." } });
   }
 };
 
-// ==================== REFRESH TOKEN ROTATION ====================
+//════════════════════════ REFRESH TOKEN ROTATION ════════════════════════
+
 export const refreshAccessToken = async (req, res) => {
   const incomingToken = req.cookies.refreshToken;
 
@@ -374,35 +383,33 @@ export const refreshAccessToken = async (req, res) => {
   }
 };
 
-// ==================== GOOGLE AUTH ====================
+//════════════════════════ GOOGLE AUTH ════════════════════════
+
 export const googleAuth = passport.authenticate("google", {
   scope: ["profile", "email"]
 });
 
 export const googleCallback = async (req, res) => {
   try {
-    if (!req.user) {
-      return res.redirect("/patient/login?error=no_user");
-    }
-
-    if (req.user.isBlocked) {
-      return res.redirect("/patient/login?error=blocked");
-    }
+    if (!req.user) return res.redirect("/patient/login?error=no_user");
+    if (req.user.isBlocked) return res.redirect("/patient/login?error=blocked");
 
     if (!req.user.password) {
-      const autoPassword = crypto.randomBytes(16).toString('hex'); 
-      req.user.password = await bcrypt.hash(autoPassword, 10);    
+      const autoPassword = crypto.randomBytes(16).toString('hex');
+      req.user.password = await bcrypt.hash(autoPassword, 10);
       req.user.needsPasswordSetup = true;
       await req.user.save();
     }
 
     if (!req.user.isActive) {
       await Patient.findByIdAndUpdate(req.user._id, {
-        isActive: true,
+        isActive:      true,
         deactivatedAt: null,
-        isVerified: true
+        isVerified:    true
       });
     }
+
+    await ensureWallet(req.user._id);
 
     const { accessToken, refreshToken } = await issueTokens(req.user._id);
     setAuthCookies(res, accessToken, refreshToken);
@@ -419,7 +426,7 @@ export const googleCallback = async (req, res) => {
   }
 };
 
-// ==================== FORGOT PASSWORD ====================
+// ════════════════════════ FORGOT / RESET PASSWORD ════════════════════════
 export const renderForgotPassword = (req, res) => {
   res.render("patient/forgot-password", { error: null, success: null });
 };
@@ -452,7 +459,6 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// ==================== RESET PASSWORD ====================
 export const renderResetPassword = (req, res) => {
   const { email, token } = req.query;
   if (!email || !token) return res.redirect("/patient/forgot-password");
@@ -493,7 +499,6 @@ export const resetPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     await Patient.findOneAndUpdate({ email }, { password: hashedPassword, isVerified: true });
     await redisClient.del(`reset:${email}`);
-
     await RefreshToken.deleteMany({ userId: user._id, userModel: 'Patient' });
 
     return res.render("patient/reset-password", {
@@ -509,7 +514,8 @@ export const resetPassword = async (req, res) => {
   }
 };
 
-// ==================== SETUP PASSWORD ====================
+// ════════════════════════ SETUP PASSWORD ════════════════════════
+
 export const setupPassword = async (req, res) => {
   try {
     const { password, confirmPassword } = req.body;
@@ -523,7 +529,7 @@ export const setupPassword = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
     await Patient.findByIdAndUpdate(req.user._id, {
-      password: hashedPassword,
+      password:           hashedPassword,
       needsPasswordSetup: false
     });
 
@@ -534,7 +540,8 @@ export const setupPassword = async (req, res) => {
   }
 };
 
-// ==================== LOGOUT ====================
+// ════════════════════════ LOGOUT ════════════════════════
+
 export const logout = async (req, res) => {
   try {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -544,9 +551,7 @@ export const logout = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     if (refreshToken) {
       const stored = await RefreshToken.findOne({ token: refreshToken });
-      if (stored) {
-        await RefreshToken.deleteMany({ family: stored.family });
-      }
+      if (stored) await RefreshToken.deleteMany({ family: stored.family });
     }
 
     res.clearCookie('accessToken');
