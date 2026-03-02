@@ -174,3 +174,157 @@ export const sendDoctorWelcomeEmail = async (to, name, password) => {
     throw error;
   }
 };
+
+export const sendBookingConfirmationEmail = async (to, data, pdfBuffer) => {
+  const { patientName, doctorName, specialization, department,
+          date, timeSlot, fee, paymentMethod, paymentStatus,
+          bookingId, status } = data;
+
+  const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-IN', {
+    weekday: 'long', day: '2-digit', month: 'long', year: 'numeric'
+  });
+
+  const payLabel =
+    paymentMethod === 'cash'     ? 'Pay at Clinic'  :
+    paymentMethod === 'wallet'   ? 'Healora Wallet'  :
+    'Online Payment (Razorpay)';
+
+  const statusColor =
+    status === 'confirmed' ? '#059669' :
+    status === 'pending'   ? '#d97706' : '#dc2626';
+
+  const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+      <div style="max-width:600px;margin:0 auto;padding:30px 20px;">
+
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#203f6a 0%,#1a7f8e 100%);border-radius:16px 16px 0 0;padding:32px;text-align:center;">
+          <h1 style="margin:0;color:white;font-size:28px;font-weight:800;letter-spacing:-0.5px;">HEALORA</h1>
+          <p style="margin:6px 0 0;color:rgba(255,255,255,0.8);font-size:13px;">Hospital Management System</p>
+        </div>
+
+        <!-- Status Banner -->
+        <div style="background:white;padding:24px 32px;border-left:4px solid ${statusColor};">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div style="width:12px;height:12px;border-radius:50%;background:${statusColor};flex-shrink:0;"></div>
+            <div>
+              <p style="margin:0;font-size:18px;font-weight:800;color:#1a202c;">
+                Appointment ${statusLabel}
+              </p>
+              <p style="margin:4px 0 0;font-size:13px;color:#64748b;">
+                Booking ID: <strong>#${bookingId}</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div style="background:white;padding:32px;border-radius:0 0 16px 16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+
+          <p style="margin:0 0 24px;font-size:15px;color:#374151;">
+            Hello <strong>${patientName}</strong>,<br><br>
+            ${status === 'confirmed'
+              ? 'Your appointment has been <strong>confirmed</strong>. Your invoice is attached to this email.'
+              : 'Your appointment has been <strong>booked successfully</strong>. Please complete payment at the clinic.'}
+          </p>
+
+          <!-- Appointment Details Card -->
+          <div style="background:#f8fafc;border-radius:12px;padding:20px;margin-bottom:24px;">
+            <h3 style="margin:0 0 16px;font-size:14px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">
+              Appointment Details
+            </h3>
+
+            <table style="width:100%;border-collapse:collapse;">
+              <tr>
+                <td style="padding:8px 0;font-size:13px;color:#64748b;width:40%;">Doctor</td>
+                <td style="padding:8px 0;font-size:13px;font-weight:700;color:#1a202c;">Dr. ${doctorName}</td>
+              </tr>
+              <tr style="border-top:1px solid #e2e8f0;">
+                <td style="padding:8px 0;font-size:13px;color:#64748b;">Specialization</td>
+                <td style="padding:8px 0;font-size:13px;font-weight:600;color:#374151;">${specialization}</td>
+              </tr>
+              <tr style="border-top:1px solid #e2e8f0;">
+                <td style="padding:8px 0;font-size:13px;color:#64748b;">Department</td>
+                <td style="padding:8px 0;font-size:13px;font-weight:600;color:#374151;">${department}</td>
+              </tr>
+              <tr style="border-top:1px solid #e2e8f0;">
+                <td style="padding:8px 0;font-size:13px;color:#64748b;">Date</td>
+                <td style="padding:8px 0;font-size:13px;font-weight:700;color:#1a202c;">${dateLabel}</td>
+              </tr>
+              <tr style="border-top:1px solid #e2e8f0;">
+                <td style="padding:8px 0;font-size:13px;color:#64748b;">Time</td>
+                <td style="padding:8px 0;font-size:13px;font-weight:700;color:#1a202c;">${timeSlot}</td>
+              </tr>
+              <tr style="border-top:1px solid #e2e8f0;">
+                <td style="padding:8px 0;font-size:13px;color:#64748b;">Consultation Fee</td>
+                <td style="padding:8px 0;font-size:15px;font-weight:800;color:#203f6a;">Rs. ${fee}</td>
+              </tr>
+              <tr style="border-top:1px solid #e2e8f0;">
+                <td style="padding:8px 0;font-size:13px;color:#64748b;">Payment Method</td>
+                <td style="padding:8px 0;font-size:13px;font-weight:600;color:#374151;">${payLabel}</td>
+              </tr>
+              <tr style="border-top:1px solid #e2e8f0;">
+                <td style="padding:8px 0;font-size:13px;color:#64748b;">Payment Status</td>
+                <td style="padding:8px 0;">
+                  <span style="background:${statusColor}20;color:${statusColor};font-size:11px;font-weight:800;padding:3px 10px;border-radius:20px;text-transform:uppercase;">
+                    ${paymentStatus}
+                  </span>
+                </td>
+              </tr>
+            </table>
+          </div>
+
+          ${paymentMethod === 'cash' ? `
+          <!-- Cash reminder -->
+          <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:24px;">
+            <p style="margin:0;font-size:13px;color:#92400e;">
+              <strong>Reminder:</strong> Please carry <strong>Rs. ${fee}</strong> in cash to your appointment.
+              Payment is due at the time of your visit.
+            </p>
+          </div>` : ''}
+
+          <!-- CTA Button -->
+          <div style="text-align:center;margin-bottom:24px;">
+            <a href="${process.env.BASE_URL}/patient/appointments"
+               style="display:inline-block;background:linear-gradient(135deg,#203f6a,#1a7f8e);color:white;text-decoration:none;padding:14px 32px;border-radius:10px;font-size:14px;font-weight:700;">
+              View My Appointments
+            </a>
+          </div>
+
+          <p style="margin:0;font-size:12px;color:#94a3b8;text-align:center;line-height:1.6;">
+            Need help? Contact us at <a href="mailto:support@healora.com" style="color:#203f6a;">support@healora.com</a><br>
+            © ${new Date().getFullYear()} Healora Hospital Management System
+          </p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const mailOptions = {
+    from:    `"Healora" <${process.env.SMTP_USER}>`,
+    to,
+    subject: `Appointment ${statusLabel} — Dr. ${doctorName} on ${dateLabel}`,
+    html,
+    attachments: pdfBuffer ? [{
+      filename:    `healora-invoice-${bookingId}.pdf`,
+      content:     pdfBuffer,
+      contentType: 'application/pdf'
+    }] : []
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+
+    console.error('Booking confirmation email error:', error);
+  }
+};
