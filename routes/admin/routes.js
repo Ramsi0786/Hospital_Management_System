@@ -31,10 +31,6 @@ router.get('/department/:id', (req, res) => {
   res.render('admin/department-detail', { title: 'Department Details - Healora Admin', admin: req.admin });
 });
 
-router.get('/appointments', (req, res) => {
-  res.render('admin/appointments', { title: 'Manage Appointments - Healora Admin', admin: req.admin });
-});
-
 router.get('/settings', (req, res) => {
   res.render('admin/settings', { title: 'Settings - Healora Admin', admin: req.admin });
 });
@@ -43,5 +39,10 @@ router.get('/settings', (req, res) => {
 router.use('/api/patients',    patientRoutes);
 router.use('/api/doctors',     doctorRoutes);     
 router.use('/api/departments', departmentRoutes);
+
+// ==================== APPOINTMENTS ====================
+router.get('/appointments', adminProtect, adminController.getAdminAppointments);
+router.get('/api/appointments/:id', adminProtect, adminController.getAppointmentById);
+router.patch('/api/appointments/:id/status', adminProtect, adminController.updateAppointmentStatus);
 
 export default router;

@@ -4,6 +4,7 @@ import Department from "../models/department.model.js";
 import Appointment from "../models/appointment.model.js";
 import { sanitizePagination, PAGINATION } from '../constants/index.js';
 import { resolveSlots } from '../controllers/availability.controller.js';
+import Invoice from '../models/invoice.model.js';
 
 
 export const getDashboard = (req, res) => {
@@ -293,5 +294,63 @@ export const getAppointments = async (req, res) => {
   } catch (error) {
     console.error('Get appointments error:', error);
     res.status(500).render('error', { title: 'Error', message: 'Failed to load appointments', user: req.user });
+  }
+};
+
+export const getAppointmentDetail = async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id)
+      .populate('doctor', 'name specialization department profileImage consultationFee phone email');
+
+    if (!appointment || appointment.patient.toString() !== req.user._id.toString()) {
+      return res.redirect('/patient/appointments');
+    }
+
+    res.render('patient/appointment-detail', {
+      title: 'Appointment Details - Healora',
+      user:   req.user,
+      appointment
+    });
+  } catch (error) {
+    console.error('Get appointment detail error:', error);
+    res.redirect('/patient/appointments');
+  }
+};
+
+
+export const getInvoices = async (req, res) => {
+  try {
+    const { type, page } = req.query;
+    const limit   = 10;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const skip    = (pageNum - 1) * limit;
+
+    let query = { patient: req.user._id };
+    if (type && type !== 'all') query.type = type;
+
+    const [invoices, total] = await Promise.all([
+      Invoice.find(query)
+        .populate({
+          path: 'appointment',
+          populate: { path: 'doctor', select: 'name specialization department profileImage' }
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Invoice.countDocuments(query)
+    ]);
+
+    res.render('patient/invoices', {
+      title:       'My Invoices - Healora',
+      user:         req.user,
+      invoices,
+      total,
+      selectedType: type || 'all',
+      currentPage:  pageNum,
+      totalPages:   Math.ceil(total / limit)
+    });
+  } catch (err) {
+    console.error('Get invoices error:', err);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load invoices', user: req.user });
   }
 };

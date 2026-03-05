@@ -1,4 +1,23 @@
 import PDFDocument from 'pdfkit';
+import Invoice from '../models/invoice.model.js';
+
+export const saveInvoiceRecord = async (appointment, type = 'booking') => {
+  try {
+    const invoiceNumber = await Invoice.generateInvoiceNumber(type);
+    const invoice = await Invoice.create({
+      appointment: appointment._id,
+      patient:     appointment.patient,
+      invoiceNumber,
+      type,
+      amount:      appointment.consultationFee,
+      pdfGeneratedAt: new Date()
+    });
+    return invoice;
+  } catch (err) {
+    console.error('Save invoice record error:', err.message);
+    return null;
+  }
+};
 
 
 export const generateInvoicePDF = (data) => {

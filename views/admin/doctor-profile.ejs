@@ -10,86 +10,13 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/admin/dashboard.css">
   <link rel="stylesheet" href="/css/admin/profile.css">
-  <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; }
-    .profile-header {
-      background: linear-gradient(135deg, #203f6a 0%, #2d5a8e 60%, #1a7f8e 100%) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 8px 32px rgba(32,63,106,0.2) !important;
-    }
-    .profile-header::before, .profile-header::after { display: none !important; }
-    .abadge { padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; text-transform:uppercase; }
-    .abadge.pending   { background:#fffbeb; color:#d97706; }
-    .abadge.confirmed { background:#eff6ff; color:#2563eb; }
-    .abadge.completed { background:#ecfdf5; color:#059669; }
-    .abadge.cancelled { background:#fef2f2; color:#dc2626; }
-    .abadge.rejected  { background:#fdf4ff; color:#9333ea; }
-    .avail-card { background:white; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:24px; }
-    .avail-card-header { padding:18px 24px 0; border-bottom:1px solid #f0f2f5; }
-    .avail-card-title { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
-    .avail-card-title i { color:#203f6a; font-size:18px; }
-    .avail-card-title h3 { font-size:18px; font-weight:600; color:#1a202c; margin:0; }
-    .avail-tabs { display:flex; gap:4px; }
-    .avail-tab { padding:9px 18px; border-radius:8px 8px 0 0; border:1px solid transparent; border-bottom:none; background:transparent; color:#64748b; cursor:pointer; font-size:13px; font-weight:600; font-family:inherit; transition:all .2s; display:inline-flex; align-items:center; gap:6px; position:relative; bottom:-1px; }
-    .avail-tab:hover { color:#203f6a; background:#f8fafc; }
-    .avail-tab.active { background:white; color:#203f6a; border-color:#e2e8f0; border-bottom-color:white; }
-    .avail-body { padding:24px; }
-    .avail-desc { font-size:14px; color:#64748b; margin-bottom:20px; line-height:1.6; }
-    .day-row { border:1px solid #e2e8f0; border-radius:10px; margin-bottom:10px; overflow:hidden; }
-    .day-row.is-working { border-color:#bfdbfe; }
-    .day-toggle { display:flex; align-items:center; gap:12px; padding:13px 16px; background:#f8fafc; }
-    .day-row.is-working .day-toggle { background:#eff6ff; }
-    .day-name { font-size:14px; font-weight:700; color:#374151; flex:1; }
-    .day-row.is-working .day-name { color:#1d4ed8; }
-    .slots-count { font-size:12px; color:#94a3b8; font-weight:500; }
-    .day-row.is-working .slots-count { color:#60a5fa; }
-    .toggle-sw { position:relative; display:inline-block; width:40px; height:22px; }
-    .toggle-sw input { opacity:0; width:0; height:0; }
-    .toggle-knob { position:absolute; inset:0; background:#cbd5e1; border-radius:22px; cursor:pointer; transition:.25s; }
-    .toggle-knob:before { content:''; position:absolute; width:16px; height:16px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.25s; box-shadow:0 1px 4px rgba(0,0,0,.15); }
-    .toggle-sw input:checked + .toggle-knob { background:#203f6a; }
-    .toggle-sw input:checked + .toggle-knob:before { transform:translateX(18px); }
-    .day-slots { padding:14px 16px; display:flex; flex-wrap:wrap; gap:6px; }
-    .slots-hidden { display:none !important; }
-    .slot-pill { display:flex; align-items:center; }
-    .slot-pill input { display:none; }
-    .slot-pill span { padding:5px 11px; border:1px solid #e2e8f0; border-radius:6px; font-size:12px; color:#64748b; cursor:pointer; transition:all .15s; user-select:none; font-weight:500; }
-    .slot-pill input:checked + span { background:#203f6a; color:white; border-color:#203f6a; }
-    .slot-pill span:hover { border-color:#93c5fd; color:#1d4ed8; }
-    .quick-btns { display:flex; gap:5px; width:100%; margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0; }
-    .qbtn { padding:4px 10px; border:1px solid #e2e8f0; border-radius:5px; background:white; font-size:11px; color:#64748b; cursor:pointer; font-weight:600; font-family:inherit; }
-    .qbtn:hover { background:#f1f5f9; }
-    .month-controls { display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap; }
-    .avail-select { padding:9px 14px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; font-weight:600; color:#374151; outline:none; font-family:inherit; background:white; }
-    .avail-select:focus { border-color:#203f6a; }
-    .copy-btn { padding:9px 16px; border:1px solid #203f6a; border-radius:8px; background:white; color:#203f6a; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; transition:all .2s; display:inline-flex; align-items:center; gap:6px; }
-    .copy-btn:hover { background:#eff6ff; }
-    .save-btn { margin-top:20px; padding:11px 26px; background:#203f6a; color:white; border:none; border-radius:9px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .2s; display:inline-flex; align-items:center; gap:8px; }
-    .save-btn:hover { background:#1a3456; transform:translateY(-1px); }
-    .exception-form { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:20px; margin-bottom:20px; }
-    .exception-form h4 { font-size:14px; font-weight:700; color:#374151; margin-bottom:16px; }
-    .ex-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
-    .ex-label { display:block; font-size:12px; font-weight:700; color:#64748b; margin-bottom:6px; text-transform:uppercase; letter-spacing:.4px; }
-    .ex-input { width:100%; padding:9px 13px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; font-family:inherit; color:#374151; outline:none; }
-    .ex-input:focus { border-color:#203f6a; }
-    .exception-item { display:flex; justify-content:space-between; align-items:center; padding:13px 16px; border:1px solid #e2e8f0; border-radius:10px; margin-bottom:8px; background:white; gap:12px; }
-    .ex-info { display:flex; align-items:center; gap:10px; flex-wrap:wrap; flex:1; }
-    .ex-date { font-size:14px; font-weight:700; color:#374151; }
-    .ex-reason { font-size:12px; color:#94a3b8; font-style:italic; }
-    .ex-slots-text { font-size:12px; color:#60a5fa; }
-    .ex-badge-working { background:#ecfdf5; color:#059669; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; }
-    .ex-badge-off { background:#fef2f2; color:#dc2626; padding:3px 9px; border-radius:20px; font-size:11px; font-weight:700; }
-    .del-btn { padding:7px 11px; border:1px solid #fecaca; border-radius:7px; background:#fef2f2; color:#ef4444; cursor:pointer; font-size:13px; flex-shrink:0; }
-    .del-btn:hover { background:#fee2e2; }
-    @media (max-width:768px) { .ex-grid { grid-template-columns:1fr; } }
-  </style>
 </head>
 <body>
 
 <%
   const appts = (typeof appointments !== 'undefined' && Array.isArray(appointments)) ? appointments : [];
   let badgeClass = 'active', badgeText = 'Active';
-  if (doctor.status === 'blocked')  { badgeClass = 'blocked';  badgeText = 'Blocked'; }
+  if (doctor.status === 'blocked')       { badgeClass = 'blocked';  badgeText = 'Blocked'; }
   else if (doctor.status === 'inactive') { badgeClass = 'inactive'; badgeText = 'Inactive'; }
 %>
 
@@ -101,6 +28,7 @@
     <i class="fas fa-arrow-left"></i> Back to Doctors
   </a>
 
+  <!-- ═══════════════ HERO HEADER ═══════════════ -->
   <div class="profile-header">
     <div class="profile-content">
       <div class="profile-top">
@@ -130,7 +58,7 @@
           </div>
         </div>
         <div class="profile-actions">
-          <button class="btn-action btn-edit" onclick="showEditModal()"><i class="fas fa-edit"></i> Edit</button>
+          <button class="btn-action btn-edit" onclick="showEditModal()"><i class="fas fa-pen"></i> Edit</button>
           <button class="btn-action <%= doctor.status === 'blocked' ? 'btn-unblock' : 'btn-block' %>" onclick="toggleBlock()">
             <i class="fas fa-<%= doctor.status === 'blocked' ? 'unlock' : 'ban' %>"></i>
             <%= doctor.status === 'blocked' ? 'Unblock' : 'Block' %>
@@ -139,18 +67,36 @@
       </div>
     </div>
     <div class="profile-stats">
-      <div class="stat-item"><span class="stat-value"><%= appts.length %></span><span class="stat-label">Total Appointments</span></div>
-      <div class="stat-item"><span class="stat-value"><%= appts.filter(a => a.status === 'completed').length %></span><span class="stat-label">Completed</span></div>
-      <div class="stat-item"><span class="stat-value"><%= doctor.experience || 2 %> Years</span><span class="stat-label">Experience</span></div>
-      <div class="stat-item"><span class="stat-value"><%= doctor.rating || 4.8 %> ★</span><span class="stat-label">Rating</span></div>
+      <div class="stat-item">
+        <span class="stat-value"><%= appts.length %></span>
+        <span class="stat-label">Total Appointments</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value"><%= appts.filter(a => a.status === 'completed').length %></span>
+        <span class="stat-label">Completed</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value"><%= doctor.experience || 2 %> yrs</span>
+        <span class="stat-label">Experience</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value"><%= doctor.rating || 4.8 %> ★</span>
+        <span class="stat-label">Rating</span>
+      </div>
     </div>
   </div>
 
+  <!-- ═══════════════ INFO CARDS ═══════════════ -->
   <div class="content-grid">
     <div class="info-card">
       <h3><i class="fas fa-user-doctor"></i> Basic Information</h3>
       <div class="info-row"><span class="info-label">Full Name</span><span class="info-value">Dr. <%= doctor.name %></span></div>
-      <div class="info-row"><span class="info-label">Status</span><span class="info-value"><span class="status-pill <%= badgeClass %>"><% if (doctor.status === 'blocked') { %><i class="fas fa-ban"></i><% } else { %><i class="fas fa-circle status-dot"></i><% } %> <%= badgeText %></span></span></div>
+      <div class="info-row"><span class="info-label">Status</span><span class="info-value">
+        <span class="status-pill <%= badgeClass %>">
+          <% if (doctor.status === 'blocked') { %><i class="fas fa-ban"></i><% } else { %><i class="fas fa-circle status-dot"></i><% } %>
+          <%= badgeText %>
+        </span>
+      </span></div>
       <div class="info-row"><span class="info-label">Email</span><span class="info-value"><%= doctor.email %></span></div>
       <div class="info-row"><span class="info-label">Phone</span><span class="info-value"><%= doctor.phone %></span></div>
       <div class="info-row"><span class="info-label">Specialization</span><span class="info-value"><%= doctor.specialization %></span></div>
@@ -158,57 +104,106 @@
       <div class="info-row"><span class="info-label">Qualification</span><span class="info-value"><%= doctor.qualification || '—' %></span></div>
       <div class="info-row"><span class="info-label">Experience</span><span class="info-value"><%= doctor.experience ? doctor.experience + ' Years' : '2 Years' %></span></div>
     </div>
+
     <div class="info-card">
       <h3><i class="fas fa-briefcase-medical"></i> Professional Details</h3>
       <div class="info-row"><span class="info-label">Consultation Fee</span><span class="info-value"><%= doctor.consultationFee ? '₹' + doctor.consultationFee : '—' %></span></div>
       <div class="info-row"><span class="info-label">Rating</span><span class="info-value"><%= doctor.rating ? doctor.rating + ' ★ / 5' : '4.7 ★' %></span></div>
-      <div class="info-row"><span class="info-label">Featured</span><span class="info-value"><span class="badge <%= doctor.isFeatured ? 'active' : 'inactive' %>">&nbsp;<%= doctor.isFeatured ? 'Yes' : 'No' %>&nbsp;</span></span></div>
+      <div class="info-row"><span class="info-label">Featured</span><span class="info-value">
+        <span class="badge <%= doctor.isFeatured ? 'active' : 'inactive' %>">&nbsp;<%= doctor.isFeatured ? 'Yes' : 'No' %>&nbsp;</span>
+      </span></div>
       <div class="info-row"><span class="info-label">Member Since</span><span class="info-value"><%= new Date(doctor.createdAt).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) %></span></div>
       <div class="info-row"><span class="info-label">Last Updated</span><span class="info-value"><%= doctor.updatedAt ? new Date(doctor.updatedAt).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : 'N/A' %></span></div>
-      <h3 style="margin-top:20px;"><i class="fas fa-file-alt"></i> Biography</h3>
-      <div class="info-row"><p style="color:#64748b;font-size:14px;line-height:1.6;margin:0;"><%= doctor.bio || '—' %></p></div>
+      <h3 style="margin-top:0; border-top:1px solid #e8ecf1;"><i class="fas fa-file-alt"></i> Biography</h3>
+      <div style="padding:14px 22px;">
+        <p style="color:#64748b;font-size:13.5px;line-height:1.7;margin:0;"><%= doctor.bio || '—' %></p>
+      </div>
     </div>
   </div>
 
-  <div class="info-card">
+  <!-- ═══════════════ APPOINTMENTS ═══════════════ -->
+  <div class="info-card" style="margin-bottom:18px;">
     <h3><i class="fas fa-calendar-check"></i> Recent Appointments</h3>
     <% if (appts.length === 0) { %>
-      <div class="empty-state"><i class="fas fa-calendar-times"></i><p>No appointments found</p></div>
+      <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <p>No appointments found</p>
+      </div>
     <% } else { %>
-      <table class="appointments-table">
-        <thead><tr><th>Date</th><th>Patient</th><th>Time</th><th>Reason</th><th>Status</th></tr></thead>
-        <tbody>
-          <% appts.slice(0,10).forEach(a => { %>
+      <div style="overflow-x:auto;">
+        <table class="appointments-table">
+          <thead>
             <tr>
-              <td><%= new Date(a.date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) %></td>
-              <td><%= a.patientName || 'Unknown' %></td>
-              <td><%= a.time || '—' %></td>
-              <td><%= a.reason || '—' %></td>
-              <td><span class="abadge <%= a.status || 'pending' %>"><%= (a.status||'pending').toUpperCase() %></span></td>
+              <th>Date</th><th>Patient</th><th>Time</th><th>Reason</th><th>Status</th>
             </tr>
-          <% }) %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% appts.slice(0,10).forEach(a => { %>
+              <tr>
+                <td><%= new Date(a.date).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) %></td>
+                <td><%= a.patientName || 'Unknown' %></td>
+                <td><%= a.timeSlot || '—' %></td>
+                <td><%= a.reason || '—' %></td>
+                <td><span class="abadge <%= a.status || 'pending' %>"><%= (a.status||'pending').toUpperCase() %></span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
     <% } %>
   </div>
 
+  <!-- ═══════════════ AVAILABILITY MANAGEMENT ═══════════════ -->
   <div class="avail-card">
     <div class="avail-card-header">
-      <div class="avail-card-title"><i class="fas fa-clock"></i><h3>Availability Management</h3></div>
+      <div class="avail-card-title">
+        <i class="fas fa-clock"></i>
+        <h3>Availability Management</h3>
+      </div>
       <div class="avail-tabs">
-        <button class="avail-tab active" onclick="switchTab('weekly',this)"><i class="fas fa-calendar-week"></i> Weekly Template</button>
-        <button class="avail-tab" onclick="switchTab('monthly',this)"><i class="fas fa-calendar-alt"></i> Monthly Override</button>
-        <button class="avail-tab" onclick="switchTab('exceptions',this)"><i class="fas fa-calendar-times"></i> Daily Exceptions</button>
+        <button class="avail-tab active" onclick="switchTab('weekly',this)">
+          <i class="fas fa-calendar-week"></i> Weekly Template
+        </button>
+        <button class="avail-tab" onclick="switchTab('monthly',this)">
+          <i class="fas fa-calendar-alt"></i> Monthly Override
+        </button>
+        <button class="avail-tab" onclick="switchTab('exceptions',this)">
+          <i class="fas fa-calendar-times"></i> Daily Exceptions
+        </button>
       </div>
     </div>
+
     <div class="avail-body">
+
+      <!-- WEEKLY TAB -->
       <div id="tab-weekly">
-        <p class="avail-desc">Default recurring schedule. Applies to all dates unless overridden.</p>
+        <p class="avail-desc">
+          <i class="fas fa-info-circle" style="color:#203f6a;margin-right:4px;"></i>
+          Default recurring schedule. Applies to all dates unless overridden by a monthly or daily setting.
+        </p>
+        <div class="duration-box">
+          <label><i class="fas fa-hourglass-half" style="margin-right:6px;"></i> Slot Duration</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;" id="durationPicker">
+            <button type="button" class="dur-btn" data-min="15" onclick="setDuration(15)">15 min</button>
+            <button type="button" class="dur-btn active" data-min="30" onclick="setDuration(30)">30 min</button>
+            <button type="button" class="dur-btn" data-min="45" onclick="setDuration(45)">45 min</button>
+            <button type="button" class="dur-btn" data-min="60" onclick="setDuration(60)">60 min</button>
+          </div>
+          <p class="duration-note">
+            <i class="fas fa-triangle-exclamation"></i>
+            Changing duration regenerates all slot options. Re-select your slots after changing.
+          </p>
+        </div>
         <div id="weekly-schedule"></div>
         <button class="save-btn" onclick="saveWeekly()"><i class="fas fa-save"></i> Save Weekly Schedule</button>
       </div>
+
+      <!-- MONTHLY TAB -->
       <div id="tab-monthly" style="display:none;">
-        <p class="avail-desc">Override the weekly schedule for a specific month.</p>
+        <p class="avail-desc">
+          <i class="fas fa-info-circle" style="color:#203f6a;margin-right:4px;"></i>
+          Override the weekly schedule for a specific month. Uses the same slot duration set in Weekly.
+        </p>
         <div class="month-controls">
           <select id="monthSelect" class="avail-select" onchange="loadMonthly()">
             <option value="1">January</option><option value="2">February</option><option value="3">March</option>
@@ -222,10 +217,15 @@
         <div id="monthly-schedule"></div>
         <button class="save-btn" onclick="saveMonthly()"><i class="fas fa-save"></i> Save Monthly Override</button>
       </div>
+
+      <!-- EXCEPTIONS TAB -->
       <div id="tab-exceptions" style="display:none;">
-        <p class="avail-desc">Override specific dates — mark holidays, leaves, or special working days.</p>
+        <p class="avail-desc">
+          <i class="fas fa-info-circle" style="color:#203f6a;margin-right:4px;"></i>
+          Override specific dates — mark as holiday, leave, or a special working day with custom slots.
+        </p>
         <div class="exception-form">
-          <h4><i class="fas fa-plus-circle" style="color:#203f6a;margin-right:6px;"></i>Add / Edit Exception</h4>
+          <h4><i class="fas fa-plus-circle"></i> Add / Edit Exception</h4>
           <div class="ex-grid">
             <div>
               <label class="ex-label">Date</label>
@@ -234,33 +234,38 @@
             <div>
               <label class="ex-label">Status</label>
               <select id="exceptionWorking" class="ex-input" onchange="toggleExSlots()">
-                <option value="false">Not Working (Holiday/Leave)</option>
+                <option value="false">Not Working (Holiday / Leave)</option>
                 <option value="true">Working (Special Day)</option>
               </select>
             </div>
           </div>
           <div style="margin-bottom:14px;">
             <label class="ex-label">Reason (optional)</label>
-            <input type="text" id="exceptionReason" class="ex-input" placeholder="e.g. Public Holiday, Conference">
+            <input type="text" id="exceptionReason" class="ex-input" placeholder="e.g. Public Holiday, Conference, Leave">
           </div>
           <div id="exSlotsWrapper" style="display:none;margin-bottom:4px;">
             <label class="ex-label" style="margin-bottom:8px;">Select Slots</label>
             <div id="exceptionSlots" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
           </div>
-          <button class="save-btn" onclick="saveException()" style="margin-top:14px;"><i class="fas fa-check"></i> Save Exception</button>
+          <button class="save-btn" onclick="saveException()" style="margin-top:14px;">
+            <i class="fas fa-check"></i> Save Exception
+          </button>
         </div>
-        <h4 style="font-size:14px;font-weight:700;color:#374151;margin-bottom:12px;">Existing Exceptions</h4>
+        <h4 style="font-size:13px;font-weight:800;color:#1a2a3a;margin-bottom:14px;text-transform:uppercase;letter-spacing:.5px;">
+          Existing Exceptions
+        </h4>
         <div id="exceptions-list"></div>
       </div>
+
     </div>
   </div>
-
 </div>
 
+<!-- ═══════════════ EDIT MODAL ═══════════════ -->
 <div class="modal-overlay" id="editModal">
   <div class="modal-content-custom">
     <div class="modal-header">
-      <h3>Edit Doctor</h3>
+      <h3><i class="fas fa-pen" style="color:#203f6a;margin-right:8px;font-size:15px;"></i> Edit Doctor</h3>
       <button class="btn-close-modal" onclick="closeEditModal()"><i class="fas fa-times"></i></button>
     </div>
     <form id="editForm">
@@ -273,12 +278,12 @@
           <label>Department *</label>
           <select id="editDepartment" required>
             <option value="">Select Department</option>
-            <option value="Cardiology" <%= doctor.department==='Cardiology'?'selected':'' %>>Cardiology</option>
-            <option value="Neurology" <%= doctor.department==='Neurology'?'selected':'' %>>Neurology</option>
-            <option value="Orthopedics" <%= doctor.department==='Orthopedics'?'selected':'' %>>Orthopedics</option>
-            <option value="Pediatrics" <%= doctor.department==='Pediatrics'?'selected':'' %>>Pediatrics</option>
-            <option value="Dermatology" <%= doctor.department==='Dermatology'?'selected':'' %>>Dermatology</option>
-            <option value="Psychiatry" <%= doctor.department==='Psychiatry'?'selected':'' %>>Psychiatry</option>
+            <option value="Cardiology"       <%= doctor.department==='Cardiology'?'selected':''       %>>Cardiology</option>
+            <option value="Neurology"        <%= doctor.department==='Neurology'?'selected':''        %>>Neurology</option>
+            <option value="Orthopedics"      <%= doctor.department==='Orthopedics'?'selected':''      %>>Orthopedics</option>
+            <option value="Pediatrics"       <%= doctor.department==='Pediatrics'?'selected':''       %>>Pediatrics</option>
+            <option value="Dermatology"      <%= doctor.department==='Dermatology'?'selected':''      %>>Dermatology</option>
+            <option value="Psychiatry"       <%= doctor.department==='Psychiatry'?'selected':''       %>>Psychiatry</option>
             <option value="General Medicine" <%= doctor.department==='General Medicine'?'selected':'' %>>General Medicine</option>
           </select>
         </div>
@@ -309,13 +314,12 @@
   const DOCTOR_DATA = JSON.parse(document.getElementById('doctor-data').textContent);
   const doctorId    = DOCTOR_DATA.id;
 
+  // ── Edit & Block ────────────────────────────────────────────────
   function showEditModal()  { document.getElementById('editModal').classList.add('show'); }
   function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
-
   document.getElementById('editModal').addEventListener('click', function(e) {
     if (e.target === this) closeEditModal();
   });
-
   document.getElementById('editForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = {
@@ -339,7 +343,7 @@
   async function toggleBlock() {
     const isBlocked = DOCTOR_DATA.status === 'blocked';
     const action    = isBlocked ? 'unblock' : 'block';
-    const result = await Alert.confirm(`Are you sure you want to ${action} this doctor?`, `${action.charAt(0).toUpperCase()+action.slice(1)} Doctor`);
+    const result    = await Alert.confirm(`Are you sure you want to ${action} this doctor?`, `${action.charAt(0).toUpperCase()+action.slice(1)} Doctor`);
     if (!result.isConfirmed) return;
     Loader.show(`${action}ing doctor...`);
     try {
@@ -351,41 +355,69 @@
     } catch(err) { Loader.hide(); Alert.error(`Error ${action}ing doctor. Please try again.`); }
   }
 
+  // ── Availability constants ──────────────────────────────────────
   const DOCTOR_ID  = '<%= doctor._id %>';
-  const ALL_SLOTS  = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
   const DAYS       = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
-  const DAY_LABELS = { monday:'Monday',tuesday:'Tuesday',wednesday:'Wednesday',thursday:'Thursday',friday:'Friday',saturday:'Saturday',sunday:'Sunday' };
-  const MORNING    = ['09:00','09:30','10:00','10:30','11:00','11:30'];
-  const AFTERNOON  = ['12:00','12:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30'];
-  let weeklyData = null;
+  const DAY_LABELS = { monday:'Monday', tuesday:'Tuesday', wednesday:'Wednesday', thursday:'Thursday', friday:'Friday', saturday:'Saturday', sunday:'Sunday' };
+
+  let currentDuration = 30;
+  let weeklyData      = null;
+
+  function generateSlots(duration) {
+    const slots  = [];
+    const start  = 9 * 60;
+    const end    = 17 * 60 + 30;
+    const lunchS = 12 * 60 + 30;
+    const lunchE = 14 * 60;
+    for (let t = start; t < end; t += duration) {
+      if (t >= lunchS && t < lunchE) continue;
+      const h = String(Math.floor(t / 60)).padStart(2, '0');
+      const m = String(t % 60).padStart(2, '0');
+      slots.push(`${h}:${m}`);
+    }
+    return slots;
+  }
+
+  function setDuration(min) {
+    currentDuration = min;
+    document.querySelectorAll('.dur-btn').forEach(b => {
+      b.classList.toggle('active', parseInt(b.dataset.min) === min);
+    });
+    buildDaySchedule('weekly-schedule', null, generateSlots(min));
+  }
 
   function switchTab(tab, btn) {
     document.querySelectorAll('.avail-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('#tab-weekly,#tab-monthly,#tab-exceptions').forEach(c => c.style.display='none');
+    document.querySelectorAll('#tab-weekly,#tab-monthly,#tab-exceptions').forEach(c => c.style.display = 'none');
     btn.classList.add('active');
     document.getElementById(`tab-${tab}`).style.display = 'block';
-    if (tab==='weekly') loadWeekly();
-    if (tab==='monthly') loadMonthly();
-    if (tab==='exceptions') loadExceptions();
+    if (tab === 'weekly')     loadWeekly();
+    if (tab === 'monthly')    loadMonthly();
+    if (tab === 'exceptions') loadExceptions();
   }
 
-  function buildDaySchedule(containerId, scheduleData) {
-    const el = document.getElementById(containerId);
+  function buildDaySchedule(containerId, scheduleData, slotsArr) {
+    const slots = slotsArr || generateSlots(currentDuration);
+    const el    = document.getElementById(containerId);
     el.innerHTML = DAYS.map(day => {
-      const d = scheduleData?.[day] || { isWorking:false, slots:[] };
+      const d   = scheduleData?.[day] || { isWorking: false, slots: [] };
       const cnt = d.isWorking ? `${d.slots.length} slots` : 'Day off';
       return `
-        <div class="day-row ${d.isWorking?'is-working':''}" id="${containerId}-row-${day}">
+        <div class="day-row ${d.isWorking ? 'is-working' : ''}" id="${containerId}-row-${day}">
           <div class="day-toggle">
             <label class="toggle-sw">
-              <input type="checkbox" ${d.isWorking?'checked':''} onchange="toggleDay('${containerId}','${day}',this.checked)">
+              <input type="checkbox" ${d.isWorking ? 'checked' : ''} onchange="toggleDay('${containerId}','${day}',this.checked)">
               <span class="toggle-knob"></span>
             </label>
             <span class="day-name">${DAY_LABELS[day]}</span>
             <span class="slots-count" id="${containerId}-cnt-${day}">${cnt}</span>
           </div>
-          <div class="day-slots ${!d.isWorking?'slots-hidden':''}" id="${containerId}-slots-${day}">
-            ${ALL_SLOTS.map(s=>`<label class="slot-pill"><input type="checkbox" value="${s}" ${(d.slots||[]).includes(s)?'checked':''} onchange="updateCount('${containerId}','${day}')"><span>${s}</span></label>`).join('')}
+          <div class="day-slots ${!d.isWorking ? 'slots-hidden' : ''}" id="${containerId}-slots-${day}">
+            ${slots.map(s => `
+              <label class="slot-pill">
+                <input type="checkbox" value="${s}" ${(d.slots || []).includes(s) ? 'checked' : ''} onchange="updateCount('${containerId}','${day}')">
+                <span>${s}</span>
+              </label>`).join('')}
             <div class="quick-btns">
               <button type="button" class="qbtn" onclick="selAll('${containerId}','${day}')">All</button>
               <button type="button" class="qbtn" onclick="selMorning('${containerId}','${day}')">Morning</button>
@@ -397,13 +429,13 @@
     }).join('');
   }
 
-  function toggleDay(cid,day,on) {
-    document.getElementById(`${cid}-slots-${day}`).classList.toggle('slots-hidden',!on);
-    document.getElementById(`${cid}-row-${day}`).classList.toggle('is-working',on);
-    updateCount(cid,day);
+  function toggleDay(cid, day, on) {
+    document.getElementById(`${cid}-slots-${day}`).classList.toggle('slots-hidden', !on);
+    document.getElementById(`${cid}-row-${day}`).classList.toggle('is-working', on);
+    updateCount(cid, day);
   }
-  function updateCount(cid,day) {
-    const on = document.querySelector(`#${cid}-row-${day} .toggle-sw input`).checked;
+  function updateCount(cid, day) {
+    const on  = document.querySelector(`#${cid}-row-${day} .toggle-sw input`).checked;
     const cnt = on ? document.querySelectorAll(`#${cid}-slots-${day} input:checked`).length : 0;
     document.getElementById(`${cid}-cnt-${day}`).textContent = on ? `${cnt} slots` : 'Day off';
   }
@@ -411,29 +443,40 @@
     const s = {};
     DAYS.forEach(day => {
       const on    = document.querySelector(`#${cid}-row-${day} .toggle-sw input`)?.checked || false;
-      const slots = on ? [...document.querySelectorAll(`#${cid}-slots-${day} input:checked`)].map(cb=>cb.value) : [];
-      s[day] = { isWorking:on, slots };
+      const slots = on ? [...document.querySelectorAll(`#${cid}-slots-${day} input:checked`)].map(cb => cb.value) : [];
+      s[day] = { isWorking: on, slots };
     });
     return s;
   }
-  function selAll(cid,day)       { document.querySelectorAll(`#${cid}-slots-${day} input[type=checkbox]`).forEach(cb=>cb.checked=true); updateCount(cid,day); }
-  function selMorning(cid,day)   { document.querySelectorAll(`#${cid}-slots-${day} input[type=checkbox]`).forEach(cb=>cb.checked=MORNING.includes(cb.value)); updateCount(cid,day); }
-  function selAfternoon(cid,day) { document.querySelectorAll(`#${cid}-slots-${day} input[type=checkbox]`).forEach(cb=>cb.checked=AFTERNOON.includes(cb.value)); updateCount(cid,day); }
-  function selNone(cid,day)      { document.querySelectorAll(`#${cid}-slots-${day} input[type=checkbox]`).forEach(cb=>cb.checked=false); updateCount(cid,day); }
+
+  function selAll(cid, day)       { document.querySelectorAll(`#${cid}-slots-${day} input[type=checkbox]`).forEach(cb => cb.checked = true);  updateCount(cid, day); }
+  function selMorning(cid, day)   { document.querySelectorAll(`#${cid}-slots-${day} input[type=checkbox]`).forEach(cb => { cb.checked = parseInt(cb.value) < 12; }); updateCount(cid, day); }
+  function selAfternoon(cid, day) { document.querySelectorAll(`#${cid}-slots-${day} input[type=checkbox]`).forEach(cb => { cb.checked = parseInt(cb.value) >= 12; }); updateCount(cid, day); }
+  function selNone(cid, day)      { document.querySelectorAll(`#${cid}-slots-${day} input[type=checkbox]`).forEach(cb => cb.checked = false); updateCount(cid, day); }
 
   async function loadWeekly() {
     try {
       const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/weekly`);
       const data = await res.json();
       weeklyData = data.weekly?.schedule || null;
-      buildDaySchedule('weekly-schedule', weeklyData);
+      if (data.slotDuration) {
+        currentDuration = data.slotDuration;
+        document.querySelectorAll('.dur-btn').forEach(b => {
+          b.classList.toggle('active', parseInt(b.dataset.min) === data.slotDuration);
+        });
+      }
+      buildDaySchedule('weekly-schedule', weeklyData, data.allSlots);
     } catch(e) { console.error(e); }
   }
+
   async function saveWeekly() {
     const schedule = getSchedule('weekly-schedule');
     Loader.show('Saving weekly schedule...');
     try {
-      const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/weekly`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ schedule }) });
+      const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/weekly`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ schedule, slotDuration: currentDuration })
+      });
       const data = await res.json();
       Loader.hide();
       if (data.success) { Alert.success('Weekly schedule saved!'); weeklyData = schedule; }
@@ -444,26 +487,34 @@
   function initYearSelect() {
     const sel = document.getElementById('yearSelect');
     const yr  = new Date().getFullYear();
-    for (let y=yr; y<=yr+2; y++) sel.innerHTML += `<option value="${y}">${y}</option>`;
-    document.getElementById('monthSelect').value = new Date().getMonth()+1;
+    for (let y = yr; y <= yr + 2; y++) sel.innerHTML += `<option value="${y}">${y}</option>`;
+    document.getElementById('monthSelect').value = new Date().getMonth() + 1;
   }
+
   async function loadMonthly() {
     const m = document.getElementById('monthSelect').value;
     const y = document.getElementById('yearSelect').value;
     try {
       const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/monthly?month=${m}&year=${y}`);
       const data = await res.json();
-      buildDaySchedule('monthly-schedule', data.monthly?.schedule || null);
+      buildDaySchedule('monthly-schedule', data.monthly?.schedule || null, data.allSlots);
     } catch(e) { console.error(e); }
   }
-  function copyFromWeekly() { buildDaySchedule('monthly-schedule', weeklyData); }
+
+  function copyFromWeekly() {
+    buildDaySchedule('monthly-schedule', weeklyData, generateSlots(currentDuration));
+  }
+
   async function saveMonthly() {
     const schedule = getSchedule('monthly-schedule');
     const month    = parseInt(document.getElementById('monthSelect').value);
     const year     = parseInt(document.getElementById('yearSelect').value);
     Loader.show('Saving monthly override...');
     try {
-      const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/monthly`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ month, year, schedule }) });
+      const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/monthly`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ month, year, schedule })
+      });
       const data = await res.json();
       Loader.hide();
       if (data.success) Alert.success('Monthly override saved!');
@@ -474,49 +525,65 @@
   function toggleExSlots() {
     const on = document.getElementById('exceptionWorking').value === 'true';
     document.getElementById('exSlotsWrapper').style.display = on ? 'block' : 'none';
-    if (on && !document.getElementById('exceptionSlots').innerHTML) {
-      document.getElementById('exceptionSlots').innerHTML = ALL_SLOTS.map(s=>`<label class="slot-pill"><input type="checkbox" value="${s}"><span>${s}</span></label>`).join('');
+    if (on) {
+      const slots = generateSlots(currentDuration);
+      document.getElementById('exceptionSlots').innerHTML =
+        slots.map(s => `<label class="slot-pill"><input type="checkbox" value="${s}"><span>${s}</span></label>`).join('');
     }
   }
+
   async function saveException() {
     const date      = document.getElementById('exceptionDate').value;
     const isWorking = document.getElementById('exceptionWorking').value === 'true';
     const reason    = document.getElementById('exceptionReason').value;
     if (!date) { Alert.error('Please select a date'); return; }
-    const slots = isWorking ? [...document.querySelectorAll('#exceptionSlots input:checked')].map(cb=>cb.value) : [];
+    const slots = isWorking ? [...document.querySelectorAll('#exceptionSlots input:checked')].map(cb => cb.value) : [];
     Loader.show('Saving exception...');
     try {
-      const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/exceptions`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ date, isWorking, slots, reason }) });
+      const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/exceptions`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ date, isWorking, slots, reason })
+      });
       const data = await res.json();
       Loader.hide();
       if (data.success) {
-        Alert.success('Exception saved!'); loadExceptions();
-        document.getElementById('exceptionDate').value=''; document.getElementById('exceptionReason').value='';
-        document.getElementById('exceptionWorking').value='false'; document.getElementById('exSlotsWrapper').style.display='none';
+        Alert.success('Exception saved!');
+        loadExceptions();
+        document.getElementById('exceptionDate').value    = '';
+        document.getElementById('exceptionReason').value  = '';
+        document.getElementById('exceptionWorking').value = 'false';
+        document.getElementById('exSlotsWrapper').style.display = 'none';
       } else Alert.error(data.error || 'Failed to save');
     } catch(e) { Loader.hide(); Alert.error('Error saving exception'); }
   }
+
   async function loadExceptions() {
     try {
       const res  = await fetch(`/admin/api/doctors/${DOCTOR_ID}/availability/exceptions`);
       const data = await res.json();
+      if (data.slotDuration) currentDuration = data.slotDuration;
       renderExceptions(data.exceptions || []);
     } catch(e) { console.error(e); }
   }
+
   function renderExceptions(list) {
     const el = document.getElementById('exceptions-list');
-    if (!list.length) { el.innerHTML=`<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No exceptions set</p></div>`; return; }
-    el.innerHTML = list.map(ex=>`
+    if (!list.length) {
+      el.innerHTML = `<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No exceptions set</p></div>`;
+      return;
+    }
+    el.innerHTML = list.map(ex => `
       <div class="exception-item">
         <div class="ex-info">
           <span class="ex-date">${ex.date}</span>
-          <span class="${ex.isWorking?'ex-badge-working':'ex-badge-off'}">${ex.isWorking?'Working':'Not Working'}</span>
-          ${ex.reason?`<span class="ex-reason">${ex.reason}</span>`:''}
-          ${ex.isWorking&&ex.slots.length?`<span class="ex-slots-text">${ex.slots.join(', ')}</span>`:''}
+          <span class="${ex.isWorking ? 'ex-badge-working' : 'ex-badge-off'}">${ex.isWorking ? 'Working' : 'Not Working'}</span>
+          ${ex.reason ? `<span class="ex-reason">${ex.reason}</span>` : ''}
+          ${ex.isWorking && ex.slots.length ? `<span class="ex-slots-text">${ex.slots.join(', ')}</span>` : ''}
         </div>
         <button class="del-btn" onclick="deleteException('${ex.date}')"><i class="fas fa-trash"></i></button>
       </div>`).join('');
   }
+
   async function deleteException(date) {
     const result = await Alert.confirm(`Remove exception for ${date}?`, 'Delete Exception');
     if (!result.isConfirmed) return;
@@ -530,7 +597,10 @@
     } catch(e) { Loader.hide(); Alert.error('Error deleting exception'); }
   }
 
-  document.addEventListener('DOMContentLoaded', () => { loadWeekly(); initYearSelect(); });
+  document.addEventListener('DOMContentLoaded', () => {
+    loadWeekly();
+    initYearSelect();
+  });
 </script>
 </body>
 </html>

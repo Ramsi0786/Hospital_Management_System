@@ -272,7 +272,7 @@
                   }) %>
                 </td>
                 <td>Dr. <%= appointment.doctorName || 'Unknown' %></td>
-                <td><%= appointment.time || 'N/A' %></td>
+                <td><%= appointment.timeSlot || '-' %></td>
                 <td><%= appointment.department || 'N/A' %></td>
                 <td>
                   <span class="status-badge status-<%= appointment.status || 'pending' %>">
@@ -387,7 +387,7 @@
 
       try {
         const response = await fetch(`/admin/api/patients/${patientId}`, {
-          method: 'PUT',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
@@ -424,7 +424,7 @@
       Loader.show(`${action}ing patient...`); 
       try {
         const response = await fetch(`/admin/api/patients/${patientId}/block`, {
-          method: 'PUT',
+          method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ block: !isBlocked })
         });

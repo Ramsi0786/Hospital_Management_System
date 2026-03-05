@@ -6,12 +6,21 @@ import {
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
-const ALL_SLOTS = [
-  '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-  '12:00', '12:30',
-  '14:00', '14:30', '15:00', '15:30',
-  '16:00', '16:30', '17:00', '17:30'
-];
+function generateSlots(duration = 30) {
+  const slots  = [];
+  const start  = 9 * 60;       
+  const end    = 17 * 60 + 30;  
+  const lunchS = 12 * 60 + 30; 
+  const lunchE = 14 * 60;    
+
+  for (let t = start; t < end; t += duration) {
+    if (t >= lunchS && t < lunchE) continue;
+    const h = String(Math.floor(t / 60)).padStart(2, '0');
+    const m = String(t % 60).padStart(2, '0');
+    slots.push(`${h}:${m}`);
+  }
+  return slots;
+}
 
 // ==================== WEEKLY ====================
 
@@ -19,7 +28,8 @@ export const getWeeklyAvailability = async (req, res) => {
   try {
     const { doctorId } = req.params;
     const weekly = await WeeklyAvailability.findOne({ doctor: doctorId });
-    res.json({ success: true, weekly: weekly || null, allSlots: ALL_SLOTS });
+    const duration = weekly?.slotDuration || 30;
+    res.json({ success: true, weekly: weekly || null, allSlots: generateSlots(duration), slotDuration: duration });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch weekly availability' });
   }
@@ -28,17 +38,17 @@ export const getWeeklyAvailability = async (req, res) => {
 export const setWeeklyAvailability = async (req, res) => {
   try {
     const { doctorId } = req.params;
-    const { schedule } = req.body;
+    const { schedule, slotDuration } = req.body; 
+
+    const duration = [15, 30, 45, 60].includes(Number(slotDuration)) ? Number(slotDuration) : 30;
 
     for (const day of DAYS) {
-      if (!schedule[day]) {
-        schedule[day] = { isWorking: false, slots: [] };
-      }
+      if (!schedule[day]) schedule[day] = { isWorking: false, slots: [] };
     }
 
     const weekly = await WeeklyAvailability.findOneAndUpdate(
       { doctor: doctorId },
-      { doctor: doctorId, schedule },
+      { doctor: doctorId, schedule, slotDuration: duration },
       { upsert: true, new: true }
     );
 
@@ -56,13 +66,13 @@ export const getMonthlyAvailability = async (req, res) => {
     const { doctorId } = req.params;
     const { month, year } = req.query;
 
-    const monthly = await MonthlyAvailability.findOne({
-      doctor: doctorId,
-      month: parseInt(month),
-      year: parseInt(year)
-    });
+    const [monthly, weekly] = await Promise.all([
+      MonthlyAvailability.findOne({ doctor: doctorId, month: parseInt(month), year: parseInt(year) }),
+      WeeklyAvailability.findOne({ doctor: doctorId })
+    ]);
 
-    res.json({ success: true, monthly: monthly || null, allSlots: ALL_SLOTS });
+    const duration = weekly?.slotDuration || 30;
+    res.json({ success: true, monthly: monthly || null, allSlots: generateSlots(duration), slotDuration: duration });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch monthly availability' });
   }
@@ -100,14 +110,18 @@ export const getDailyExceptions = async (req, res) => {
     const { month, year } = req.query;
 
     let query = { doctor: doctorId };
-
     if (month && year) {
       const monthStr = String(parseInt(month)).padStart(2, '0');
       query.date = { $regex: `^${year}-${monthStr}` };
     }
 
-    const exceptions = await DailyException.find(query).sort({ date: 1 });
-    res.json({ success: true, exceptions, allSlots: ALL_SLOTS });
+    const [exceptions, weekly] = await Promise.all([
+      DailyException.find(query).sort({ date: 1 }),
+      WeeklyAvailability.findOne({ doctor: doctorId })
+    ]);
+
+    const duration = weekly?.slotDuration || 30;
+    res.json({ success: true, exceptions, allSlots: generateSlots(duration), slotDuration: duration });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Failed to fetch exceptions' });
   }

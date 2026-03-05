@@ -1,20 +1,317 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Appointments Management - Healora</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/admin/appointment.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin/dashboard.css">
+  <link rel="stylesheet" href="/css/admin/appointments.css">
+
 </head>
 <body>
 
-    <%- include('../partials/admin-sidebar', { currentPage: 'appointments' }) %>
-    <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Appointments' }) %>    
+<%- include('../partials/admin-sidebar', { currentPage: 'appointments' }) %>
+<%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Appointments' }) %>
 
-    <%- include('../partials/logout-modal') %>
-    <%- include('../partials/admin-scripts') %>
+<div class="main-content">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;">
+    <div>
+      <h1 style="font-size:26px;font-weight:800;color:#1a202c;margin:0;">Appointments</h1>
+      <p style="color:#94a3b8;font-size:14px;margin:4px 0 0;">Manage and monitor all patient appointments</p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card <%= !filters.status ? 'active':'' %>" onclick="filterByStatus('')">
+      <div class="stat-icon si-all"><i class="fas fa-calendar-alt"></i></div>
+      <div><div class="stat-val"><%= stats.total %></div><div class="stat-label">Total</div></div>
+    </div>
+    <div class="stat-card <%= filters.status==='pending'?'active':'' %>" onclick="filterByStatus('pending')">
+      <div class="stat-icon si-pending"><i class="fas fa-clock"></i></div>
+      <div><div class="stat-val"><%= stats.pending %></div><div class="stat-label">Pending</div></div>
+    </div>
+    <div class="stat-card <%= filters.status==='confirmed'?'active':'' %>" onclick="filterByStatus('confirmed')">
+      <div class="stat-icon si-confirmed"><i class="fas fa-check-circle"></i></div>
+      <div><div class="stat-val"><%= stats.confirmed %></div><div class="stat-label">Confirmed</div></div>
+    </div>
+    <div class="stat-card <%= filters.status==='completed'?'active':'' %>" onclick="filterByStatus('completed')">
+      <div class="stat-icon si-completed"><i class="fas fa-check-double"></i></div>
+      <div><div class="stat-val"><%= stats.completed %></div><div class="stat-label">Completed</div></div>
+    </div>
+    <div class="stat-card <%= filters.status==='cancelled'?'active':'' %>" onclick="filterByStatus('cancelled')">
+      <div class="stat-icon si-cancelled"><i class="fas fa-times-circle"></i></div>
+      <div><div class="stat-val"><%= stats.cancelled %></div><div class="stat-label">Cancelled</div></div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-card">
+    <form method="GET" action="/admin/appointments" id="filterForm">
+      <div class="filter-row">
+        <div class="fg" style="flex:2;min-width:200px;">
+          <label>Search</label>
+          <input type="text" name="search" class="fi" placeholder="Patient or doctor name..." value="<%= filters.search %>">
+        </div>
+        <div class="fg">
+          <label>Status</label>
+          <select name="status" class="fi" id="statusSelect">
+            <option value="">All Statuses</option>
+            <option value="pending"   <%= filters.status==='pending'   ?'selected':'' %>>Pending</option>
+            <option value="confirmed" <%= filters.status==='confirmed' ?'selected':'' %>>Confirmed</option>
+            <option value="completed" <%= filters.status==='completed' ?'selected':'' %>>Completed</option>
+            <option value="cancelled" <%= filters.status==='cancelled' ?'selected':'' %>>Cancelled</option>
+            <option value="rejected"  <%= filters.status==='rejected'  ?'selected':'' %>>Rejected</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Payment</label>
+          <select name="payment" class="fi">
+            <option value="">All Methods</option>
+            <option value="cash"     <%= filters.payment==='cash'     ?'selected':'' %>>Cash</option>
+            <option value="razorpay" <%= filters.payment==='razorpay' ?'selected':'' %>>Razorpay</option>
+            <option value="wallet"   <%= filters.payment==='wallet'   ?'selected':'' %>>Wallet</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>Doctor</label>
+          <select name="doctor" class="fi">
+            <option value="">All Doctors</option>
+            <% doctors.forEach(d => { %>
+              <option value="<%= d._id %>" <%= filters.doctor===d._id.toString()?'selected':'' %>>Dr. <%= d.name %></option>
+            <% }) %>
+          </select>
+        </div>
+        <div class="fg">
+          <label>From Date</label>
+          <input type="date" name="dateFrom" class="fi" value="<%= filters.dateFrom %>">
+        </div>
+        <div class="fg">
+          <label>To Date</label>
+          <input type="date" name="dateTo" class="fi" value="<%= filters.dateTo %>">
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
+          <button type="submit" class="fb fb-apply"><i class="fas fa-search" style="margin-right:6px;"></i>Filter</button>
+          <a href="/admin/appointments" class="fb fb-reset">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-head">
+      <div class="table-title-txt"><i class="fas fa-calendar-check" style="color:#203f6a;"></i> Appointment List</div>
+      <span class="tcount"><%= pagination.total %> appointments</span>
+    </div>
+
+    <% if (appointments.length === 0) { %>
+      <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <p>No appointments found matching your filters</p>
+      </div>
+    <% } else { %>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date & Time</th>
+              <th>Payment</th>
+              <th>Fee</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% appointments.forEach((a, i) => { %>
+              <tr>
+                <td style="color:#94a3b8;font-size:12px;font-weight:600;"><%= ((pagination.page-1)*pagination.limit)+i+1 %></td>
+                <td>
+                  <div class="pcell">
+                    <div class="pav" style="background:#203f6a;"><%= (a.patient?.name||'?').charAt(0).toUpperCase() %></div>
+                    <div>
+                      <div class="pname"><%= a.patient?.name||'Unknown' %></div>
+                      <div class="psub"><%= a.patient?.phone||a.patient?.email||'—' %></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div class="pcell">
+                    <div class="pav" style="background:#1a7f8e;">Dr</div>
+                    <div>
+                      <div class="pname">Dr. <%= a.doctor?.name||'Unknown' %></div>
+                      <div class="psub"><%= a.doctor?.department||a.department||'—' %></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight:700;color:#1a202c;font-size:13px;"><%= new Date(a.date).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'}) %></div>
+                  <div style="font-size:12px;color:#94a3b8;margin-top:2px;"><i class="fas fa-clock" style="margin-right:3px;"></i><%= a.timeSlot||'—' %></div>
+                </td>
+                <td>
+                  <span class="bp <%= a.paymentMethod %>"><%= a.paymentMethod==='razorpay'?'Razorpay':a.paymentMethod==='wallet'?'Wallet':'Cash' %></span>
+                  <div style="font-size:11px;color:#94a3b8;margin-top:3px;"><%= a.paymentStatus||'pending' %></div>
+                </td>
+                <td style="font-weight:700;color:#1a202c;">₹<%= (a.consultationFee||0).toLocaleString('en-IN') %></td>
+                <td><span class="bs <%= a.status %>"><%= a.status %></span></td>
+                <td>
+                  <div class="aw">
+                    <button class="bv" onclick="viewAppt('<%= a._id %>')"><i class="fas fa-eye"></i></button>
+                    <% if (!['completed','cancelled','rejected'].includes(a.status)) { %>
+                      <button class="bu" onclick="viewAppt('<%= a._id %>')"><i class="fas fa-edit"></i></button>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (pagination.totalPages > 1) { %>
+        <div class="pg-wrap">
+          <%
+            const q = Object.entries(filters)
+              .filter(([k,v]) => v)
+              .map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+          %>
+          <%- include('../partials/pagination', { currentPage: pagination.page, totalPages: pagination.totalPages, selectedStatus: q }) %>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<!-- Detail / Status Modal -->
+<div class="mo" id="apptModal">
+  <div class="mb-box">
+    <div class="mh">
+      <h3>Appointment Details</h3>
+      <button class="mc-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mbody" id="modalBody">
+      <div style="text-align:center;padding:30px;color:#94a3b8;"><i class="fas fa-spinner fa-spin" style="font-size:28px;"></i></div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/logout-modal') %>
+<%- include('../partials/loading') %>
+<%- include('../partials/admin-scripts') %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/alerts.js"></script>
+<script src="/js/loader.js"></script>
+
+<script>
+  function filterByStatus(s) {
+    document.getElementById('statusSelect').value = s;
+    document.getElementById('filterForm').submit();
+  }
+
+  async function viewAppt(id) {
+    document.getElementById('apptModal').classList.add('show');
+    document.getElementById('modalBody').innerHTML =
+      '<div style="text-align:center;padding:30px;color:#94a3b8;"><i class="fas fa-spinner fa-spin" style="font-size:28px;"></i><p style="margin-top:10px;">Loading...</p></div>';
+    try {
+      const res  = await fetch(`/admin/api/appointments/${id}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
+      const a = data.appointment;
+      const canUpdate = !['completed','cancelled','rejected'].includes(a.status);
+      document.getElementById('modalBody').innerHTML = `
+        <div class="dgrid">
+          <div class="di"><label>Patient</label><span>${a.patient?.name||'Unknown'}</span></div>
+          <div class="di"><label>Phone</label><span>${a.patient?.phone||'—'}</span></div>
+          <div class="di"><label>Doctor</label><span>Dr. ${a.doctor?.name||'Unknown'}</span></div>
+          <div class="di"><label>Department</label><span>${a.doctor?.department||a.department||'—'}</span></div>
+          <div class="di"><label>Date</label><span>${new Date(a.date).toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</span></div>
+          <div class="di"><label>Time Slot</label><span>${a.timeSlot||'—'}</span></div>
+          <div class="di"><label>Fee</label><span>₹${(a.consultationFee||0).toLocaleString('en-IN')}</span></div>
+          <div class="di"><label>Payment</label><span style="text-transform:capitalize;">${a.paymentMethod} / ${a.paymentStatus}</span></div>
+          <div class="di"><label>Status</label><span class="bs ${a.status}">${a.status}</span></div>
+          <div class="di"><label>Booked On</label><span>${new Date(a.createdAt).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}</span></div>
+        </div>
+        ${a.reason ? `<div style="margin-bottom:16px;"><label style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Reason for Visit</label><div style="background:#f8fafc;border-radius:8px;padding:10px 14px;font-size:13px;color:#374151;">${a.reason}</div></div>` : ''}
+        ${a.status==='cancelled' ? `
+          <div style="background:#fef2f2;border-radius:8px;padding:12px 14px;margin-bottom:16px;">
+            <div style="font-size:12px;font-weight:700;color:#dc2626;margin-bottom:4px;">Cancellation Details</div>
+            <div style="font-size:13px;color:#374151;">Cancelled by: <strong style="text-transform:capitalize;">${a.cancelledBy||'—'}</strong></div>
+            ${a.cancellationReason ? `<div style="font-size:13px;color:#374151;margin-top:4px;">Reason: ${a.cancellationReason}</div>` : ''}
+            ${a.refundAmount > 0 ? `<div style="font-size:13px;color:#059669;margin-top:4px;">Refund: ₹${a.refundAmount} (${a.refundPercentage}%) — ${a.refundStatus}</div>` : ''}
+          </div>` : ''}
+        <hr class="mdiv">
+        ${canUpdate ? `
+          <div class="sub-box">
+            <h4><i class="fas fa-edit" style="margin-right:6px;color:#203f6a;"></i>Update Status</h4>
+            <div class="sbtns">
+              ${a.status !== 'confirmed'  ? `<button class="sbtn sc" onclick="doUpdate('${a._id}','confirmed')">Confirm</button>` : ''}
+              ${a.status !== 'completed'  ? `<button class="sbtn sm" onclick="doUpdate('${a._id}','completed')">Complete</button>` : ''}
+              ${a.status !== 'cancelled'  ? `<button class="sbtn sx" onclick="showReason('${a._id}','cancelled')">Cancel</button>` : ''}
+              ${a.status !== 'rejected' && a.paymentMethod === 'cash' ? `<button class="sbtn sr" onclick="showReason('${a._id}','rejected')">Reject</button>` : ''}
+            </div>
+            <input type="text" id="reasonInp" class="ri" placeholder="Enter reason (optional)...">
+          </div>` : `
+          <div style="text-align:center;color:#94a3b8;font-size:13px;padding:12px 0;">
+            <i class="fas fa-lock" style="margin-right:6px;"></i>
+            This appointment is <strong>${a.status}</strong> — no further changes allowed.
+          </div>`}
+      `;
+    } catch(e) {
+      document.getElementById('modalBody').innerHTML = '<p style="color:#ef4444;text-align:center;padding:20px;">Failed to load appointment details.</p>';
+    }
+  }
+
+  let _pid = null, _pst = null;
+  function showReason(id, st) {
+    _pid = id; _pst = st;
+    const inp = document.getElementById('reasonInp');
+    if (inp) inp.classList.add('show');
+    if (!document.getElementById('confirmBtn')) {
+      const btn = document.createElement('button');
+      btn.id        = 'confirmBtn';
+      btn.className = 'fb fb-apply';
+      btn.style     = 'margin-top:10px;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;';
+      btn.innerHTML = `<i class="fas fa-check"></i> Confirm ${st.charAt(0).toUpperCase()+st.slice(1)}`;
+      btn.onclick   = () => doUpdate(_pid, _pst, document.getElementById('reasonInp')?.value || '');
+      document.querySelector('.sub-box')?.appendChild(btn);
+    }
+  }
+
+  async function doUpdate(id, status, reason = '') {
+    Loader.show(`Updating to ${status}...`);
+    try {
+      const res  = await fetch(`/admin/api/appointments/${id}/status`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status, reason })
+      });
+      const data = await res.json();
+      Loader.hide();
+      if (data.success) {
+        closeModal();
+        Alert.success(`Appointment ${status} successfully!`).then(() => window.location.reload());
+      } else {
+        Alert.error(data.error || 'Failed to update');
+      }
+    } catch(e) {
+      Loader.hide();
+      Alert.error('Something went wrong');
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('apptModal').classList.remove('show');
+    _pid = null; _pst = null;
+  }
+  document.getElementById('apptModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
 </body>
 </html>
