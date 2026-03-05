@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <link rel="stylesheet" href="/css/patient/wallet.css" >
+</head>
+<body>
+
+<%- include('../partials/patient-sidebar', { currentPage: 'wallet' }) %>
+
+<!-- Modal root — direct child of <body>, escapes sidebar stacking context -->
+<div id="healora-modal-root"></div>
+
+<div class="main-content">
+  <div class="top-bar">
+    <h1 class="page-title">My Wallet</h1>
+    <button class="user-profile-btn">
+      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
+      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
+    </button>
+  </div>
+
+  <div class="top-grid">
+    <div class="balance-card">
+      <div class="balance-label"><i class="fas fa-wallet"></i> Healora Wallet Balance</div>
+      <div class="balance-amount">₹<%= wallet.balance.toLocaleString('en-IN') %></div>
+      <div class="balance-sub">Available to use for appointments</div>
+      <button class="topup-btn" onclick="openTopupModal()">
+        <i class="fas fa-plus-circle"></i> Add Money
+      </button>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-top">
+        <div>
+          <div class="stat-val">₹<%= totalCredit.toLocaleString('en-IN') %></div>
+          <div class="stat-label">Total Added</div>
+        </div>
+        <div class="stat-icon credit"><i class="fas fa-arrow-down"></i></div>
+      </div>
+      <div style="font-size:12px;color:#94a3b8;">
+        <i class="fas fa-receipt" style="margin-right:4px;"></i>
+        <%= creditCount %> credit transactions
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-card-top">
+        <div>
+          <div class="stat-val">₹<%= totalDebit.toLocaleString('en-IN') %></div>
+          <div class="stat-label">Total Spent</div>
+        </div>
+        <div class="stat-icon debit"><i class="fas fa-arrow-up"></i></div>
+      </div>
+      <div style="font-size:12px;color:#94a3b8;">
+        <i class="fas fa-calendar-check" style="margin-right:4px;"></i>
+        <%= debitCount %> debit transactions
+      </div>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <a href="/patient/wallet"              class="filter-tab <%= selectedType==='all'     ? 'active':'' %>">All</a>
+    <a href="/patient/wallet?type=credit"  class="filter-tab <%= selectedType==='credit'  ? 'active':'' %>">Credits</a>
+    <a href="/patient/wallet?type=debit"   class="filter-tab <%= selectedType==='debit'   ? 'active':'' %>">Debits</a>
+    <a href="/patient/wallet?type=topup"   class="filter-tab <%= selectedType==='topup'   ? 'active':'' %>">Top-ups</a>
+    <a href="/patient/wallet?type=refund"  class="filter-tab <%= selectedType==='refund'  ? 'active':'' %>">Refunds</a>
+    <a href="/patient/wallet?type=booking" class="filter-tab <%= selectedType==='booking' ? 'active':'' %>">Bookings</a>
+  </div>
+
+  <div class="txn-card">
+    <div class="txn-card-header">
+      <div class="txn-card-title">
+        <i class="fas fa-list-ul" style="color:#203f6a;"></i>
+        Transaction History
+      </div>
+      <span class="txn-count"><%= total %> transactions</span>
+    </div>
+
+    <% if (transactions.length === 0) { %>
+      <div class="empty-state">
+        <i class="fas fa-receipt"></i>
+        <p>No transactions yet</p>
+      </div>
+    <% } else { %>
+      <% transactions.forEach(txn => { %>
+        <div class="txn-row">
+          <div class="txn-icon <%= txn.type %>">
+            <i class="fas fa-<%=
+              txn.transactionType === 'topup'   ? 'plus-circle' :
+              txn.transactionType === 'refund'  ? 'undo' :
+              txn.transactionType === 'booking' ? 'calendar-check' :
+              txn.type === 'credit' ? 'arrow-down' : 'arrow-up'
+            %>"></i>
+          </div>
+          <div class="txn-info">
+            <div class="txn-desc"><%= txn.description %></div>
+            <div class="txn-meta">
+              <span><%= new Date(txn.createdAt).toLocaleDateString('en-US',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></span>
+              <span class="txn-type-badge <%= txn.transactionType %>"><%= txn.transactionType %></span>
+            </div>
+          </div>
+          <div>
+            <div class="txn-amount <%= txn.type %>">
+              <%= txn.type === 'credit' ? '+' : '-' %>₹<%= txn.amount.toLocaleString('en-IN') %>
+            </div>
+            <div class="txn-balance">Bal: ₹<%= txn.balanceAfter.toLocaleString('en-IN') %></div>
+          </div>
+        </div>
+      <% }) %>
+
+      <% if (totalPages > 1) { %>
+        <div class="pagination-wrap">
+          <%- include('../partials/pagination', { currentPage, totalPages, selectedStatus: selectedType ? `type=${selectedType}` : '' }) %>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<script>
+  const RAZORPAY_KEY = '<%= razorpayKeyId %>';
+  const USER_NAME    = '<%= user.name %>';
+  const USER_EMAIL   = '<%= user.email %>';
+  const USER_PHONE   = '<%= user.phone || "" %>';
+
+  const modalRoot = document.getElementById('healora-modal-root');
+
+  /* ── Core modal engine ── */
+  function showModal(innerHtml) {
+    modalRoot.innerHTML = `<div class="hm-backdrop" id="hm-backdrop">${innerHtml}</div>`;
+    document.getElementById('hm-backdrop').addEventListener('click', function(e) {
+      if (e.target === this) hideModal();
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      modalRoot.classList.add('active');
+    }));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideModal() {
+    modalRoot.classList.remove('active');
+    document.body.style.overflow = '';
+    setTimeout(() => { modalRoot.innerHTML = ''; }, 250);
+  }
+
+  /* ── Top-up modal ── */
+  function openTopupModal() {
+    showModal(`
+      <div class="hm-box" onclick="event.stopPropagation()">
+        <div class="hm-icon green"><i class="fas fa-wallet"></i></div>
+        <div class="hm-title">Add Money to Wallet</div>
+        <div class="hm-sub">Choose an amount or enter a custom value</div>
+        <div class="hm-presets">
+          <button class="hm-preset-btn" onclick="selectPreset(this,100)">₹100</button>
+          <button class="hm-preset-btn" onclick="selectPreset(this,200)">₹200</button>
+          <button class="hm-preset-btn" onclick="selectPreset(this,500)">₹500</button>
+          <button class="hm-preset-btn" onclick="selectPreset(this,1000)">₹1,000</button>
+          <button class="hm-preset-btn" onclick="selectPreset(this,2000)">₹2,000</button>
+          <button class="hm-preset-btn" onclick="selectPreset(this,5000)">₹5,000</button>
+        </div>
+        <div class="hm-input-wrap">
+          <label class="hm-input-label">Or enter custom amount</label>
+          <input type="number" id="topupAmount" class="hm-input" placeholder="₹ Enter amount" min="10" max="50000" oninput="clearPresets()">
+          <div class="hm-input-note">Min: ₹10 · Max: ₹50,000 per transaction</div>
+        </div>
+        <div class="hm-btns">
+          <button class="hm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="hm-btn navy" id="topupConfirmBtn" onclick="initiateTopup()">
+            <i class="fas fa-lock" style="margin-right:6px;font-size:12px;"></i> Pay Securely
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  function selectPreset(btn, amount) {
+    document.querySelectorAll('.hm-preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('topupAmount').value = amount;
+  }
+  function clearPresets() {
+    document.querySelectorAll('.hm-preset-btn').forEach(b => b.classList.remove('active'));
+  }
+
+  async function initiateTopup() {
+    const amount = parseFloat(document.getElementById('topupAmount').value);
+    if (!amount || amount < 10 || amount > 50000) {
+      alert('Please enter a valid amount between ₹10 and ₹50,000');
+      return;
+    }
+    const btn = document.getElementById('topupConfirmBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Creating order...';
+
+    try {
+      const res  = await fetch('/patient/wallet/topup/create-order', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount })
+      });
+      const data = await res.json();
+
+      if (!data.success) {
+        alert(data.error || 'Failed to create order');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock" style="margin-right:6px;font-size:12px;"></i> Pay Securely';
+        return;
+      }
+
+      hideModal();
+
+      const rzp = new Razorpay({
+        key:         RAZORPAY_KEY,
+        amount:      data.order.amount,
+        currency:    'INR',
+        order_id:    data.order.id,
+        name:        'Healora',
+        description: 'Wallet Top-up',
+        prefill:     { name: USER_NAME, email: USER_EMAIL, contact: USER_PHONE },
+        theme:       { color: '#203f6a' },
+        handler: async function(response) {
+          try {
+            const verifyRes  = await fetch('/patient/wallet/topup/verify', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id:   response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature:  response.razorpay_signature,
+                amount
+              })
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) { window.location.reload(); }
+            else { alert(verifyData.error || 'Payment verification failed'); }
+          } catch { alert('Something went wrong verifying payment'); }
+        },
+        modal: {
+          ondismiss: function() {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-lock" style="margin-right:6px;font-size:12px;"></i> Pay Securely';
+          }
+        }
+      });
+      rzp.open();
+
+    } catch {
+      alert('Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-lock" style="margin-right:6px;font-size:12px;"></i> Pay Securely';
+    }
+  }
+
+  /* ── Logout modal ── */
+  function showLogoutModal() {
+    showModal(`
+      <div class="hm-box" onclick="event.stopPropagation()">
+        <div class="hm-icon blue"><i class="fas fa-sign-out-alt"></i></div>
+        <div class="hm-title">Confirm Logout</div>
+        <div class="hm-sub">Are you sure you want to logout from Healora?</div>
+        <div class="hm-btns">
+          <button class="hm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="hm-btn navy" onclick="confirmLogout()">Logout</button>
+        </div>
+      </div>
+    `);
+  }
+
+  function confirmLogout() {
+    fetch('/patient/logout', { method: 'POST' })
+      .then(() => window.location.href = '/patient/login')
+      .catch(() => window.location.href = '/patient/login');
+  }
+</script>
+</body>
+</html>

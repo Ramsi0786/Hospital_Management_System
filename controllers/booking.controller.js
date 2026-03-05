@@ -4,10 +4,11 @@ import Wallet from '../models/wallet.model.js';
 import WalletTransaction from '../models/walletTransaction.model.js';
 import Payment from '../models/payment.model.js';
 import { resolveSlots } from './availability.controller.js';
-import { generateInvoicePDF } from '../utils/generateInvoice.js';
+import { generateInvoicePDF, saveInvoiceRecord } from '../utils/generateInvoice.js';
 import { sendBookingConfirmationEmail } from '../utils/sendEmail.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
+
 
 const razorpay = new Razorpay({
   key_id:     process.env.RAZORPAY_KEY_ID,
@@ -18,21 +19,47 @@ const razorpay = new Razorpay({
 const sendInvoiceAndEmail = async (appointment, doctor, patient) => {
   try {
     const pdfBuffer = await generateInvoicePDF({ appointment, doctor, patient });
+    await saveInvoiceRecord(appointment, 'booking'); 
     await sendBookingConfirmationEmail(patient.email, {
-      patientName:   patient.name,
-      doctorName:    doctor.name,
+      patientName:    patient.name,
+      doctorName:     doctor.name,
       specialization: doctor.specialization,
-      department:    doctor.department,
-      date:          appointment.date,
-      timeSlot:      appointment.timeSlot,
-      fee:           appointment.consultationFee,
-      paymentMethod: appointment.paymentMethod,
-      paymentStatus: appointment.paymentStatus,
-      bookingId:     appointment._id.toString().slice(-8).toUpperCase(),
-      status:        appointment.status
+      department:     doctor.department,
+      date:           appointment.date,
+      timeSlot:       appointment.timeSlot,
+      fee:            appointment.consultationFee,
+      paymentMethod:  appointment.paymentMethod,
+      paymentStatus:  appointment.paymentStatus,
+      bookingId:      appointment._id.toString().slice(-8).toUpperCase(),
+      status:         appointment.status
     }, pdfBuffer);
   } catch (err) {
     console.error('Invoice/email error (non-fatal):', err.message);
+  }
+};
+
+export const downloadInvoice = async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.appointmentId)
+      .populate('doctor')
+      .populate('patient');
+
+    if (!appointment || appointment.patient._id.toString() !== req.user._id.toString()) {
+      return res.status(404).send('Invoice not found');
+    }
+
+    const pdfBuffer = await generateInvoicePDF({ 
+      appointment, 
+      doctor: appointment.doctor, 
+      patient: appointment.patient 
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=invoice-${req.params.appointmentId.slice(-8).toUpperCase()}.pdf`);
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error('Download invoice error:', err);
+    res.status(500).send('Failed to generate invoice');
   }
 };
 
@@ -352,20 +379,18 @@ export const cancelAppointment = async (req, res) => {
       return res.status(400).json({ success: false, error: 'This appointment cannot be cancelled' });
     }
 
-    const { percentage, amount } = calcRefund(
-      appointment.consultationFee,
-      appointment.date,
-      appointment.timeSlot
-    );
+const isCash = appointment.paymentMethod === 'cash';
+const { percentage, amount } = isCash
+  ? { percentage: 0, amount: 0 }
+  : calcRefund(appointment.consultationFee, appointment.date, appointment.timeSlot);
 
-    appointment.status             = 'cancelled';
-    appointment.cancelledBy        = 'patient';
-    appointment.cancellationReason = reason || '';
-    appointment.cancelledAt        = new Date();
-    appointment.refundPercentage   = percentage;
-    appointment.refundAmount       = amount;
-    appointment.refundStatus       = amount > 0 ? 'pending' : 'none';
-
+appointment.status             = 'cancelled';
+appointment.cancelledBy        = 'patient';
+appointment.cancellationReason = reason || '';
+appointment.cancelledAt        = new Date();
+appointment.refundPercentage   = percentage;
+appointment.refundAmount       = amount;
+appointment.refundStatus       = isCash ? 'none' : (amount > 0 ? 'pending' : 'none');
     if (amount > 0) {
       if (appointment.paymentMethod === 'wallet') {
         const wallet = await Wallet.findOneAndUpdate(
@@ -429,5 +454,119 @@ export const cancelAppointment = async (req, res) => {
   } catch (err) {
     console.error('Cancel appointment error:', err);
     res.status(500).json({ success: false, error: 'Failed to cancel appointment' });
+  }
+};
+
+
+export const getWallet = async (req, res) => {
+  try {
+    const patientId = req.user._id;
+    const { type, page } = req.query;
+    const limit   = 10;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const skip    = (pageNum - 1) * limit;
+
+    let wallet = await Wallet.findOne({ patient: patientId });
+    if (!wallet) wallet = await Wallet.create({ patient: patientId, balance: 0 });
+
+    let query = { patient: patientId };
+    if (type && type !== 'all') {
+      if (type === 'credit' || type === 'debit') {
+        query.type = type;
+      } else {
+        query.transactionType = type; 
+      }
+    }
+
+    const [transactions, total, allTxns] = await Promise.all([
+      WalletTransaction.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      WalletTransaction.countDocuments(query),
+      WalletTransaction.find({ patient: patientId }) 
+    ]);
+
+    const totalCredit = allTxns.filter(t => t.type === 'credit').reduce((s, t) => s + t.amount, 0);
+    const totalDebit  = allTxns.filter(t => t.type === 'debit').reduce((s, t) => s + t.amount, 0);
+    const creditCount = allTxns.filter(t => t.type === 'credit').length;
+    const debitCount  = allTxns.filter(t => t.type === 'debit').length;
+
+    res.render('patient/wallet', {
+      title:        'My Wallet - Healora',
+      user:          req.user,
+      wallet,
+      transactions,
+      total,
+      totalCredit,
+      totalDebit,
+      creditCount,
+      debitCount,
+      selectedType:  type || 'all',
+      currentPage:   pageNum,
+      totalPages:    Math.ceil(total / limit),
+      razorpayKeyId: process.env.RAZORPAY_KEY_ID
+    });
+  } catch (err) {
+    console.error('Get wallet error:', err);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load wallet', user: req.user });
+  }
+};
+
+export const createTopupOrder = async (req, res) => {
+  try {
+    const { amount } = req.body;
+
+    if (!amount || amount < 10 || amount > 50000) {
+      return res.status(400).json({ success: false, error: 'Invalid amount. Must be between ₹10 and ₹50,000.' });
+    }
+
+    const order = await razorpay.orders.create({
+      amount:   Math.round(amount * 100), // paise
+      currency: 'INR',
+      receipt: `wp_${req.user._id.toString().slice(-8)}_${Date.now().toString().slice(-8)}`
+    });
+
+    res.json({ success: true, order });
+  } catch (err) {
+    console.error('Create topup order error:', err);
+    res.status(500).json({ success: false, error: 'Failed to create payment order' });
+  }
+};
+
+export const verifyTopup = async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
+    const patientId = req.user._id;
+
+    const body     = razorpay_order_id + '|' + razorpay_payment_id;
+    const expected = crypto
+      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+      .update(body)
+      .digest('hex');
+
+    if (expected !== razorpay_signature) {
+      return res.status(400).json({ success: false, error: 'Payment verification failed' });
+    }
+
+    let wallet = await Wallet.findOne({ patient: patientId });
+    if (!wallet) wallet = await Wallet.create({ patient: patientId, balance: 0 });
+
+    const balanceBefore = wallet.balance;
+    wallet.balance += Number(amount);
+    await wallet.save();
+
+    await WalletTransaction.create({
+      patient:           patientId,
+      type:              'credit',
+      amount:            Number(amount),
+      description:       `Wallet top-up via Razorpay`,
+      balanceBefore,
+      balanceAfter:      wallet.balance,
+      razorpayPaymentId: razorpay_payment_id,
+      transactionType:   'topup'
+    });
+
+    res.json({ success: true, newBalance: wallet.balance });
+  } catch (err) {
+    console.error('Verify topup error:', err);
+    res.status(500).json({ success: false, error: 'Failed to verify payment' });
   }
 };

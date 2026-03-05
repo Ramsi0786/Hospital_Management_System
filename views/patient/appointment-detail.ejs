@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/patient/appointment.css" >
+</head>
+<body>
+
+<%- include('../partials/patient-sidebar', { currentPage: 'appointments' }) %>
+
+<%
+  const appt = appointment;
+  const doc  = appt.doctor;
+
+  // Date display
+  const apptDate = new Date(appt.date + 'T00:00:00').toLocaleDateString('en-US', {
+    weekday:'long', year:'numeric', month:'long', day:'numeric'
+  });
+
+  // Is past
+  const [slotH, slotM] = appt.timeSlot.split(':').map(Number);
+  const apptDateTime = new Date(appt.date);
+  apptDateTime.setHours(slotH, slotM, 0, 0);
+  const isPast = apptDateTime < new Date();
+  const canCancel = ['pending','confirmed'].includes(appt.status) && !isPast;
+
+  // Booking ID
+  const bookingId = appt._id.toString().slice(-8).toUpperCase();
+
+  // Refund preview (for cancel modal)
+  const hoursUntil = (apptDateTime - new Date()) / (1000 * 60 * 60);
+  const refundPct  = hoursUntil >= 12 ? 90 : 0;
+  const refundAmt  = appt.paymentMethod === 'cash' ? 0 : Math.round(appt.consultationFee * refundPct / 100);
+%>
+
+<div class="main-content">
+  <div class="top-bar">
+    <h1 class="page-title">Appointment Details</h1>
+    <button class="user-profile-btn">
+      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
+      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
+    </button>
+  </div>
+
+  <a href="/patient/appointments" class="back-btn">
+    <i class="fas fa-arrow-left"></i> Back to Appointments
+  </a>
+
+  <!-- Doctor Hero -->
+  <div class="doctor-hero">
+    <% if (doc && doc.profileImage) { %>
+      <img class="doc-avatar-lg" src="<%= doc.profileImage %>" alt="">
+    <% } else { %>
+      <div class="doc-initials-lg">
+        <%= doc ? doc.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) : 'DR' %>
+      </div>
+    <% } %>
+    <div>
+      <h2>Dr. <%= doc ? doc.name : 'Unknown' %></h2>
+      <p><%= doc ? doc.specialization : '' %> · <%= appt.department %></p>
+      <div class="hero-chips">
+        <span class="hero-chip"><i class="fas fa-calendar"></i> <%= apptDate %></span>
+        <span class="hero-chip"><i class="fas fa-clock"></i> <%= appt.timeSlot %></span>
+        <span class="hero-chip status-chip"><%= appt.status.toUpperCase() %></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+
+    <!-- LEFT COLUMN -->
+    <div>
+
+      <!-- Appointment Info -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-calendar-check"></i> Appointment Information</div>
+
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-hashtag"></i> Booking ID</span>
+          <span class="booking-id">#<%= bookingId %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-circle"></i> Status</span>
+          <span class="status-badge <%= appt.status %>"><%= appt.status %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-calendar"></i> Date</span>
+          <span class="info-value"><%= apptDate %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-clock"></i> Time Slot</span>
+          <span class="info-value"><%= appt.timeSlot %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-hospital"></i> Department</span>
+          <span class="info-value"><%= appt.department %></span>
+        </div>
+        <% if (appt.reason) { %>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-notes-medical"></i> Reason</span>
+          <span class="info-value" style="max-width:220px;text-align:right;"><%= appt.reason %></span>
+        </div>
+        <% } %>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-calendar-plus"></i> Booked On</span>
+          <span class="info-value"><%= new Date(appt.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) %></span>
+        </div>
+      </div>
+
+      <!-- Doctor Info -->
+      <% if (doc) { %>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-user-doctor"></i> Doctor Information</div>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-user"></i> Name</span>
+          <span class="info-value">Dr. <%= doc.name %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-stethoscope"></i> Specialization</span>
+          <span class="info-value"><%= doc.specialization %></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-hospital"></i> Department</span>
+          <span class="info-value"><%= doc.department %></span>
+        </div>
+        <% if (doc.phone) { %>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-phone"></i> Contact</span>
+          <span class="info-value"><%= doc.phone %></span>
+        </div>
+        <% } %>
+      </div>
+      <% } %>
+
+      <!-- Cancellation info (if cancelled) -->
+      <% if (appt.status === 'cancelled') { %>
+      <div class="card">
+        <div class="card-title"><i class="fas fa-times-circle" style="color:#dc2626;"></i> Cancellation Details</div>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-user"></i> Cancelled By</span>
+          <span class="info-value" style="text-transform:capitalize;"><%= appt.cancelledBy || 'Patient' %></span>
+        </div>
+        <% if (appt.cancelledAt) { %>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-calendar"></i> Cancelled On</span>
+          <span class="info-value"><%= new Date(appt.cancelledAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'}) %></span>
+        </div>
+        <% } %>
+        <% if (appt.cancellationReason) { %>
+        <div class="info-row">
+          <span class="info-label"><i class="fas fa-comment"></i> Reason</span>
+          <span class="info-value"><%= appt.cancellationReason %></span>
+        </div>
+        <% } %>
+        <% if (appt.refundAmount > 0) { %>
+        <div class="refund-box" style="margin-top:14px;">
+          <div class="refund-title"><i class="fas fa-undo"></i> Refund Details</div>
+          <div class="refund-row"><span>Refund Amount</span><strong>₹<%= appt.refundAmount %> (<%= appt.refundPercentage %>%)</strong></div>
+          <div class="refund-row"><span>Refund Status</span><strong style="text-transform:capitalize;"><%= appt.refundStatus %></strong></div>
+        </div>
+        <% } %>
+      </div>
+      <% } %>
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+
+      <!-- Payment Card -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-credit-card"></i> Payment Summary</div>
+
+        <div class="fee-highlight">
+          <div class="fee-amount">₹<%= appt.consultationFee %></div>
+          <div class="fee-label">Consultation Fee</div>
+        </div>
+
+        <div class="info-row">
+          <span class="info-label">Payment Method</span>
+          <span class="pay-chip <%= appt.paymentMethod %>">
+            <i class="fas fa-<%= appt.paymentMethod === 'cash' ? 'money-bill-wave' : appt.paymentMethod === 'wallet' ? 'wallet' : 'credit-card' %>"></i>
+            <%= appt.paymentMethod === 'cash' ? 'Cash' : appt.paymentMethod === 'wallet' ? 'Wallet' : 'Online' %>
+          </span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Payment Status</span>
+          <span class="pay-status <%= appt.paymentStatus %>"><%= appt.paymentStatus %></span>
+        </div>
+      </div>
+
+      <!-- Refund Policy -->
+      <% if (canCancel && appt.paymentMethod !== 'cash' && appt.paymentStatus === 'paid') { %>
+      <div class="policy-box">
+        <div class="policy-title"><i class="fas fa-shield-alt"></i> Cancellation & Refund Policy</div>
+        <div class="policy-item"><i class="fas fa-check" style="color:#059669;"></i> Cancel 12+ hours before → 90% refund</div>
+        <div class="policy-item"><i class="fas fa-times" style="color:#dc2626;"></i> Cancel less than 12 hours → No refund</div>
+      </div>
+      <% } %>
+
+      <!-- Actions -->
+      <div class="card">
+        <div class="card-title"><i class="fas fa-bolt"></i> Actions</div>
+
+        <!-- Invoice download -->
+        <a href="/patient/appointments/<%= appt._id %>/success" class="action-btn btn-invoice">
+          <i class="fas fa-eye"></i> View Booking Summary
+        </a>
+
+        <!-- Cancel button -->
+        <% if (canCancel) { %>
+          <button class="action-btn btn-cancel" onclick="openCancelModal()">
+            <i class="fas fa-times-circle"></i> Cancel Appointment
+          </button>
+        <% } else if (['pending','confirmed'].includes(appt.status) && isPast) { %>
+          <button class="action-btn btn-disabled" disabled>
+            <i class="fas fa-clock"></i> Slot Expired
+          </button>
+        <% } %>
+
+        <a href="/patient/appointments" class="action-btn btn-back">
+          <i class="fas fa-arrow-left"></i> Back to Appointments
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Cancel Modal -->
+<% if (canCancel) { %>
+<div class="modal-backdrop" id="cancelModal">
+  <div class="modal-box">
+    <div class="modal-icon-wrap"><i class="fas fa-times-circle"></i></div>
+    <div class="modal-title">Cancel Appointment</div>
+    <div class="modal-sub">Dr. <%= doc ? doc.name : 'Unknown' %> · <%= appt.timeSlot %></div>
+
+    <div class="refund-preview">
+  <% if (appt.paymentMethod === 'cash' || appt.paymentStatus !== 'paid') { %>
+  <div class="rp-row"><span>Payment Method</span><strong>Cash at Hospital</strong></div>
+  <div class="rp-row" style="font-size:12px;color:#64748b;margin-top:6px;">
+    <span>No payment collected. Appointment will simply be cancelled.</span>
+  </div>
+<% } else { %>
+  <div class="rp-row"><span>Consultation Fee</span><strong>₹<%= appt.consultationFee %></strong></div>
+  <div class="rp-row"><span>Refund Policy</span><strong><%= refundPct %>% refund</strong></div>
+  <div class="rp-row total">
+    <span>Refund Amount</span><strong>₹<%= refundAmt %> (<%= refundPct %>%)</strong>
+  </div>
+  <div class="rp-row" style="font-size:12px;color:#64748b;margin-top:4px;">
+    <span>Refund to</span>
+    <span><%= appt.paymentMethod === 'wallet' ? 'Healora Wallet' : 'Original payment method' %></span>
+  </div>
+<% } %>
+</div>
+
+    <textarea class="form-control" id="cancelReason" placeholder="Reason for cancellation (optional)"></textarea>
+
+    <div class="modal-btns">
+      <button class="btn-modal-back" onclick="closeCancelModal()">Keep Appointment</button>
+      <button class="btn-modal-confirm" id="confirmCancelBtn" onclick="confirmCancel()">Cancel Appointment</button>
+    </div>
+  </div>
+</div>
+<% } %>
+
+<!-- Logout Modal -->
+<div class="modal-backdrop" id="logoutModal">
+  <div class="modal-box" style="max-width:420px;">
+    <div class="modal-icon-wrap"><i class="fas fa-sign-out-alt"></i></div>
+    <div class="modal-title">Confirm Logout</div>
+    <div class="modal-sub">Are you sure you want to logout?</div>
+    <div class="modal-btns">
+      <button class="btn-modal-back" onclick="closeLogoutModal()">Cancel</button>
+      <button onclick="confirmLogout()" style="flex:1;padding:12px;border-radius:10px;border:none;background:#203f6a;color:white;font-weight:700;cursor:pointer;font-family:inherit;">Logout</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const APPT_ID = '<%= appt._id %>';
+
+  function openCancelModal()  { document.getElementById('cancelModal').classList.add('show'); }
+  function closeCancelModal() { document.getElementById('cancelModal').classList.remove('show'); }
+
+  // Close on backdrop click
+  document.getElementById('cancelModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('cancelModal')) closeCancelModal();
+  });
+
+  async function confirmCancel() {
+    const btn    = document.getElementById('confirmCancelBtn');
+    const reason = document.getElementById('cancelReason').value.trim();
+
+    btn.disabled    = true;
+    btn.textContent = 'Cancelling...';
+
+    try {
+      const res  = await fetch(`/patient/appointments/${APPT_ID}/cancel`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ reason })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        window.location.reload();
+      } else {
+        alert(data.error || 'Failed to cancel appointment');
+        btn.disabled    = false;
+        btn.textContent = 'Cancel Appointment';
+      }
+    } catch (err) {
+      alert('Something went wrong. Please try again.');
+      btn.disabled    = false;
+      btn.textContent = 'Cancel Appointment';
+    }
+  }
+
+  function showLogoutModal()  { document.getElementById('logoutModal').classList.add('show'); }
+  function closeLogoutModal() { document.getElementById('logoutModal').classList.remove('show'); }
+  function confirmLogout() {
+    fetch('/patient/logout', { method: 'POST' })
+      .then(() => window.location.href = '/patient/login')
+      .catch(() => window.location.href = '/patient/login');
+  }
+</script>
+</body>
+</html>

@@ -35,7 +35,22 @@
         <span class="nav-text">My Profile</span>
         <div class="nav-indicator"></div>
       </a>
-    </div>
+      </div>
+
+      <div class="nav-section">
+      <span class="nav-section-title">Finance</span>
+      <a href="/patient/wallet" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'wallet' ? 'active' : '' %>">
+        <div class="nav-icon"><i class="fas fa-wallet"></i></div>
+        <span class="nav-text">My Wallet</span>
+        <div class="nav-indicator"></div>
+      </a>
+      <a href="/patient/invoices" class="nav-item <%= currentPage === 'invoices' ? 'active' : '' %>">
+        <div class="nav-icon"><i class="fas fa-file-invoice"></i></div>
+        <span class="nav-text">My Invoices</span>
+        <div class="nav-indicator"></div>
+      </a>
+      </div>
+    
 
     <div class="nav-section">
       <span class="nav-section-title">MEDICAL</span>
@@ -49,12 +64,6 @@
       <a href="/patient/prescriptions" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'prescriptions' ? 'active' : '' %>">
         <div class="nav-icon"><i class="fas fa-prescription"></i></div>
         <span class="nav-text">Prescriptions</span>
-        <div class="nav-indicator"></div>
-      </a>
-
-      <a href="/patient/lab-reports" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'lab-reports' ? 'active' : '' %>">
-        <div class="nav-icon"><i class="fas fa-flask"></i></div>
-        <span class="nav-text">Lab Reports</span>
         <div class="nav-indicator"></div>
       </a>
     </div>

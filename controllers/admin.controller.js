@@ -2,71 +2,71 @@ import Patient from "../models/patient.model.js";
 import Doctor from "../models/doctor.model.js";
 import Settings from "../models/settings.model.js"
 import Appointment from "../models/appointment.model.js";
+import Wallet from '../models/wallet.model.js';
+import WalletTransaction from '../models/walletTransaction.model.js';
+import Payment from '../models/payment.model.js';
 import bcrypt from "bcryptjs";
 import { sendDoctorWelcomeEmail } from "../utils/sendEmail.js";
 import { HTTP_STATUS, PAGINATION, sanitizePagination } from "../constants/index.js";
 import logger from "../utils/logger.js";
 import cloudinary from "../config/cloudinary.js";
+import Razorpay from 'razorpay';
 
 /* ==================== GET DASHBOARD ==================== */
 
 export const getDashboard = async (req, res) => {
   try {
     const admin = req.admin || req.user;
-    const adminName =
-      admin.id === "superAdmin" ? "Super Admin" : admin.name || "Admin";
-
-    const [appointments, patients, doctors] = await Promise.all([
-      Appointment.find().catch(() => []),
-      Patient.find().catch(() => []),
-      Doctor.find().catch(() => [])
-    ]);
+    const adminName = admin.id === "superAdmin" ? "Super Admin" : admin.name || "Admin";
 
     const now = new Date();
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
+    const [totalAppointments, totalPatients, totalDoctors,
+           recentPatients, recentDoctors, recentAppointments] = await Promise.all([
+      Appointment.countDocuments(),
+      Patient.countDocuments(),
+      Doctor.countDocuments(),
+      Patient.find({ createdAt: { $gte: last24Hours } }).select('name createdAt'),
+      Doctor.find({ createdAt: { $gte: last24Hours } }).select('name createdAt'),
+      Appointment.find({ createdAt: { $gte: last24Hours } }).select('createdAt')
+    ]);
+
     const recentActivities = [];
 
-    patients.forEach(p => {
-      if (p.createdAt && p.createdAt >= last24Hours) {
-        recentActivities.push({
-          type: "Patient",
-          message: `${p.name} registered`,
-          date: p.createdAt
-        });
-      }
+    recentPatients.forEach(p => {
+      recentActivities.push({
+        type: "Patient",
+        message: `${p.name} registered`,
+        date: p.createdAt
+      });
     });
 
-    doctors.forEach(d => {
-      if (d.createdAt && d.createdAt >= last24Hours) {
-        recentActivities.push({
-          type: "Doctor",
-          message: `Dr. ${d.name} added`,
-          date: d.createdAt
-        });
-      }
+    recentDoctors.forEach(d => {
+      recentActivities.push({
+        type: "Doctor",
+        message: `Dr. ${d.name} added`,
+        date: d.createdAt
+      });
     });
 
-    appointments.forEach(a => {
-      if (a.createdAt && a.createdAt >= last24Hours) {
-        recentActivities.push({
-          type: "Appointment",
-          message: "New appointment scheduled",
-          date: a.createdAt
-        });
-      }
+    recentAppointments.forEach(a => {
+      recentActivities.push({
+        type: "Appointment",
+        message: "New appointment scheduled",
+        date: a.createdAt
+      });
     });
 
     recentActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
-    const limitedActivities = recentActivities.slice(0, 5);
 
     res.render("admin/dashboard", {
       admin,
       title: `${adminName} Dashboard - Healora`,
-      appointments: appointments || [],
-      patients: patients || [],
-      doctors: doctors || [],
-      recentActivities: limitedActivities
+      totalAppointments,
+      totalPatients,
+      totalDoctors,
+      recentActivities: recentActivities.slice(0, 5)
     });
 
   } catch (error) {
@@ -74,9 +74,9 @@ export const getDashboard = async (req, res) => {
     res.render("admin/dashboard", {
       admin: req.admin || req.user,
       title: "Dashboard - Healora",
-      appointments: [],
-      patients: [],
-      doctors: [],
+      totalAppointments: 0,
+      totalPatients: 0,
+      totalDoctors: 0,
       recentActivities: []
     });
   }
@@ -215,7 +215,6 @@ export const getPatientById = async (req, res) => {
       doctorName: apt.doctor?.name || 'Unknown', 
       status: apt.status || 'pending',
       date: apt.date,
-      time: apt.time,
       department: apt.department || 'N/A',
       reason: apt.reason || 'N/A'
     }));
@@ -475,7 +474,8 @@ export const addDoctor = async (req, res) => {
       specialization,
       department,
       password: hashedPassword,
-      profileImage: finalImageUrl 
+      profileImage: finalImageUrl,
+      status: 'active' 
     });
 
     await newDoctor.save();
@@ -606,7 +606,7 @@ export const getDoctorById = async (req, res) => {
       patientName: apt.patient?.name || 'Unknown', 
       status: apt.status || 'pending',
       date: apt.date,
-      time: apt.time,
+      timeSlot: apt.timeSlot || '-',
       department: apt.department || '_',
       reason: apt.reason || '_'
     }));
@@ -828,5 +828,243 @@ export const updateHospitalStats = async (req, res) => {
   } catch (error) {
     console.error('Update hospital stats error:', error);
     res.status(500).json({ success: false, error: 'Failed to update stats' });
+  }
+};
+
+/* ==================== GET ALL APPOINTMENTS ==================== */
+export const getAdminAppointments = async (req, res) => {
+  try {
+    const {
+      search   = '',
+      status   = '',
+      payment  = '',
+      doctor   = '',
+      dateFrom = '',
+      dateTo   = '',
+      page,
+      limit
+    } = req.query;
+
+    const { page: pageNum, limit: limitNum, skip } = sanitizePagination(
+      page,
+      limit || PAGINATION.APPOINTMENTS_PER_PAGE || 10
+    );
+
+    let query = {};
+    if (status && status !== 'all') query.status = status;
+
+    if (payment && payment !== 'all') query.paymentMethod = payment;
+
+    if (doctor) query.doctor = doctor;
+
+    if (dateFrom || dateTo) {
+      query.date = {};
+      if (dateFrom) query.date.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        query.date.$lte = end;
+      }
+    }
+
+    if (search.trim()) {
+      const [matchingPatients, matchingDoctors] = await Promise.all([
+        Patient.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id'),
+        Doctor.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id')
+      ]);
+      query.$or = [
+        { patient: { $in: matchingPatients.map(p => p._id) } },
+        { doctor:  { $in: matchingDoctors.map(d => d._id) } }
+      ];
+    }
+
+    const [appointments, total, doctors] = await Promise.all([
+      Appointment.find(query)
+        .populate('patient', 'name email phone')
+        .populate('doctor',  'name specialization department')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+      Appointment.countDocuments(query),
+      Doctor.find({}, 'name department').sort({ name: 1 }) 
+    ]);
+
+    const [totalCount, pendingCount, confirmedCount, completedCount, cancelledCount] = await Promise.all([
+      Appointment.countDocuments({}),
+      Appointment.countDocuments({ status: 'pending' }),
+      Appointment.countDocuments({ status: 'confirmed' }),
+      Appointment.countDocuments({ status: 'completed' }),
+      Appointment.countDocuments({ status: 'cancelled' })
+    ]);
+
+    res.render('admin/appointments', {
+      title:    'Appointments Management - Healora',
+      admin:    req.admin || req.user,
+      appointments,
+      doctors,
+      pagination: {
+        total,
+        page:       pageNum,
+        limit:      limitNum,
+        totalPages: Math.ceil(total / limitNum)
+      },
+      filters: { search, status, payment, doctor, dateFrom, dateTo },
+      stats: { total: totalCount, pending: pendingCount, confirmed: confirmedCount, completed: completedCount, cancelled: cancelledCount }
+    });
+  } catch (err) {
+    logger.error('Get Admin Appointments Error', 'Admin', err);
+    res.status(500).render('admin/appointments', {
+      title: 'Appointments - Healora',
+      admin: req.admin || req.user,
+      appointments: [],
+      doctors: [],
+      pagination: { total: 0, page: 1, limit: 10, totalPages: 0 },
+      filters: {},
+      stats: { total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 }
+    });
+  }
+};
+
+/* ==================== UPDATE APPOINTMENT STATUS (Admin) ==================== */
+export const updateAppointmentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, reason } = req.body;
+
+    const allowed = ['pending', 'confirmed', 'completed', 'cancelled'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ success: false, error: 'Invalid status' });
+    }
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment) {
+      return res.status(404).json({ success: false, error: 'Appointment not found' });
+    }
+
+    if (appointment.status === 'completed' && status !== 'completed') {
+      return res.status(400).json({ success: false, error: 'Cannot change a completed appointment' });
+    }
+
+    if (appointment.status === 'cancelled') {
+      return res.status(400).json({ success: false, error: 'Appointment is already cancelled' });
+    }
+
+    appointment.status = status;
+
+    // ── CANCELLATION ──────────────────────────────────────────────
+    if (status === 'cancelled') {
+      appointment.cancelledBy        = 'admin';
+      appointment.cancellationReason = reason || '';
+      appointment.cancelledAt        = new Date();
+
+      const isCash  = appointment.paymentMethod === 'cash';
+      const wasPaid = appointment.paymentStatus === 'paid';
+
+      if (!isCash && wasPaid) {
+        const apptDateTime = new Date(
+          `${new Date(appointment.date).toISOString().split('T')[0]}T${appointment.timeSlot}:00`
+        );
+        const diffHours  = (apptDateTime - new Date()) / (1000 * 60 * 60);
+        const percentage = diffHours >= 12 ? 90 : 0;
+        const amount     = percentage > 0 ? Math.round(appointment.consultationFee * percentage / 100) : 0;
+
+        appointment.refundPercentage = percentage;
+        appointment.refundAmount     = amount;
+        appointment.refundStatus     = amount > 0 ? 'pending' : 'none';
+
+        if (amount > 0) {
+          // ── Wallet refund ────────────────────────────────────────
+          if (appointment.paymentMethod === 'wallet') {
+            const wallet = await Wallet.findOneAndUpdate(
+              { patient: appointment.patient },
+              { $inc: { balance: amount } },
+              { new: true, upsert: true }
+            );
+
+            appointment.refundStatus  = 'processed';
+            appointment.refundedAt    = new Date();
+            appointment.paymentStatus = amount === appointment.consultationFee
+              ? 'refunded'
+              : 'partially_refunded';
+
+            await WalletTransaction.create({
+              patient:         appointment.patient,
+              type:            'credit',
+              amount,
+              description:     `Refund by admin — cancelled appointment (${percentage}%)`,
+              balanceBefore:   wallet.balance - amount,
+              balanceAfter:    wallet.balance,
+              appointment:     id,
+              transactionType: 'refund'
+            });
+          }
+
+          // ── Razorpay refund ──────────────────────────────────────
+          if (appointment.paymentMethod === 'razorpay' && appointment.razorpayPaymentId) {
+            try {
+              const rzp = new Razorpay({
+                key_id:     process.env.RAZORPAY_KEY_ID,
+                key_secret: process.env.RAZORPAY_KEY_SECRET
+              });
+              await rzp.payments.refund(appointment.razorpayPaymentId, { amount: amount * 100 });
+              appointment.refundStatus  = 'processed';
+              appointment.refundedAt    = new Date();
+              appointment.paymentStatus = amount === appointment.consultationFee
+                ? 'refunded'
+                : 'partially_refunded';
+            } catch (refundErr) {
+              console.error('Razorpay refund error:', refundErr);
+              appointment.refundStatus = 'pending';
+            }
+          }
+
+          // ── Update Payment record ────────────────────────────────
+          await Payment.findOneAndUpdate(
+            { appointment: id },
+            {
+              status:       appointment.paymentStatus,
+              refundAmount: amount,
+              refundStatus: appointment.refundStatus,
+              refundedAt:   appointment.refundedAt || null
+            }
+          );
+        }
+      }
+    }
+
+    await appointment.save();
+
+    logger.info(`Appointment ${id} → ${status} by admin`, 'Admin');
+
+    let message = `Appointment ${status} successfully.`;
+    if (appointment.refundAmount > 0) {
+      message += ` ₹${appointment.refundAmount} refund (${appointment.refundPercentage}%) — ${appointment.refundStatus}.`;
+    } else if (status === 'cancelled' && appointment.paymentMethod !== 'cash' && appointment.paymentStatus === 'paid') {
+      message += ' No refund — appointment is within 12 hours.';
+    }
+
+    res.json({ success: true, message, appointment });
+
+  } catch (err) {
+    logger.error('Update Appointment Status Error', 'Admin', err);
+    res.status(500).json({ success: false, error: 'Failed to update appointment status' });
+  }
+};
+
+/* ==================== GET SINGLE APPOINTMENT (Admin API) ==================== */
+export const getAppointmentById = async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id)
+      .populate('patient', 'name email phone age gender')
+      .populate('doctor',  'name specialization department consultationFee profileImage');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, error: 'Appointment not found' });
+    }
+
+    res.json({ success: true, appointment });
+  } catch (err) {
+    logger.error('Get Appointment Error', 'Admin', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch appointment' });
   }
 };

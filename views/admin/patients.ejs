@@ -28,6 +28,34 @@
       </button>
     </div>
 
+    <!-- Stats -->
+<div id="patientStats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+  <div style="background:white;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;">
+    <div style="width:46px;height:46px;border-radius:12px;background:#eff6ff;color:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
+      <i class="fas fa-users"></i>
+    </div>
+    <div><div id="statTotal" style="font-size:22px;font-weight:800;color:#1a202c;line-height:1;">0</div><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-top:2px;">Total</div></div>
+  </div>
+  <div style="background:white;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;">
+    <div style="width:46px;height:46px;border-radius:12px;background:#ecfdf5;color:#059669;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
+      <i class="fas fa-user-check"></i>
+    </div>
+    <div><div id="statActive" style="font-size:22px;font-weight:800;color:#1a202c;line-height:1;">0</div><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-top:2px;">Active</div></div>
+  </div>
+  <div style="background:white;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;">
+    <div style="width:46px;height:46px;border-radius:12px;background:#fef2f2;color:#ef4444;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
+      <i class="fas fa-user-slash"></i>
+    </div>
+    <div><div id="statBlocked" style="font-size:22px;font-weight:800;color:#1a202c;line-height:1;">0</div><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-top:2px;">Blocked</div></div>
+  </div>
+  <div style="background:white;border-radius:14px;padding:18px 20px;box-shadow:0 2px 10px rgba(0,0,0,.06);display:flex;align-items:center;gap:14px;">
+    <div style="width:46px;height:46px;border-radius:12px;background:#fffbeb;color:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
+      <i class="fas fa-user-clock"></i>
+    </div>
+    <div><div id="statInactive" style="font-size:22px;font-weight:800;color:#1a202c;line-height:1;">0</div><div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;margin-top:2px;">Inactive</div></div>
+  </div>
+</div>
+
     <div class="toolbar">
       <div class="search-wrapper">
         <i class="fas fa-search"></i>
@@ -173,36 +201,80 @@
     };
 
     async function loadPatients() {
-      Loader.show('Loading patients...');
+  Loader.show('Loading patients...');
+  try {
+    const params = new URLSearchParams({
+      search: state.search,
+      gender: state.gender,
+      status: state.status,
+      page:   state.page,
+      limit:  state.limit
+    });
 
-      try {
-        const params = new URLSearchParams({
-          search: state.search,
-          gender: state.gender,
-          status: state.status,
-          page: state.page,
-          limit: state.limit
-        });
+    const response = await fetch(`/admin/api/patients?${params}`);
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error);
 
-        const response = await fetch(`/admin/api/patients?${params}`);
-        const data = await response.json();
+    state.total      = data.pagination.total;
+    state.totalPages = data.pagination.totalPages;
 
-        if (!data.success) throw new Error(data.error);
+    renderPatients(data.patients);
+    renderPagination();
+    updateResultsInfo();
 
-        state.total = data.pagination.total;
-        state.totalPages = data.pagination.totalPages;
+    // Stats — parallel, non-blocking
+    try {
+      const [totalRes, activeRes, blockedRes, inactiveRes] = await Promise.all([
+        fetch('/admin/api/patients?limit=1&page=1'),
+        fetch('/admin/api/patients?limit=1&page=1&status=active'),
+        fetch('/admin/api/patients?limit=1&page=1&status=blocked'),
+        fetch('/admin/api/patients?limit=1&page=1&status=inactive')
+      ]);
+      const [t, a, b, i] = await Promise.all([
+        totalRes.json(), activeRes.json(), blockedRes.json(), inactiveRes.json()
+      ]);
+      document.getElementById('statTotal').textContent    = t.pagination?.total || 0;
+      document.getElementById('statActive').textContent   = a.pagination?.total || 0;
+      document.getElementById('statBlocked').textContent  = b.pagination?.total || 0;
+      document.getElementById('statInactive').textContent = i.pagination?.total || 0;
+    } catch(e) { console.warn('Stats failed', e); }
 
-        renderPatients(data.patients);
-        renderPagination();
-        updateResultsInfo();
+  } catch (error) {
+    console.error('Error loading patients:', error);
+    Alert.error('Failed to load patients');
+  } finally {
+    Loader.hide();
+  }
+}
 
-      } catch (error) {
-        console.error('Error loading patients:', error);
-        Alert.error('Failed to load patients');
-      } finally {
-        Loader.hide();
-      }
+    async function togglePatientBlock(id, isBlocked) {
+  const action = isBlocked ? 'unblock' : 'block';
+  const result = await Alert.confirm(
+    `Are you sure you want to ${action} this patient?`,
+    `${action.charAt(0).toUpperCase() + action.slice(1)} Patient`
+  );
+  if (!result.isConfirmed) return;
+
+  Loader.show(`${action}ing patient...`);
+  try {
+    const response = await fetch(`/admin/api/patients/${id}/block`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ block: !isBlocked })
+    });
+    const data = await response.json();
+    Loader.hide();
+    if (data.success) {
+      Alert.success(`Patient ${action}ed successfully!`);
+      loadPatients();
+    } else {
+      Alert.error(data.error || `Failed to ${action} patient`);
     }
+  } catch (err) {
+    Loader.hide();
+    Alert.error(`Error ${action}ing patient`);
+  }
+}
 
     function getStatus(patient) {
       if (patient.isBlocked) return `<span class="badge blocked">Blocked</span>`;
@@ -249,8 +321,15 @@
             <td>${getStatus(patient)}</td>
             <td>
               <div class="action-buttons">
-                <button class="btn-action btn-view" onclick="viewPatientProfile('${patient._id}')">View</button>
-              </div>
+    <button class="btn-action btn-view" onclick="viewPatientProfile('${patient._id}')">
+      <i class="fas fa-eye"></i> View
+    </button>
+    <button class="btn-action ${patient.isBlocked ? 'btn-unblock' : 'btn-block'}" 
+            onclick="togglePatientBlock('${patient._id}', ${patient.isBlocked})">
+      <i class="fas fa-${patient.isBlocked ? 'unlock' : 'ban'}"></i>
+      ${patient.isBlocked ? 'Unblock' : 'Block'}
+    </button>
+  </div>
             </td>
           </tr>`;
       }).join('');

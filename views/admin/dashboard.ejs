@@ -19,33 +19,22 @@
 
     <div class="stats-grid">
       <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-calendar-check"></i>
-        </div>
-        <h3><%= appointments.length %></h3>
+        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+        <h3><%= totalAppointments %></h3>
         <p>Total Appointments</p>
       </div>
-
       <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-user-injured"></i>
-        </div>
-        <h3><%= patients.length %></h3>
+        <div class="stat-icon"><i class="fas fa-user-injured"></i></div>
+        <h3><%= totalPatients %></h3>
         <p>Total Patients</p>
       </div>
-
       <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-user-doctor"></i>
-        </div>
-        <h3><%= doctors.length %></h3>
+        <div class="stat-icon"><i class="fas fa-user-doctor"></i></div>
+        <h3><%= totalDoctors %></h3>
         <p>Total Doctors</p>
       </div>
-
       <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-dollar-sign"></i>
-        </div>
+        <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
         <h3>₹0</h3>
         <p>Total Revenue</p>
       </div>
@@ -54,168 +43,46 @@
     <div class="recent-grid">
 
       <div class="recent-card">
-        <h3>
-          <i class="fas fa-calendar-check"></i>
-          Today's Appointments
-        </h3>
-        <div id="appointmentsList">
-          <% if (appointments.length === 0) { %>
+        <h3><i class="fas fa-calendar-check"></i> Today's Appointments</h3>
+        <div class="empty-state">
+          <i class="fas fa-calendar-times"></i>
+          <p>Visit Appointments page for details</p>
+        </div>
+      </div>
+
+      <div class="recent-card">
+        <h3><i class="fas fa-history"></i> Recent Activities</h3>
+        <div id="activitiesList">
+          <% if (!recentActivities || recentActivities.length === 0) { %>
             <div class="empty-state">
-              <i class="fas fa-calendar-times"></i>
-              <p>No appointments scheduled for today</p>
+              <i class="fas fa-history"></i>
+              <p>No recent activities</p>
             </div>
           <% } else { %>
-            <% 
-              // Filter today's appointments
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              const tomorrow = new Date(today);
-              tomorrow.setDate(tomorrow.getDate() + 1);
-              
-              const todayAppointments = appointments.filter(apt => {
-                const aptDate = new Date(apt.date || apt.createdAt);
-                return aptDate >= today && aptDate < tomorrow;
-              }).slice(0, 5);
-            %>
-            
-            <% if (todayAppointments.length === 0) { %>
-              <div class="empty-state">
-                <i class="fas fa-calendar-times"></i>
-                <p>No appointments scheduled for today</p>
-              </div>
-            <% } else { %>
-              <% todayAppointments.forEach(appointment => { %>
-                <div class="activity-item">
-                  <p>
-                    <strong>Appointment:</strong> 
-                    <%= appointment.patientName || 'Patient' %> with 
-                    <%= appointment.doctorName || 'Doctor' %>
-                  </p>
-                  <div class="activity-time">
-                    <%= appointment.time || new Date(appointment.date || appointment.createdAt).toLocaleTimeString('en-US', { 
-                      hour: '2-digit', 
-                      minute: '2-digit' 
-                    }) %>
-                  </div>
+            <% recentActivities.forEach(activity => { %>
+              <div class="activity-item">
+                <p>
+                  <strong><%= activity.type %>:</strong>
+                  <%= activity.message %>
+                </p>
+                <div class="activity-time">
+                  <%= new Date(activity.date).toLocaleString('en-US', {
+                    month: 'short', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                  }) %>
                 </div>
-              <% }) %>
-            <% } %>
+              </div>
+            <% }) %>
           <% } %>
         </div>
       </div>
-      <div class="recent-card">
-  <h3>
-    <i class="fas fa-history"></i>
-    Recent Activities
-  </h3>
-
-  <div id="activitiesList">
-
-    <% if (!recentActivities || recentActivities.length === 0) { %>
-      <div class="empty-state">
-        <i class="fas fa-history"></i>
-        <p>No recent activities</p>
-      </div>
-    <% } else { %>
-      <% recentActivities.forEach(activity => { %>
-        <div class="activity-item">
-          <p>
-            <strong><%= activity.type %>:</strong>
-            <%= activity.message %>
-          </p>
-          <div class="activity-time">
-            <%= new Date(activity.date).toLocaleString('en-US', {
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            }) %>
-          </div>
-        </div>
-      <% }) %>
-    <% } %>
-
-  </div>
-</div>
 
     </div>
 
-    <div class="summary-card">
-      <h3>
-        <i class="fas fa-chart-bar"></i>
-        Quick Summary
-      </h3>
-      <div class="summary-grid">
-        <div class="summary-item">
-          <div class="summary-icon">
-            <i class="fas fa-clock"></i>
-          </div>
-          <div class="summary-info">
-            <h4>
-              <% 
-                const pending = appointments.filter(a => a.status === 'pending').length;
-              %>
-              <%= pending %>
-            </h4>
-            <p>Pending Appointments</p>
-          </div>
-        </div>
-        
-        <div class="summary-item">
-          <div class="summary-icon">
-            <i class="fas fa-check-circle"></i>
-          </div>
-          <div class="summary-info">
-            <h4>
-              <% 
-                const completed = appointments.filter(a => a.status === 'completed').length;
-              %>
-              <%= completed %>
-            </h4>
-            <p>Completed</p>
-          </div>
-        </div>
-        
-        <div class="summary-item">
-          <div class="summary-icon">
-            <i class="fas fa-user-check"></i>
-          </div>
-          <div class="summary-info">
-            <h4>
-              <% 
-                const activePatients = patients.filter(p => p.isActive && !p.isBlocked).length;
-              %>
-              <%= activePatients %>
-            </h4>
-            <p>Active Patients</p>
-          </div>
-        </div>
-        
-        <div class="summary-item">
-          <div class="summary-icon">
-            <i class="fas fa-stethoscope"></i>
-          </div>
-          <div class="summary-info">
-            <h4><%= doctors.length %></h4>
-            <p>Available Doctors</p>
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <%- include('../partials/logout-modal') %>
   <%- include('../partials/admin-scripts') %>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<div class="chart-card">
-  <h3>
-    <i class="fas fa-chart-line"></i>
-    Appointments Appointments Overview
-  </h3>
-  <canvas id="appointmentsChart"></canvas>
-</div>
 
 </body>
 </html>
