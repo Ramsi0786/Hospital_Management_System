@@ -961,11 +961,7 @@ export const updateAppointmentStatus = async (req, res) => {
       const wasPaid = appointment.paymentStatus === 'paid';
 
       if (!isCash && wasPaid) {
-        const apptDateTime = new Date(
-          `${new Date(appointment.date).toISOString().split('T')[0]}T${appointment.timeSlot}:00`
-        );
-        const diffHours  = (apptDateTime - new Date()) / (1000 * 60 * 60);
-        const percentage = diffHours >= 12 ? 90 : 0;
+        const percentage = 100;
         const amount     = percentage > 0 ? Math.round(appointment.consultationFee * percentage / 100) : 0;
 
         appointment.refundPercentage = percentage;
@@ -991,7 +987,7 @@ export const updateAppointmentStatus = async (req, res) => {
               patient:         appointment.patient,
               type:            'credit',
               amount,
-              description:     `Refund by admin — cancelled appointment (${percentage}%)`,
+              description:     `Refund — appointment cancelled by admin (credited to wallet)`,
               balanceBefore:   wallet.balance - amount,
               balanceAfter:    wallet.balance,
               appointment:     id,
@@ -1000,22 +996,28 @@ export const updateAppointmentStatus = async (req, res) => {
           }
 
           // ── Razorpay refund ──────────────────────────────────────
-          if (appointment.paymentMethod === 'razorpay' && appointment.razorpayPaymentId) {
-            try {
-              const rzp = new Razorpay({
-                key_id:     process.env.RAZORPAY_KEY_ID,
-                key_secret: process.env.RAZORPAY_KEY_SECRET
-              });
-              await rzp.payments.refund(appointment.razorpayPaymentId, { amount: amount * 100 });
-              appointment.refundStatus  = 'processed';
-              appointment.refundedAt    = new Date();
-              appointment.paymentStatus = amount === appointment.consultationFee
-                ? 'refunded'
-                : 'partially_refunded';
-            } catch (refundErr) {
-              console.error('Razorpay refund error:', refundErr);
-              appointment.refundStatus = 'pending';
-            }
+          
+          if (appointment.paymentMethod === 'razorpay') {
+            const wallet = await Wallet.findOneAndUpdate(
+              { patient: appointment.patient },
+              { $inc: { balance: amount } },
+              { new: true, upsert: true }
+            );
+            appointment.refundStatus  = 'processed';
+            appointment.refundedAt    = new Date();
+            appointment.paymentStatus = 'refunded';
+            
+            await WalletTransaction.create({
+              patient:         appointment.patient,
+              type:            'credit',
+              amount,
+              description:     `Refund — appointment cancelled by admin (credited to wallet)`,
+              balanceBefore:   wallet.balance - amount,
+              balanceAfter:    wallet.balance,
+              appointment:     id,
+              transactionType: 'refund'
+            });
+          
           }
 
           // ── Update Payment record ────────────────────────────────

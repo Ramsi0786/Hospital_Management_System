@@ -328,3 +328,66 @@ export const sendBookingConfirmationEmail = async (to, data, pdfBuffer) => {
     console.error('Booking confirmation email error:', error);
   }
 };
+
+
+export const sendAppointmentCancelledByDoctorEmail = async (email, patientName, details) => {
+  const {
+    doctorName, date, timeSlot, reason,
+    availableSlots, refundAmount, refundStatus, paymentMethod
+  } = details;
+
+  const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+  });
+
+  const slotsHtml = availableSlots.length > 0
+    ? `<p style="margin:12px 0 8px;font-weight:600;color:#1a202c;">Available slots on the same day:</p>
+       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+         ${availableSlots.map(s => `<span style="background:#eff6ff;color:#2563eb;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;">${s}</span>`).join('')}
+       </div>
+       <a href="${process.env.BASE_URL}/patient/doctors" style="display:inline-block;background:#203f6a;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">Rebook Appointment</a>`
+    : `<p style="color:#64748b;font-size:14px;">No other slots are available on this day. Please choose a different date.</p>
+       <a href="${process.env.BASE_URL}/patient/doctors" style="display:inline-block;margin-top:12px;background:#203f6a;color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:700;font-size:14px;">Book New Appointment</a>`;
+
+  const refundHtml = paymentMethod !== 'cash' && refundAmount > 0
+    ? `<div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin:16px 0;">
+         <p style="font-weight:700;color:#059669;margin-bottom:6px;">💰 Refund Information</p>
+         <p style="font-size:13px;color:#374151;">Amount: <strong>₹${refundAmount}</strong></p>
+         <p style="font-size:13px;color:#374151;">Status: <strong>${refundStatus}</strong></p>
+       </div>`
+    : '';
+
+  const mailOptions = {
+    from: `"Healora" <${process.env.SMTP_USER}>`,
+    to: email,
+    subject: `Appointment Cancelled by Dr. ${doctorName} — Healora`,
+    html: `
+      <div style="font-family:'Plus Jakarta Sans',Arial,sans-serif;max-width:560px;margin:0 auto;background:#f1f5f9;padding:30px 16px;">
+        <div style="background:white;border-radius:16px;padding:32px;box-shadow:0 2px 12px rgba(0,0,0,.06);">
+          <div style="text-align:center;margin-bottom:24px;">
+            <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:12px;">❌</div>
+            <h2 style="font-size:22px;font-weight:800;color:#1a202c;margin:0;">Appointment Cancelled</h2>
+          </div>
+
+          <p style="color:#374151;margin-bottom:20px;">Dear <strong>${patientName}</strong>,</p>
+          <p style="color:#64748b;line-height:1.6;margin-bottom:20px;">
+            Your appointment with <strong>Dr. ${doctorName}</strong> on <strong>${dateLabel}</strong> at <strong>${timeSlot}</strong> has been cancelled.
+          </p>
+
+          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px 16px;margin-bottom:20px;">
+            <p style="font-weight:700;color:#dc2626;margin-bottom:4px;">Reason for cancellation:</p>
+            <p style="font-size:14px;color:#374151;">${reason}</p>
+          </div>
+
+          ${refundHtml}
+
+          <p style="font-size:12px;color:#94a3b8;text-align:center;margin-top:24px;">
+            We apologize for the inconvenience. — Healora Team
+          </p>
+        </div>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};

@@ -41,6 +41,9 @@ router.post('/upload-profile-image', uploadProfileImage);
 router.delete('/delete-profile-image', deleteProfileImage);
 router.put('/update-profile', doctorController.updateDoctorProfile);
 
+router.get('/appointments', doctorController.getAppointments);
+router.patch('/appointments/:id/status', doctorController.updateAppointmentStatus);
+
 router.route('/logout')
   .get(authController.logout)
   .post(authController.logout);
