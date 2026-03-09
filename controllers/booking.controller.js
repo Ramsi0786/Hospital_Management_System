@@ -413,16 +413,26 @@ appointment.refundStatus       = isCash ? 'none' : (amount > 0 ? 'pending' : 'no
         });
       }
 
-      if (appointment.paymentMethod === 'razorpay' && appointment.razorpayPaymentId) {
-        try {
-          await razorpay.payments.refund(appointment.razorpayPaymentId, { amount: amount * 100 });
-          appointment.refundStatus = 'processed';
-          appointment.refundedAt   = new Date();
-        } catch (refundErr) {
-          console.error('Razorpay refund error:', refundErr);
-          appointment.refundStatus = 'pending'; 
-        }
-      }
+      if (appointment.paymentMethod === 'razorpay') {
+  const wallet = await Wallet.findOneAndUpdate(
+    { patient: patientId },
+    { $inc: { balance: amount } },
+    { new: true, upsert: true }
+  );
+  appointment.refundStatus = 'processed';
+  appointment.refundedAt   = new Date();
+
+  await WalletTransaction.create({
+    patient:         patientId,
+    type:            'credit',
+    amount,
+    description:     `Refund for cancelled appointment (${percentage}%) — credited to wallet`,
+    balanceBefore:   wallet.balance - amount,
+    balanceAfter:    wallet.balance,
+    appointment:     id,
+    transactionType: 'refund'
+  });
+}
 
       await Payment.findOneAndUpdate(
         { appointment: id },
