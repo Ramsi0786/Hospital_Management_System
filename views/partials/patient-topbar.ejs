@@ -1,0 +1,159 @@
+<div class="topbar">
+  <div class="topbar-left">
+    <% if (typeof backUrl !== 'undefined' && backUrl) { %>
+      <a href="<%= backUrl %>" class="topbar-back">
+        <i class="fas fa-arrow-left"></i>
+        <span><%= typeof backLabel !== 'undefined' && backLabel ? backLabel : 'Back' %></span>
+      </a>
+    <% } %>
+    <div class="topbar-title-wrap">
+      <h1 class="topbar-title"><%= typeof pageTitle !== 'undefined' ? pageTitle : '' %></h1>
+      <% if (typeof pageSubtitle !== 'undefined' && pageSubtitle) { %>
+        <p class="topbar-subtitle"><%= pageSubtitle %></p>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="topbar-right">
+    <div class="topbar-user">
+      <div class="topbar-avatar">
+        <% if (locals.user && user.profileImage) { %>
+          <img src="<%= user.profileImage %>" alt="<%= user.name %>">
+        <% } else { %>
+          <%= locals.user ? user.name.charAt(0).toUpperCase() : 'P' %>
+        <% } %>
+      </div>
+      <div class="topbar-user-info">
+        <span class="topbar-greeting">Hello,</span>
+        <span class="topbar-name"><%= locals.user ? user.name.split(' ')[0] : 'Patient' %></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .topbar-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #374151;
+    text-decoration: none;
+    transition: all .2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  .topbar-back:hover {
+    background: #203f6a;
+    color: white;
+    border-color: #203f6a;
+    transform: translateX(-2px);
+    text-decoration: none;
+  }
+
+  .topbar-back i {
+    font-size: 12px;
+  }
+
+  .topbar-title-wrap { min-width: 0; }
+
+  .topbar-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: #1a202c;
+    margin: 0;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar-subtitle {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 3px 0 0;
+    font-weight: 500;
+  }
+
+  .topbar-right { flex-shrink: 0; }
+
+  .topbar-user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    padding: 8px 16px 8px 8px;
+    border-radius: 50px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    border: 1.5px solid #f0f2f5;
+  }
+
+  .topbar-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #203f6a, #1a7f8e);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+
+  .topbar-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+
+  .topbar-user-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+  }
+
+  .topbar-greeting {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+  }
+
+  .topbar-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1a202c;
+  }
+
+  @media (max-width: 768px) {
+    .topbar-title { font-size: 20px; }
+    .topbar-user-info { display: none; }
+    .topbar-user { padding: 6px; border-radius: 50%; }
+  }
+</style>

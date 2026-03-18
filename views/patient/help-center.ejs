@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
+    .main-content { margin-left:230px; padding:30px; min-height:100vh; }
+
+    /* Top bar */
+    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+    .page-title { font-size:26px; font-weight:800; color:#1a202c; }
+    .user-profile-btn { display:flex; align-items:center; gap:10px; background:white; padding:8px 16px; border-radius:50px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.08); cursor:default; }
+    .user-avatar-small { width:35px; height:35px; border-radius:50%; background:#203f6a; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+    .user-name { font-size:14px; font-weight:600; color:#2d3748; }
+
+    /* Hero */
+    .help-hero { background:linear-gradient(135deg,#203f6a 0%,#1a7f8e 100%); border-radius:20px; padding:40px 36px; margin-bottom:28px; position:relative; overflow:hidden; }
+    .help-hero::before { content:''; position:absolute; top:-40px; right:-40px; width:200px; height:200px; background:rgba(255,255,255,.05); border-radius:50%; }
+    .help-hero::after  { content:''; position:absolute; bottom:-60px; right:80px; width:140px; height:140px; background:rgba(255,255,255,.04); border-radius:50%; }
+    .hero-content { position:relative; z-index:1; }
+    .hero-content h2 { font-size:26px; font-weight:800; color:white; margin-bottom:8px; }
+    .hero-content p  { font-size:14px; color:rgba(255,255,255,.75); margin-bottom:24px; }
+
+    /* Search */
+    .search-wrap { position:relative; max-width:520px; }
+    .search-wrap i { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:#94a3b8; font-size:16px; }
+    .search-input { width:100%; padding:14px 16px 14px 46px; border:none; border-radius:12px; font-size:14px; font-family:inherit; outline:none; background:white; box-shadow:0 4px 20px rgba(0,0,0,.1); color:#374151; }
+    .search-input::placeholder { color:#94a3b8; }
+
+    /* Quick actions */
+    .quick-actions { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:14px; margin-bottom:28px; }
+    .quick-card { background:white; border-radius:14px; padding:18px 16px; box-shadow:0 2px 10px rgba(0,0,0,.06); display:flex; align-items:center; gap:14px; text-decoration:none; color:inherit; transition:all .2s; border:1.5px solid transparent; }
+    .quick-card:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(0,0,0,.1); border-color:#e2e8f0; color:inherit; text-decoration:none; }
+    .quick-icon { width:42px; height:42px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .quick-icon.blue   { background:#eff6ff; color:#2563eb; }
+    .quick-icon.green  { background:#f0fdf4; color:#059669; }
+    .quick-icon.purple { background:#f5f3ff; color:#7c3aed; }
+    .quick-icon.orange { background:#fff7ed; color:#ea580c; }
+    .quick-label { font-size:13px; font-weight:700; color:#374151; }
+    .quick-sub   { font-size:11px; color:#94a3b8; margin-top:2px; }
+
+    /* FAQ layout */
+    .faq-layout { display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:start; }
+
+    /* Category sidebar */
+    .cat-list { background:white; border-radius:14px; padding:12px; box-shadow:0 2px 10px rgba(0,0,0,.06); position:sticky; top:24px; }
+    .cat-btn { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; border:none; border-radius:10px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; background:transparent; color:#64748b; transition:all .2s; text-align:left; margin-bottom:2px; }
+    .cat-btn:hover { background:#f1f5f9; color:#374151; }
+    .cat-btn.active { background:#203f6a; color:white; }
+    .cat-btn i { width:18px; text-align:center; font-size:14px; }
+    .cat-count { margin-left:auto; font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px; background:rgba(0,0,0,.06); }
+    .cat-btn.active .cat-count { background:rgba(255,255,255,.2); color:white; }
+
+    /* FAQ section */
+    .faq-section { display:none; }
+    .faq-section.active { display:block; }
+    .faq-section-title { font-size:16px; font-weight:800; color:#1a202c; margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+    .faq-section-title i { color:#203f6a; }
+
+    .faq-item { background:white; border-radius:12px; margin-bottom:10px; box-shadow:0 2px 8px rgba(0,0,0,.05); border:1.5px solid #f0f2f5; overflow:hidden; transition:border-color .2s; }
+    .faq-item.open { border-color:#203f6a; }
+    .faq-q { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; cursor:pointer; gap:12px; }
+    .faq-q-text { font-size:14px; font-weight:700; color:#1a202c; flex:1; line-height:1.4; }
+    .faq-chevron { width:28px; height:28px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .3s; color:#64748b; font-size:12px; }
+    .faq-item.open .faq-chevron { background:#203f6a; color:white; transform:rotate(180deg); }
+    .faq-a { display:none; padding:0 18px 16px; font-size:13px; color:#64748b; line-height:1.8; border-top:1px solid #f0f2f5; padding-top:14px; }
+    .faq-a a { color:#203f6a; font-weight:600; text-decoration:none; }
+    .faq-a a:hover { text-decoration:underline; }
+
+    /* No results */
+    .no-results { text-align:center; padding:48px 20px; background:white; border-radius:14px; display:none; }
+    .no-results i { font-size:40px; color:#e2e8f0; margin-bottom:12px; display:block; }
+    .no-results p { font-size:14px; color:#94a3b8; }
+
+    /* Contact card */
+    .contact-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:16px; margin-top:28px; }
+    .contact-card { background:white; border-radius:14px; padding:22px; box-shadow:0 2px 10px rgba(0,0,0,.06); text-align:center; }
+    .contact-icon { width:52px; height:52px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; margin:0 auto 14px; }
+    .contact-icon.email  { background:#eff6ff; color:#2563eb; }
+    .contact-icon.phone  { background:#f0fdf4; color:#059669; }
+    .contact-icon.hours  { background:#fef9c3; color:#d97706; }
+    .contact-card h4 { font-size:14px; font-weight:700; color:#1a202c; margin-bottom:6px; }
+    .contact-card p  { font-size:13px; color:#64748b; margin:0; line-height:1.6; }
+    .contact-card a  { color:#203f6a; font-weight:600; text-decoration:none; }
+    .contact-card a:hover { text-decoration:underline; }
+
+    .section-divider { margin:32px 0 20px; }
+    .section-divider h3 { font-size:18px; font-weight:800; color:#1a202c; display:flex; align-items:center; gap:10px; }
+    .section-divider h3 i { color:#203f6a; }
+
+    /* Search highlight */
+    .highlight { background:#fef9c3; border-radius:3px; padding:0 2px; }
+
+    @media (max-width:900px) { .faq-layout { grid-template-columns:1fr; } .cat-list { position:static; display:flex; flex-wrap:wrap; gap:4px; padding:8px; } }
+    @media (max-width:768px) { .main-content { margin-left:70px; padding:20px; } .help-hero { padding:28px 20px; } }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/patient-sidebar', { currentPage: 'help' }) %>
+
+<div class="main-content">
+
+  <div class="top-bar">
+    <h1 class="page-title">Help Center</h1>
+    <button class="user-profile-btn">
+      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
+      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
+    </button>
+  </div>
+
+  <!-- Hero + Search -->
+  <div class="help-hero">
+    <div class="hero-content">
+      <h2>How can we help you?</h2>
+      <p>Search our knowledge base or browse topics below</p>
+      <div class="search-wrap">
+        <i class="fas fa-search"></i>
+        <input type="text" class="search-input" id="faqSearch"
+          placeholder="Search for answers... e.g. 'cancel appointment', 'refund'" 
+          oninput="searchFAQ(this.value)">
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Actions -->
+  <div class="quick-actions">
+    <a href="/patient/appointments/book" class="quick-card">
+      <div class="quick-icon blue"><i class="fas fa-calendar-plus"></i></div>
+      <div>
+        <div class="quick-label">Book Appointment</div>
+        <div class="quick-sub">Find a doctor</div>
+      </div>
+    </a>
+    <a href="/patient/appointments" class="quick-card">
+      <div class="quick-icon green"><i class="fas fa-calendar-check"></i></div>
+      <div>
+        <div class="quick-label">My Appointments</div>
+        <div class="quick-sub">View & manage</div>
+      </div>
+    </a>
+    <a href="/patient/wallet" class="quick-card">
+      <div class="quick-icon purple"><i class="fas fa-wallet"></i></div>
+      <div>
+        <div class="quick-label">My Wallet</div>
+        <div class="quick-sub">Balance & top-up</div>
+      </div>
+    </a>
+    <a href="/patient/medical-records" class="quick-card">
+      <div class="quick-icon orange"><i class="fas fa-file-medical"></i></div>
+      <div>
+        <div class="quick-label">Medical Records</div>
+        <div class="quick-sub">Upload & view</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section-divider">
+    <h3><i class="fas fa-question-circle"></i> Frequently Asked Questions</h3>
+  </div>
+
+  <div class="faq-layout" id="faqLayout">
+
+    <!-- Category sidebar -->
+    <div class="cat-list">
+      <button class="cat-btn active" onclick="switchCat('appointments', this)">
+        <i class="fas fa-calendar-check"></i> Appointments
+        <span class="cat-count">6</span>
+      </button>
+      <button class="cat-btn" onclick="switchCat('payments', this)">
+        <i class="fas fa-credit-card"></i> Payments
+        <span class="cat-count">5</span>
+      </button>
+      <button class="cat-btn" onclick="switchCat('records', this)">
+        <i class="fas fa-file-medical"></i> Records
+        <span class="cat-count">4</span>
+      </button>
+      <button class="cat-btn" onclick="switchCat('account', this)">
+        <i class="fas fa-user-circle"></i> Account
+        <span class="cat-count">4</span>
+      </button>
+    </div>
+
+    <!-- FAQ panels -->
+    <div>
+
+      <!-- No results -->
+      <div class="no-results" id="noResults">
+        <i class="fas fa-search"></i>
+        <p>No results found. Try different keywords.</p>
+      </div>
+
+      <!-- Appointments -->
+      <div class="faq-section active" id="cat-appointments">
+        <div class="faq-section-title"><i class="fas fa-calendar-check"></i> Appointments</div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">How do I book an appointment?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Go to <a href="/patient/doctors">Find Doctors</a>, browse or search for a doctor, select your preferred date and time slot, choose a payment method, and confirm your booking. You'll receive a confirmation immediately.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">Can I cancel my appointment?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Yes. Go to <a href="/patient/appointments">My Appointments</a>, find the appointment and click Cancel. You can cancel any pending or confirmed appointment that hasn't passed yet.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">What is the cancellation refund policy?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            If you cancel <strong>12 or more hours</strong> before your appointment, you receive a <strong>90% refund</strong> to your Healora Wallet. If you cancel less than 12 hours before, no refund is issued. Cash payments are not refunded.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">Can I reschedule an appointment?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Rescheduling is not directly supported yet. To change your slot, cancel the existing appointment and book a new one. If you cancel 12+ hours before, you'll receive a 90% refund to your wallet which you can use for the new booking.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">How do I know if my booking is confirmed?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            After booking, you'll see a booking success page with your appointment details. Your appointment will also appear in <a href="/patient/appointments">My Appointments</a> with a <strong>Pending</strong> or <strong>Confirmed</strong> status. You'll also receive a confirmation email.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">Why can't I see any available time slots?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Slots may be unavailable because the doctor hasn't set their availability yet, all slots for that day are fully booked, or the available slots for today have already passed. Try selecting a different date or checking back later.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Payments -->
+      <div class="faq-section" id="cat-payments">
+        <div class="faq-section-title"><i class="fas fa-credit-card"></i> Payments & Refunds</div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">What payment methods are accepted?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Healora accepts three payment methods: <strong>Cash at Clinic</strong> (pay when you visit), <strong>Healora Wallet</strong> (prepaid balance), and <strong>Online Payment</strong> via Razorpay (UPI, credit/debit cards, net banking).
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">How do I add money to my wallet?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Go to <a href="/patient/wallet">My Wallet</a> and click <strong>Add Money</strong>. Choose a preset amount or enter a custom amount (₹10 – ₹50,000), then pay securely via Razorpay. Your balance updates instantly after payment.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">How long does a refund take?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Refunds to your <strong>Healora Wallet</strong> are instant. Refunds to your original payment method (card/UPI) may take 5–7 business days depending on your bank.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">Can I get an invoice for my appointment?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Yes. Go to <a href="/patient/invoices">My Invoices</a> to see all your invoices. You can also download a PDF invoice from any appointment detail page.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">My payment failed. What should I do?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            If your payment fails, you'll see a <strong>Retry Payment</strong> button on the booking page. Click it to try again. If money was deducted but the booking didn't confirm, it will be automatically refunded within 5–7 business days. Contact support if it isn't.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Medical Records -->
+      <div class="faq-section" id="cat-records">
+        <div class="faq-section-title"><i class="fas fa-file-medical"></i> Medical Records</div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">What types of files can I upload?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            You can upload <strong>PDF, JPG, and PNG</strong> files up to <strong>10MB</strong> per file. This covers most lab reports, scans, and health documents.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">What is the difference between Lab Reports and Documents?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            <strong>Lab Reports</strong> are for test results — blood tests, urine tests, cultures, etc. <strong>Documents</strong> are for everything else — discharge summaries, vaccination records, referral letters, insurance documents, and scan reports.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">Where do my prescriptions come from?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Prescriptions are added by your doctor after each completed consultation. You don't upload them — they appear automatically in the <strong>Prescriptions</strong> tab once your doctor issues them.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">Can I delete my uploaded records?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Yes. Open <a href="/patient/medical-records">Medical Records</a>, find the record and click the <strong>Delete</strong> button. Deletion is permanent and cannot be undone, so please be sure before deleting.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Account -->
+      <div class="faq-section" id="cat-account">
+        <div class="faq-section-title"><i class="fas fa-user-circle"></i> Account & Profile</div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">How do I update my profile information?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Go to <a href="/patient/profile">My Profile</a> and click <strong>Edit Profile</strong>. You can update your name, phone, date of birth, gender, blood group, address, and emergency contact details.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">Can I change my profile picture?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Yes. On your <a href="/patient/profile">Profile</a> page, click your profile picture to upload a new one. You can crop and adjust the image before saving.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">I signed up with Google. Can I also use email login?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Your account is linked to Google. You can set up a password via <a href="/patient/settings">Settings</a> to also log in with your email and password if you prefer.
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="toggleFAQ(this)">
+            <span class="faq-q-text">How do I logout?</span>
+            <div class="faq-chevron"><i class="fas fa-chevron-down"></i></div>
+          </div>
+          <div class="faq-a">
+            Click the <strong>logout button</strong> (arrow icon) at the bottom of the sidebar next to your name. You'll be asked to confirm before being logged out.
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Contact Support -->
+  <div class="section-divider">
+    <h3><i class="fas fa-headset"></i> Contact Support</h3>
+  </div>
+
+  <div class="contact-grid">
+    <div class="contact-card">
+      <div class="contact-icon email"><i class="fas fa-envelope"></i></div>
+      <h4>Email Us</h4>
+      <p><a href="mailto:support@healora.com">support@healora.com</a><br>We reply within 24 hours</p>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon phone"><i class="fas fa-phone"></i></div>
+      <h4>Call Us</h4>
+      <p><a href="tel:+911234567890">+91 12345 67890</a><br>Mon–Sat, 9 AM – 6 PM</p>
+    </div>
+    <div class="contact-card">
+      <div class="contact-icon hours"><i class="fas fa-clock"></i></div>
+      <h4>Support Hours</h4>
+      <p>Monday – Saturday<br>9:00 AM – 6:00 PM IST</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  /* ── Category switch ──────────────────────────── */
+  function switchCat(cat, btn) {
+    document.querySelectorAll('.faq-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('cat-' + cat).classList.add('active');
+    btn.classList.add('active');
+    document.getElementById('faqSearch').value = '';
+    document.getElementById('noResults').style.display = 'none';
+  }
+
+  /* ── Toggle FAQ item ──────────────────────────── */
+  function toggleFAQ(qEl) {
+    const item   = qEl.closest('.faq-item');
+    const answer = item.querySelector('.faq-a');
+    const isOpen = item.classList.contains('open');
+
+    // Close all others in same section
+    item.closest('.faq-section, #faqSearch-results')
+      ?.querySelectorAll('.faq-item.open')
+      .forEach(i => {
+        i.classList.remove('open');
+        i.querySelector('.faq-a').style.display = 'none';
+      });
+
+    if (!isOpen) {
+      item.classList.add('open');
+      answer.style.display = 'block';
+    }
+  }
+
+  /* ── Search ───────────────────────────────────── */
+  function searchFAQ(query) {
+    const q = query.trim().toLowerCase();
+
+    if (!q) {
+      // Restore normal view
+      document.getElementById('faqLayout').style.display = 'grid';
+      document.getElementById('noResults').style.display  = 'none';
+      const existing = document.getElementById('searchResults');
+      if (existing) existing.remove();
+      return;
+    }
+
+    // Hide category layout, show search results
+    document.getElementById('faqLayout').style.display = 'none';
+
+    let existing = document.getElementById('searchResults');
+    if (!existing) {
+      existing = document.createElement('div');
+      existing.id = 'searchResults';
+      document.getElementById('faqLayout').insertAdjacentElement('afterend', existing);
+    }
+
+    // Collect all FAQ items
+    const allItems = document.querySelectorAll('.faq-item');
+    const matches  = [];
+
+    allItems.forEach(item => {
+      const qText = item.querySelector('.faq-q-text').textContent.toLowerCase();
+      const aText = item.querySelector('.faq-a').textContent.toLowerCase();
+      if (qText.includes(q) || aText.includes(q)) {
+        matches.push(item.cloneNode(true));
+      }
+    });
+
+    if (matches.length === 0) {
+      existing.innerHTML = '';
+      document.getElementById('noResults').style.display = 'block';
+      existing.insertAdjacentElement('afterbegin', document.getElementById('noResults'));
+      document.getElementById('noResults').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('noResults').style.display = 'none';
+
+    existing.innerHTML = `
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:14px;font-weight:600;">
+        <i class="fas fa-search" style="margin-right:6px;"></i>
+        ${matches.length} result${matches.length > 1 ? 's' : ''} for "<strong style="color:#374151;">${query}</strong>"
+      </div>
+    `;
+
+    matches.forEach(item => {
+      // Re-attach toggle handler
+      const qEl = item.querySelector('.faq-q');
+      qEl.setAttribute('onclick', 'toggleFAQ(this)');
+      item.classList.remove('open');
+      item.querySelector('.faq-a').style.display = 'none';
+      existing.appendChild(item);
+    });
+  }
+</script>
+</body>
+</html>

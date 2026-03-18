@@ -5,6 +5,12 @@ import Appointment from "../models/appointment.model.js";
 import { sanitizePagination, PAGINATION } from '../constants/index.js';
 import { resolveSlots } from '../controllers/availability.controller.js';
 import Invoice from '../models/invoice.model.js';
+import MedicalRecord from '../models/medicalRecord.model.js';
+import cloudinary from '../config/cloudinary.js';
+import bcrypt from 'bcryptjs';
+import RefreshToken from '../models/refreshToken.model.js';
+import Wallet from '../models/wallet.model.js';
+import WalletTransaction from '../models/walletTransaction.model.js';
 
 
 export const getDashboard = (req, res) => {
@@ -14,6 +20,95 @@ export const getDashboard = (req, res) => {
     showPasswordSetupBanner: req.session.showPasswordSetupBanner || false
   });
   delete req.session.showPasswordSetupBanner;
+};
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const patientId = req.user._id;
+    const now       = new Date();
+    
+    const [upcoming, completed, cancelled, total] = await Promise.all([
+      Appointment.countDocuments({ patient: patientId, status: { $in: ['pending','confirmed'] } }),
+      Appointment.countDocuments({ patient: patientId, status: 'completed' }),
+      Appointment.countDocuments({ patient: patientId, status: 'cancelled' }),
+      Appointment.countDocuments({ patient: patientId })
+    ]);
+
+    const wallet = await Wallet.findOne({ patient: patientId }).select('balance');
+    const recordsCount = await MedicalRecord.countDocuments({ patient: patientId });
+    const recentAppointments = await Appointment.find({ patient: patientId })
+      .populate('doctor', 'name specialization profileImage')
+      .sort({ createdAt: -1 })
+      .limit(4)
+      .select('doctor date timeSlot status consultationFee department');
+
+    // ── Appointment chart — last 6 months ──────────
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+    sixMonthsAgo.setDate(1);
+    sixMonthsAgo.setHours(0,0,0,0);
+
+    const apptByMonth = await Appointment.aggregate([
+      { $match: { patient: patientId, createdAt: { $gte: sixMonthsAgo } } },
+      { $group: {
+        _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
+        count: { $sum: 1 }
+      }},
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    // ── Spending chart — last 6 months ──────────────
+    const spendingByMonth = await WalletTransaction.aggregate([
+      { $match: {
+        patient:         patientId,
+        type:            'debit',
+        transactionType: 'booking',
+        createdAt:       { $gte: sixMonthsAgo }
+      }},
+      { $group: {
+        _id: { year: { $year: '$createdAt' }, month: { $month: '$createdAt' } },
+        total: { $sum: '$amount' }
+      }},
+      { $sort: { '_id.year': 1, '_id.month': 1 } }
+    ]);
+
+    const months     = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const chartMonths = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      chartMonths.push({ year: d.getFullYear(), month: d.getMonth() + 1, label: months[d.getMonth()] });
+    }
+
+    const apptChart = chartMonths.map(cm => {
+      const found = apptByMonth.find(a => a._id.year === cm.year && a._id.month === cm.month);
+      return { label: cm.label, count: found ? found.count : 0 };
+    });
+
+    const spendChart = chartMonths.map(cm => {
+      const found = spendingByMonth.find(s => s._id.year === cm.year && s._id.month === cm.month);
+      return { label: cm.label, total: found ? found.total : 0 };
+    });
+
+    res.json({
+      success: true,
+      stats: {
+        upcoming,
+        completed,
+        cancelled,
+        total,
+        walletBalance: wallet?.balance ?? 0,
+        recordsCount
+      },
+      recentAppointments,
+      apptChart,
+      spendChart
+    });
+
+  } catch (err) {
+    console.error('Dashboard stats error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load dashboard data' });
+  }
 };
 
 export const getAllDoctors = async (req, res) => {
@@ -205,7 +300,8 @@ export const updatePatientProfile = async (req, res) => {
     const userId = req.user?._id;
     const {
       name, phone, dateOfBirth, gender, bloodGroup,
-      address, emergencyContactName, emergencyContactPhone
+      address, emergencyContactName, 
+      emergencyContactPhone, emergencyContactRelation
     } = req.body;
 
     if (!userId) {
@@ -244,7 +340,8 @@ export const updatePatientProfile = async (req, res) => {
       bloodGroup: bloodGroup || null,
       address: address?.trim() || null,
       emergencyContactName: emergencyContactName?.trim() || null,
-      emergencyContactPhone: emergencyContactPhone || null
+      emergencyContactPhone: emergencyContactPhone || null,
+      emergencyContactRelation: emergencyContactRelation?.trim() || null
     };
 
     const updatedPatient = await Patient.findByIdAndUpdate(
@@ -352,5 +449,231 @@ export const getInvoices = async (req, res) => {
   } catch (err) {
     console.error('Get invoices error:', err);
     res.status(500).render('error', { title: 'Error', message: 'Failed to load invoices', user: req.user });
+  }
+};
+
+export const getMedicalRecords = async (req, res) => {
+  try {
+    const { tab } = req.query;
+    const validTabs = ['prescription', 'lab', 'document'];
+    const activeTab = validTabs.includes(tab) ? tab : 'lab';
+
+    const records = await MedicalRecord.find({
+      patient: req.user._id,
+      type: activeTab
+    }).sort({ recordDate: -1, createdAt: -1 });
+
+    res.render('patient/medical-records', {
+      title:     'Medical Records - Healora',
+      user:       req.user,
+      records,
+      activeTab,
+      currentPage: 'medical-records'
+    });
+  } catch (err) {
+    console.error('Get medical records error:', err);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load records', user: req.user });
+  }
+};
+
+export const uploadMedicalRecord = async (req, res) => {
+  try {
+    const { title, type, notes, recordDate, fileData, fileType } = req.body;
+    const patientId = req.user._id;
+
+    if (!title || !type || !recordDate || !fileData) {
+      return res.status(400).json({ success: false, error: 'Title, type, date and file are required' });
+    }
+
+    const validTypes = ['lab', 'document'];
+    if (!validTypes.includes(type)) {
+      return res.status(400).json({ success: false, error: 'Invalid record type' });
+    }
+
+    const folder = `healora/medical-records/${patientId}`;
+    const resourceType = fileType === 'pdf' ? 'raw' : 'image';
+
+    const uploadRes = await cloudinary.uploader.upload(fileData, {
+      folder,
+      resource_type: resourceType,
+      ...(fileType === 'image' && {
+        transformation: [{ quality: 'auto:good' }, { fetch_format: 'auto' }]
+      })
+    });
+
+    const record = await MedicalRecord.create({
+      patient:    patientId,
+      type,
+      title:      title.trim(),
+      notes:      notes?.trim() || '',
+      fileUrl:    uploadRes.secure_url,
+      fileType,
+      publicId:   uploadRes.public_id,
+      recordDate
+    });
+
+    res.json({ success: true, message: 'Record uploaded successfully', record });
+
+  } catch (err) {
+    console.error('Upload medical record error:', err);
+    res.status(500).json({ success: false, error: 'Failed to upload record' });
+  }
+};
+
+export const deleteMedicalRecord = async (req, res) => {
+  try {
+    const record = await MedicalRecord.findById(req.params.id);
+
+    if (!record || record.patient.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ success: false, error: 'Record not found' });
+    }
+    try {
+      const resourceType = record.fileType === 'pdf' ? 'raw' : 'image';
+      await cloudinary.uploader.destroy(record.publicId, { resource_type: resourceType });
+    } catch (err) {
+      console.error('Cloudinary delete error:', err);
+    }
+
+    await MedicalRecord.findByIdAndDelete(req.params.id);
+
+    res.json({ success: true, message: 'Record deleted successfully' });
+
+  } catch (err) {
+    console.error('Delete medical record error:', err);
+    res.status(500).json({ success: false, error: 'Failed to delete record' });
+  }
+};
+
+export const getMedicalRecordCounts = async (req, res) => {
+  try {
+    const { type } = req.query;
+    const count = await MedicalRecord.countDocuments({
+      patient: req.user._id,
+      ...(type ? { type } : {})
+    });
+    res.json({ success: true, count });
+  } catch (err) {
+    res.json({ success: false, count: 0 });
+  }
+};
+
+export const getSettings = async (req, res) => {
+  try {
+    const patient = await Patient.findById(req.user._id)
+      .select('name email authProvider googleId password notifications createdAt');
+
+    res.render('patient/settings', {
+      title:       'Settings - Healora',
+      user:         patient,
+      currentPage: 'settings',
+      hasPassword:  !!patient.password,
+      isGoogleUser: !!patient.googleId,
+      notifications: patient.notifications || {
+        bookingConfirmed:     true,
+        appointmentCancelled: true,
+        refundProcessed:      true,
+        appointmentReminder:  true
+      }
+    });
+  } catch (err) {
+    console.error('Get settings error:', err);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load settings', user: req.user });
+  }
+};
+
+export const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const patient = await Patient.findById(req.user._id).select('password');
+
+    if (!patient.password) {
+      return res.status(400).json({ success: false, error: 'No password set on this account.' });
+    }
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, error: 'All fields are required.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters.' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, error: 'New passwords do not match.' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, patient.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, error: 'Current password is incorrect.' });
+    }
+
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ success: false, error: 'New password must be different from current password.' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await Patient.findByIdAndUpdate(req.user._id, { password: hashed });
+
+    res.json({ success: true, message: 'Password changed successfully.' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ success: false, error: 'Failed to change password.' });
+  }
+};
+
+export const updateNotifications = async (req, res) => {
+  try {
+    const {
+      bookingConfirmed,
+      appointmentCancelled,
+      refundProcessed,
+      appointmentReminder
+    } = req.body;
+
+    await Patient.findByIdAndUpdate(req.user._id, {
+      notifications: {
+        bookingConfirmed:     bookingConfirmed     === true || bookingConfirmed     === 'true',
+        appointmentCancelled: appointmentCancelled === true || appointmentCancelled === 'true',
+        refundProcessed:      refundProcessed      === true || refundProcessed      === 'true',
+        appointmentReminder:  appointmentReminder  === true || appointmentReminder  === 'true'
+      }
+    });
+
+    res.json({ success: true, message: 'Notification preferences saved.' });
+  } catch (err) {
+    console.error('Update notifications error:', err);
+    res.status(500).json({ success: false, error: 'Failed to save preferences.' });
+  }
+};
+
+export const deleteAccount = async (req, res) => {
+  try {
+    const { password, reason } = req.body;
+    const patient = await Patient.findById(req.user._id).select('password googleId');
+
+    if (patient.password) {
+      if (!password) {
+        return res.status(400).json({ success: false, error: 'Please enter your password to confirm.' });
+      }
+      const isMatch = await bcrypt.compare(password, patient.password);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, error: 'Incorrect password.' });
+      }
+    }
+
+    await Patient.findByIdAndUpdate(req.user._id, {
+      isActive:      false,
+      deactivatedAt: new Date(),
+      phone:         null,
+      profileImage:  '',
+      ...(reason ? { deletionReason: reason } : {})
+    });
+
+    await RefreshToken.deleteMany({ userId: req.user._id, userModel: 'Patient' });
+
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+
+    res.json({ success: true, redirect: '/patient/login?message=account_deleted' });
+  } catch (err) {
+    console.error('Delete account error:', err);
+    res.status(500).json({ success: false, error: 'Failed to delete account.' });
   }
 };

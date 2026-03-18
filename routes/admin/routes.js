@@ -2,6 +2,7 @@ import express from "express";
 const router = express.Router();
 import { adminProtect } from '../../middleware/authAdmin.js';
 import * as adminController from '../../controllers/admin.controller.js';
+import * as bookingController from '../../controllers/booking.controller.js';
 
 import authRoutes from './auth.routes.js';
 import patientRoutes from './patients.routes.js';
@@ -34,6 +35,10 @@ router.get('/department/:id', (req, res) => {
 router.get('/settings', (req, res) => {
   res.render('admin/settings', { title: 'Settings - Healora Admin', admin: req.admin });
 });
+
+router.get('/invoice', adminController.getAdminInvoices);
+
+router.get('/invoice/:appointmentId/download', bookingController.downloadInvoice);
 
 // ==================== API ROUTES ====================
 router.use('/api/patients',    patientRoutes);

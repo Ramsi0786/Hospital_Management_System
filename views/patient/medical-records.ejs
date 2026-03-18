@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
+    .main-content { margin-left:260px; padding:30px; min-height:100vh; }
+
+    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+    .page-title { font-size:26px; font-weight:800; color:#1a202c; }
+    .user-profile-btn { display:flex; align-items:center; gap:10px; background:white; padding:8px 16px; border-radius:50px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.08); }
+    .user-avatar-small { width:35px; height:35px; border-radius:50%; background:#203f6a; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+    .user-name { font-size:14px; font-weight:600; color:#2d3748; }
+
+    /* Tabs */
+    .tabs-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+    .tab-list { display:flex; background:white; border-radius:12px; padding:4px; box-shadow:0 2px 8px rgba(0,0,0,.06); gap:4px; }
+    .tab-btn { padding:9px 20px; border:none; border-radius:9px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; background:transparent; color:#64748b; transition:all .2s; display:flex; align-items:center; gap:7px; }
+    .tab-btn.active { background:#203f6a; color:white; box-shadow:0 2px 8px rgba(32,63,106,.25); }
+    .tab-btn:hover:not(.active) { background:#f1f5f9; color:#374151; }
+
+    .btn-upload { display:flex; align-items:center; gap:8px; padding:10px 20px; background:#203f6a; color:white; border:none; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:all .2s; }
+    .btn-upload:hover { background:#1a3456; transform:translateY(-1px); }
+
+    /* Empty state */
+    .empty-state { text-align:center; padding:60px 20px; background:white; border-radius:16px; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+    .empty-state i { font-size:48px; color:#e2e8f0; margin-bottom:16px; display:block; }
+    .empty-state h4 { font-size:18px; font-weight:700; color:#374151; margin-bottom:8px; }
+    .empty-state p { font-size:14px; color:#94a3b8; }
+
+    /* Records grid */
+    .records-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:16px; }
+
+    .record-card { background:white; border-radius:14px; padding:20px; box-shadow:0 2px 12px rgba(0,0,0,.06); border:1.5px solid #f0f2f5; transition:all .2s; position:relative; }
+    .record-card:hover { transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.1); border-color:#e2e8f0; }
+
+    .record-header { display:flex; align-items:flex-start; gap:12px; margin-bottom:14px; }
+    .record-icon { width:44px; height:44px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+    .record-icon.pdf   { background:#fef2f2; color:#dc2626; }
+    .record-icon.image { background:#eff6ff; color:#2563eb; }
+
+    .record-title { font-size:15px; font-weight:700; color:#1a202c; margin-bottom:3px; line-height:1.3; }
+    .record-date  { font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:5px; }
+
+    .record-notes { font-size:13px; color:#64748b; background:#f8fafc; border-radius:8px; padding:10px 12px; margin-bottom:14px; line-height:1.5; }
+
+    .record-actions { display:flex; gap:8px; }
+    .btn-action { flex:1; padding:8px; border-radius:8px; border:none; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:all .2s; }
+    .btn-view   { background:#eff6ff; color:#2563eb; }
+    .btn-view:hover   { background:#dbeafe; }
+    .btn-delete { background:#fef2f2; color:#dc2626; }
+    .btn-delete:hover { background:#fee2e2; }
+
+    .record-type-badge { position:absolute; top:14px; right:14px; font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; text-transform:uppercase; letter-spacing:.5px; }
+    .badge-lab      { background:#f0fdf4; color:#059669; }
+    .badge-document { background:#fef9c3; color:#d97706; }
+    .badge-prescription { background:#eff6ff; color:#2563eb; }
+
+    /* Prescription empty */
+    .prescription-info { background:white; border-radius:16px; padding:40px; text-align:center; box-shadow:0 4px 20px rgba(0,0,0,.06); }
+    .prescription-info .pi-icon { width:64px; height:64px; background:#eff6ff; border-radius:16px; display:flex; align-items:center; justify-content:center; font-size:28px; color:#2563eb; margin:0 auto 16px; }
+
+    /* Modal */
+    .hm-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:9999; display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity .25s; }
+    #healora-modal-root.active .hm-backdrop { opacity:1; }
+    .hm-box { background:white; border-radius:20px; padding:28px; width:100%; max-width:480px; box-shadow:0 20px 60px rgba(0,0,0,.2); transform:translateY(20px); transition:transform .25s; }
+    #healora-modal-root.active .hm-box { transform:translateY(0); }
+    .hm-title { font-size:19px; font-weight:800; color:#1a202c; margin-bottom:6px; }
+    .hm-sub   { font-size:13px; color:#94a3b8; margin-bottom:20px; }
+    .hm-btns  { display:flex; gap:10px; margin-top:20px; }
+    .hm-btn   { flex:1; padding:12px; border:none; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:all .2s; }
+    .hm-btn.gray  { background:#f1f5f9; color:#64748b; }
+    .hm-btn.gray:hover  { background:#e2e8f0; }
+    .hm-btn.navy  { background:#203f6a; color:white; }
+    .hm-btn.navy:hover  { background:#1a3456; }
+    .hm-btn.red   { background:#dc2626; color:white; }
+    .hm-btn.red:hover   { background:#b91c1c; }
+    .hm-btn:disabled { opacity:.6; cursor:not-allowed; }
+
+    .hm-form-group { margin-bottom:16px; }
+    .hm-label { font-size:12px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:block; }
+    .hm-input { width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; color:#374151; outline:none; transition:border-color .2s; }
+    .hm-input:focus { border-color:#203f6a; }
+    .hm-textarea { width:100%; padding:10px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; color:#374151; outline:none; resize:vertical; min-height:80px; transition:border-color .2s; }
+    .hm-textarea:focus { border-color:#203f6a; }
+
+    /* File drop zone */
+    .drop-zone { border:2px dashed #e2e8f0; border-radius:12px; padding:24px; text-align:center; cursor:pointer; transition:all .2s; background:#f8fafc; }
+    .drop-zone:hover, .drop-zone.dragover { border-color:#203f6a; background:#eff6ff; }
+    .drop-zone i { font-size:28px; color:#94a3b8; margin-bottom:8px; display:block; }
+    .drop-zone p { font-size:13px; color:#64748b; margin:0; }
+    .drop-zone .file-name { font-size:13px; font-weight:700; color:#203f6a; margin-top:6px; }
+
+    @media (max-width:768px) { .main-content { margin-left:70px; padding:20px; } }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/patient-sidebar', { currentPage: 'medical-records' }) %>
+<div id="healora-modal-root"></div>
+
+<div class="main-content">
+  <div class="top-bar">
+    <h1 class="page-title">Medical Records</h1>
+    <button class="user-profile-btn">
+      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
+      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
+    </button>
+  </div>
+
+  <div class="tabs-row">
+    <div class="tab-list">
+      <button class="tab-btn <%= activeTab === 'lab' ? 'active' : '' %>" onclick="switchTab('lab')">
+        <i class="fas fa-flask"></i> Lab Reports
+      </button>
+      <button class="tab-btn <%= activeTab === 'document' ? 'active' : '' %>" onclick="switchTab('document')">
+        <i class="fas fa-file-medical"></i> Documents
+      </button>
+      <button class="tab-btn <%= activeTab === 'prescription' ? 'active' : '' %>" onclick="switchTab('prescription')">
+        <i class="fas fa-prescription"></i> Prescriptions
+      </button>
+    </div>
+    <% if (activeTab !== 'prescription') { %>
+      <button class="btn-upload" onclick="openUploadModal()">
+        <i class="fas fa-upload"></i> Upload Record
+      </button>
+    <% } %>
+  </div>
+
+  <% if (activeTab === 'prescription') { %>
+    <div class="prescription-info">
+      <div class="pi-icon"><i class="fas fa-prescription"></i></div>
+      <h4 style="font-size:18px;font-weight:700;color:#1a202c;margin-bottom:8px;">Prescriptions</h4>
+      <p style="font-size:14px;color:#64748b;max-width:400px;margin:0 auto 16px;">
+        Prescriptions will be added here by your doctor after each consultation.
+      </p>
+      <% if (records.length === 0) { %>
+        <p style="font-size:13px;color:#94a3b8;background:#f8fafc;padding:12px 20px;border-radius:10px;display:inline-block;">
+          <i class="fas fa-info-circle" style="margin-right:6px;"></i> No prescriptions yet
+        </p>
+      <% } else { %>
+        <div class="records-grid" style="margin-top:24px;text-align:left;">
+          <%- include('./partials/record-cards', { records }) %>
+        </div>
+      <% } %>
+    </div>
+
+  <% } else if (records.length === 0) { %>
+    <div class="empty-state">
+      <i class="fas fa-<%= activeTab === 'lab' ? 'flask' : 'file-medical' %>"></i>
+      <h4>No <%= activeTab === 'lab' ? 'Lab Reports' : 'Documents' %> yet</h4>
+      <p>Upload your <%= activeTab === 'lab' ? 'lab reports and test results' : 'health documents' %> to keep them safe and accessible.</p>
+      <button class="btn-upload" style="margin-top:16px;display:inline-flex;" onclick="openUploadModal()">
+        <i class="fas fa-upload"></i> Upload Now
+      </button>
+    </div>
+
+  <% } else { %>
+    <div class="records-grid">
+      <% records.forEach(record => { %>
+        <div class="record-card" id="record-<%= record._id %>">
+          <span class="record-type-badge badge-<%= record.type %>">
+            <%= record.type === 'lab' ? 'Lab Report' : record.type === 'document' ? 'Document' : 'Prescription' %>
+          </span>
+          <div class="record-header">
+            <div class="record-icon <%= record.fileType %>">
+              <i class="fas fa-<%= record.fileType === 'pdf' ? 'file-pdf' : 'file-image' %>"></i>
+            </div>
+            <div style="min-width:0;">
+              <div class="record-title"><%= record.title %></div>
+              <div class="record-date">
+                <i class="fas fa-calendar"></i>
+                <%= new Date(record.recordDate + 'T00:00:00').toLocaleDateString('en-US', { day:'numeric', month:'short', year:'numeric' }) %>
+              </div>
+            </div>
+          </div>
+          <% if (record.notes) { %>
+            <div class="record-notes"><%= record.notes %></div>
+          <% } %>
+          <div class="record-actions">
+            <button class="btn-action btn-view"
+  onclick="viewRecord('<%= record.fileType %>', '<%= record.fileUrl %>')">
+  <i class="fas fa-eye"></i> View
+</button>
+            <a href="<%= record.fileUrl %>" download class="btn-action btn-view" style="background:#f0fdf4;color:#059669;">
+              <i class="fas fa-download"></i> Download
+            </a>
+            <button class="btn-action btn-delete" onclick="confirmDelete('<%= record._id %>', '<%= record.title %>')">
+              <i class="fas fa-trash"></i> Delete
+            </button>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  const modalRoot = document.getElementById('healora-modal-root');
+
+  function switchTab(tab) {
+    window.location.href = `/patient/medical-records?tab=${tab}`;
+  }
+
+  /* ── Modal engine ─────────────────────────────── */
+  function showModal(html) {
+    modalRoot.innerHTML = `<div class="hm-backdrop" id="hm-backdrop">${html}</div>`;
+    document.getElementById('hm-backdrop').addEventListener('click', e => {
+      if (e.target === document.getElementById('hm-backdrop')) hideModal();
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => modalRoot.classList.add('active')));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideModal() {
+    modalRoot.classList.remove('active');
+    document.body.style.overflow = '';
+    setTimeout(() => { modalRoot.innerHTML = ''; }, 250);
+  }
+
+  function viewRecord(fileType, url) {
+  if (fileType === 'pdf') {
+    window.open('https://docs.google.com/viewer?url=' + encodeURIComponent(url), '_blank');
+  } else {
+    window.open(url, '_blank');
+  }
+}
+
+  /* ── Upload modal ─────────────────────────────── */
+  const activeTab = '<%= activeTab %>';
+  let selectedFileData = null;
+  let selectedFileType = null;
+
+  function openUploadModal() {
+    showModal(`
+      <div class="hm-box" onclick="event.stopPropagation()" style="max-width:520px;">
+        <div class="hm-title">Upload ${activeTab === 'lab' ? 'Lab Report' : 'Document'}</div>
+        <div class="hm-sub">Supported formats: PDF, JPG, PNG (max 10MB)</div>
+
+        <div class="hm-form-group">
+          <label class="hm-label">Title *</label>
+          <input type="text" id="recordTitle" class="hm-input" placeholder="e.g. Blood Test Report - Jan 2025" maxlength="100">
+        </div>
+
+        <div class="hm-form-group">
+          <label class="hm-label">Date *</label>
+          <input type="date" id="recordDate" class="hm-input" max="${new Date().toISOString().split('T')[0]}">
+        </div>
+
+        <div class="hm-form-group">
+          <label class="hm-label">Notes <span style="font-weight:400;text-transform:none;color:#94a3b8;">(optional)</span></label>
+          <textarea id="recordNotes" class="hm-textarea" placeholder="Any additional notes about this record..."></textarea>
+        </div>
+
+        <div class="hm-form-group">
+          <label class="hm-label">File *</label>
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Click to browse or drag & drop your file here</p>
+            <div class="file-name" id="fileName"></div>
+          </div>
+          <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFileSelect(event)">
+        </div>
+
+        <div id="uploadError" style="display:none;font-size:12px;color:#dc2626;font-weight:600;margin-bottom:8px;"></div>
+
+        <div class="hm-btns">
+          <button class="hm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="hm-btn navy" id="uploadBtn" onclick="submitUpload()">
+            <i class="fas fa-upload" style="margin-right:6px;font-size:12px;"></i> Upload
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.add('dragover');
+  }
+
+  function handleDragLeave(e) {
+    document.getElementById('dropZone').classList.remove('dragover');
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropZone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  }
+
+  function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) processFile(file);
+  }
+
+  function processFile(file) {
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+
+    if (!allowed.includes(file.type)) {
+      showUploadError('Only PDF, JPG, and PNG files are allowed.');
+      return;
+    }
+    if (file.size > maxSize) {
+      showUploadError('File size must be less than 10MB.');
+      return;
+    }
+
+    hideUploadError();
+    selectedFileType = file.type === 'application/pdf' ? 'pdf' : 'image';
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      selectedFileData = e.target.result;
+      document.getElementById('fileName').textContent = `✓ ${file.name}`;
+      document.getElementById('dropZone').style.borderColor = '#059669';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function showUploadError(msg) {
+    const el = document.getElementById('uploadError');
+    if (el) { el.textContent = msg; el.style.display = 'block'; }
+  }
+
+  function hideUploadError() {
+    const el = document.getElementById('uploadError');
+    if (el) el.style.display = 'none';
+  }
+
+  async function submitUpload() {
+    const title      = document.getElementById('recordTitle').value.trim();
+    const recordDate = document.getElementById('recordDate').value;
+    const notes      = document.getElementById('recordNotes').value.trim();
+
+    if (!title)        { showUploadError('Please enter a title.'); return; }
+    if (!recordDate)   { showUploadError('Please select a date.'); return; }
+    if (!selectedFileData) { showUploadError('Please select a file.'); return; }
+
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i> Uploading...';
+
+    try {
+      const res  = await fetch('/patient/medical-records/upload', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title,
+          type:      activeTab,
+          notes,
+          recordDate,
+          fileData:  selectedFileData,
+          fileType:  selectedFileType
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        hideModal();
+        window.location.reload();
+      } else {
+        showUploadError(data.error || 'Upload failed. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-upload" style="margin-right:6px;font-size:12px;"></i> Upload';
+      }
+    } catch {
+      showUploadError('Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-upload" style="margin-right:6px;font-size:12px;"></i> Upload';
+    }
+  }
+
+  /* ── Delete confirm modal ─────────────────────── */
+  function confirmDelete(id, title) {
+    showModal(`
+      <div class="hm-box" onclick="event.stopPropagation()">
+        <div style="width:48px;height:48px;background:#fef2f2;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <i class="fas fa-trash" style="color:#dc2626;font-size:20px;"></i>
+        </div>
+        <div class="hm-title">Delete Record</div>
+        <div class="hm-sub">Are you sure you want to delete "<strong>${title}</strong>"? This cannot be undone.</div>
+        <div class="hm-btns">
+          <button class="hm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="hm-btn red" id="confirmDeleteBtn" onclick="deleteRecord('${id}')">Delete</button>
+        </div>
+      </div>
+    `);
+  }
+
+  async function deleteRecord(id) {
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = 'Deleting...';
+    try {
+      const res  = await fetch(`/patient/medical-records/${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.success) {
+        hideModal();
+        document.getElementById(`record-${id}`)?.remove();
+        // Show empty state if no records left
+        if (document.querySelectorAll('.record-card').length === 0) {
+          window.location.reload();
+        }
+      } else {
+        alert(data.error || 'Failed to delete');
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+      }
+    } catch {
+      alert('Something went wrong.');
+      btn.disabled = false;
+      btn.textContent = 'Delete';
+    }
+  }
+
+  /* ── Logout modal ─────────────────────────────── */
+  function showLogoutModal() {
+    showModal(`
+      <div class="hm-box" onclick="event.stopPropagation()">
+        <div class="hm-title">Confirm Logout</div>
+        <div class="hm-sub">Are you sure you want to logout from Healora?</div>
+        <div class="hm-btns">
+          <button class="hm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="hm-btn navy" onclick="confirmLogout()">Logout</button>
+        </div>
+      </div>
+    `);
+  }
+
+  function confirmLogout() {
+    fetch('/patient/logout', { method: 'POST' })
+      .then(() => window.location.href = '/patient/login')
+      .catch(() => window.location.href = '/patient/login');
+  }
+</script>
+</body>
+</html>

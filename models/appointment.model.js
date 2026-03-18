@@ -71,7 +71,9 @@ const appointmentSchema = new mongoose.Schema({
     default: 'none'
   },
   refundPercentage: { type: Number, default: 0 },
-  refundedAt:       { type: Date, default: null }
+  refundedAt:       { type: Date, default: null },
+
+  hasReview: { type: Boolean, default: false },
 
 }, { timestamps: true });
 

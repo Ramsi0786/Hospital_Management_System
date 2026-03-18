@@ -17,13 +17,12 @@
 <div id="healora-modal-root"></div>
 
 <div class="main-content">
-  <div class="top-bar">
-    <h1 class="page-title">My Appointments</h1>
-    <button class="user-profile-btn">
-      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
-      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
-    </button>
-  </div>
+  <%- include('../partials/patient-topbar', {
+  pageTitle:    'My Appointments',
+  pageSubtitle: null,
+  backUrl:      null,
+  backLabel:    null
+}) %>
 
   <div class="stats-row">
     <div class="stat-card">
@@ -73,7 +72,11 @@
             <div class="appt-spec"><%= appt.doctor ? appt.doctor.specialization : '' %> · <%= appt.department %></div>
             <div class="appt-meta">
               <span class="meta-chip"><i class="fas fa-calendar"></i> <%= new Date(appt.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) %></span>
-              <span class="meta-chip"><i class="fas fa-clock"></i> <%= appt.timeSlot %></span>
+              <span class="meta-chip"><i class="fas fa-clock"></i> <%
+                const [h1, m1] = appt.timeSlot.split(':').map(Number);
+                const ampm1 = h1 >= 12 ? 'PM' : 'AM';
+                const fh1 = h1 % 12 || 12;
+                %><%= `${fh1}:${String(m1).padStart(2,'0')} ${ampm1}` %></span>
               <span class="meta-chip">
                 <i class="fas fa-<%= appt.paymentMethod==='cash'?'money-bill-wave':appt.paymentMethod==='wallet'?'wallet':'credit-card' %>"></i>
                 <%= appt.paymentMethod==='cash'?'Cash':appt.paymentMethod==='wallet'?'Wallet':'Online' %>
@@ -110,6 +113,26 @@
               <% } else if (['pending','confirmed'].includes(appt.status) && isPast) { %>
                 <button class="btn-sm" style="background:#f1f5f9;color:#94a3b8;cursor:not-allowed;" disabled>Expired</button>
               <% } %>
+
+              <% if (appt.status === 'completed' && !appt.hasReview) { %>
+  <button class="btn-sm btn-rate"
+    data-id="<%= appt._id %>"
+    data-doctor="<%= appt.doctor ? appt.doctor.name : 'Unknown' %>"
+    data-date="<%= appt.date %>"
+    data-slot="<%= appt.timeSlot %>"
+    onclick="openRateModal(this)">
+    <i class="fas fa-star"></i> Rate
+  </button>
+<% } else if (appt.status === 'completed' && appt.hasReview) { %>
+  <button class="btn-sm btn-rated"
+    data-id="<%= appt._id %>"
+    data-doctor="<%= appt.doctor ? appt.doctor.name : 'Unknown' %>"
+    data-date="<%= appt.date %>"
+    data-slot="<%= appt.timeSlot %>"
+    onclick="openRateModal(this)">
+    <i class="fas fa-star"></i> Edit Rating
+  </button>
+<% } %>
             </div>
           </div>
         </div>
@@ -124,6 +147,13 @@
 <script>
   const modalRoot = document.getElementById('healora-modal-root');
   let cancelTargetId = null;
+
+  // ── Global time formatter ──────────────────────────────────────
+  function formatSlot(slot) {
+    const [h, m] = slot.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
+  }
 
   function showModal(innerHtml) {
     modalRoot.innerHTML = `
@@ -182,7 +212,7 @@
       <div class="hm-box" onclick="event.stopPropagation()">
         <div class="hm-icon red"><i class="fas fa-times-circle"></i></div>
         <div class="hm-title">Cancel Appointment</div>
-        <div class="hm-sub">Dr. ${doctorName} &middot; ${dateLabel} at ${timeSlot}</div>
+        <div class="hm-sub">Dr. ${doctorName} &middot; ${dateLabel} at ${formatSlot(timeSlot)}</div>
         <div class="hm-preview">${previewHtml}</div>
         <textarea id="cancelReason" class="hm-textarea" placeholder="Reason for cancellation (optional)"></textarea>
         <div class="hm-btns">
@@ -213,6 +243,130 @@
     } catch {
       alert('Something went wrong. Please try again.');
       btn.disabled = false; btn.textContent = 'Cancel Appointment';
+    }
+  }
+
+  /* ── Rate modal ───────────────────────────────────────────────── */
+  let rateTargetId = null;
+
+  function openRateModal(btn) {
+    rateTargetId     = btn.dataset.id;
+    const doctorName = btn.dataset.doctor;
+    const date       = btn.dataset.date;
+    const slot       = btn.dataset.slot;
+    const dateLabel  = new Date(date + 'T00:00:00').toLocaleDateString('en-US', {
+      weekday:'long', month:'long', day:'numeric'
+    });
+
+    showModal(`
+      <div class="hm-box" onclick="event.stopPropagation()">
+        <div class="hm-icon" style="background:#fef9c3;color:#d97706;">
+          <i class="fas fa-star"></i>
+        </div>
+        <div class="hm-title">Rate Your Experience</div>
+        <div class="hm-sub">Dr. ${doctorName} &middot; ${dateLabel} at ${formatSlot(slot)}</div>
+
+        <div style="display:flex;justify-content:center;gap:10px;margin:20px 0 8px;">
+          ${[1,2,3,4,5].map(n => `
+            <button type="button"
+              id="star-${n}"
+              onclick="selectStar(${n})"
+              style="background:none;border:none;font-size:32px;cursor:pointer;color:#e2e8f0;transition:color .15s;padding:0;">
+              &#9733;
+            </button>
+          `).join('')}
+        </div>
+        <div id="ratingLabel" style="text-align:center;font-size:13px;color:#94a3b8;margin-bottom:16px;">
+          Tap a star to rate
+        </div>
+
+        <div id="reviewHint" style="display:none;font-size:12px;color:#d97706;font-weight:600;margin-bottom:6px;text-align:left;"></div>
+        <textarea id="reviewText" class="hm-textarea"
+          placeholder="Share your experience (optional)"
+          style="margin-bottom:4px;"
+          oninput="document.getElementById('reviewText').style.border='';document.getElementById('reviewValidation').style.display='none'"></textarea>
+        <div id="reviewValidation" style="display:none;font-size:12px;color:#dc2626;font-weight:600;margin-bottom:12px;">
+          <i class="fas fa-exclamation-circle"></i> Please describe your experience for low ratings.
+        </div>
+
+        <div class="hm-btns">
+          <button class="hm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="hm-btn navy" id="submitRateBtn" onclick="submitRating()" disabled>
+            Submit Review
+          </button>
+        </div>
+      </div>
+    `);
+
+    selectedRating = 0;
+  }
+
+  const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+  let selectedRating = 0;
+
+  function selectStar(n) {
+    selectedRating = n;
+    for (let i = 1; i <= 5; i++) {
+      document.getElementById(`star-${i}`).style.color = i <= n ? '#f59e0b' : '#e2e8f0';
+    }
+    document.getElementById('ratingLabel').textContent = ratingLabels[n];
+    document.getElementById('ratingLabel').style.color = '#d97706';
+    document.getElementById('submitRateBtn').disabled = false;
+
+    const hint       = document.getElementById('reviewHint');
+    const validation = document.getElementById('reviewValidation');
+    if (n <= 2) {
+      hint.style.display   = 'block';
+      hint.textContent     = '⚠️ Please describe what went wrong (required)';
+    } else {
+      hint.style.display   = 'none';
+    }
+    validation.style.display                          = 'none';
+    document.getElementById('reviewText').style.border = '';
+  }
+
+  async function submitRating() {
+    if (!rateTargetId || !selectedRating) return;
+
+    if (selectedRating <= 2) {
+      const reviewText = document.getElementById('reviewText').value.trim();
+      if (!reviewText) {
+        document.getElementById('reviewText').style.border       = '2px solid #dc2626';
+        document.getElementById('reviewText').placeholder        = 'Please describe your experience (required for low ratings)';
+        document.getElementById('reviewValidation').style.display = 'block';
+        return;
+      }
+    }
+
+    document.getElementById('reviewText').style.border       = '';
+    document.getElementById('reviewValidation').style.display = 'none';
+
+    const btn = document.getElementById('submitRateBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Submitting...';
+
+    try {
+      const res  = await fetch(`/patient/appointments/${rateTargetId}/review`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          rating: selectedRating,
+          review: document.getElementById('reviewText').value.trim()
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        hideModal();
+        window.location.reload();
+      } else {
+        alert(data.error || 'Failed to submit review');
+        btn.disabled    = false;
+        btn.textContent = 'Submit Review';
+      }
+    } catch {
+      alert('Something went wrong. Please try again.');
+      btn.disabled    = false;
+      btn.textContent = 'Submit Review';
     }
   }
 

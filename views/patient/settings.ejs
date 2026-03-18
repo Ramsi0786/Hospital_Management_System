@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
+    .main-content { margin-left:230px; padding:30px; min-height:100vh; }
+
+    /* Top bar */
+    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
+    .page-title { font-size:26px; font-weight:800; color:#1a202c; }
+    .user-profile-btn { display:flex; align-items:center; gap:10px; background:white; padding:8px 16px; border-radius:50px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.08); cursor:default; }
+    .user-avatar-small { width:35px; height:35px; border-radius:50%; background:#203f6a; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
+    .user-name { font-size:14px; font-weight:600; color:#2d3748; }
+
+    /* Layout */
+    .settings-layout { display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:start; }
+
+    /* Nav */
+    .settings-nav { background:white; border-radius:14px; padding:10px; box-shadow:0 2px 10px rgba(0,0,0,.06); position:sticky; top:24px; }
+    .snav-item { display:flex; align-items:center; gap:10px; padding:11px 14px; border-radius:10px; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; transition:all .2s; border:none; background:transparent; width:100%; text-align:left; margin-bottom:2px; }
+    .snav-item:hover { background:#f1f5f9; color:#374151; }
+    .snav-item.active { background:#203f6a; color:white; }
+    .snav-item i { width:18px; text-align:center; }
+
+    /* Section cards */
+    .settings-section { display:none; }
+    .settings-section.active { display:block; }
+
+    .s-card { background:white; border-radius:16px; padding:28px; box-shadow:0 2px 12px rgba(0,0,0,.06); margin-bottom:20px; }
+    .s-card-title { font-size:16px; font-weight:800; color:#1a202c; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+    .s-card-title i { color:#203f6a; }
+    .s-card-sub { font-size:13px; color:#94a3b8; margin-bottom:24px; }
+
+    /* Account info */
+    .account-info-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #f0f2f5; }
+    .account-info-row:last-child { border-bottom:none; padding-bottom:0; }
+    .ai-label { font-size:12px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; margin-bottom:3px; }
+    .ai-value { font-size:14px; font-weight:600; color:#1a202c; }
+    .auth-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; }
+    .auth-badge.google { background:#fff0f0; color:#e53e3e; }
+    .auth-badge.local  { background:#f0fdf4; color:#059669; }
+
+    /* Form */
+    .form-group { margin-bottom:18px; }
+    .form-label { font-size:12px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:block; }
+    .form-input { width:100%; padding:11px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; color:#374151; outline:none; transition:border-color .2s; background:white; }
+    .form-input:focus { border-color:#203f6a; }
+    .form-input.error { border-color:#dc2626; }
+    .input-wrap { position:relative; }
+    .toggle-pw { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:14px; padding:4px; }
+    .toggle-pw:hover { color:#374151; }
+
+    .btn-save { padding:11px 28px; background:#203f6a; color:white; border:none; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px; }
+    .btn-save:hover { background:#1a3456; transform:translateY(-1px); }
+    .btn-save:disabled { background:#94a3b8; cursor:not-allowed; transform:none; }
+
+    /* Alert */
+    .s-alert { padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:16px; display:none; align-items:center; gap:8px; }
+    .s-alert.success { background:#f0fdf4; color:#059669; border:1px solid #bbf7d0; display:flex; }
+    .s-alert.error   { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; display:flex; }
+
+    /* Notification toggles */
+    .notif-row { display:flex; align-items:center; justify-content:space-between; padding:16px 0; border-bottom:1px solid #f0f2f5; }
+    .notif-row:last-child { border-bottom:none; }
+    .notif-info h4 { font-size:14px; font-weight:700; color:#1a202c; margin-bottom:3px; }
+    .notif-info p  { font-size:12px; color:#94a3b8; margin:0; }
+
+    /* Toggle switch */
+    .toggle-switch { position:relative; width:46px; height:26px; flex-shrink:0; }
+    .toggle-switch input { opacity:0; width:0; height:0; }
+    .toggle-slider { position:absolute; cursor:pointer; inset:0; background:#e2e8f0; border-radius:26px; transition:.3s; }
+    .toggle-slider:before { content:''; position:absolute; width:20px; height:20px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; box-shadow:0 1px 4px rgba(0,0,0,.15); }
+    .toggle-switch input:checked + .toggle-slider { background:#203f6a; }
+    .toggle-switch input:checked + .toggle-slider:before { transform:translateX(20px); }
+
+    .notif-save-wrap { margin-top:20px; display:flex; align-items:center; gap:14px; }
+
+    /* Danger zone */
+    .danger-card { background:white; border-radius:16px; padding:28px; box-shadow:0 2px 12px rgba(0,0,0,.06); border:1.5px solid #fecaca; }
+    .danger-title { font-size:16px; font-weight:800; color:#dc2626; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+    .danger-sub   { font-size:13px; color:#64748b; margin-bottom:20px; line-height:1.6; }
+    .danger-list  { margin-bottom:20px; padding-left:0; list-style:none; }
+    .danger-list li { font-size:13px; color:#64748b; padding:4px 0; display:flex; align-items:center; gap:8px; }
+    .danger-list li i { color:#dc2626; font-size:11px; }
+    .btn-danger { padding:11px 24px; background:white; color:#dc2626; border:2px solid #fecaca; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px; }
+    .btn-danger:hover { background:#fef2f2; border-color:#dc2626; }
+
+    /* Google notice */
+    .google-notice { background:#fff7ed; border:1.5px solid #fed7aa; border-radius:12px; padding:16px 18px; display:flex; align-items:flex-start; gap:12px; margin-bottom:20px; }
+    .google-notice i { color:#ea580c; font-size:18px; margin-top:1px; flex-shrink:0; }
+    .google-notice p { font-size:13px; color:#9a3412; margin:0; line-height:1.6; }
+
+    /* Modal */
+    #healora-modal-root { position:fixed; inset:0; z-index:9999; pointer-events:none; }
+    #healora-modal-root.active { pointer-events:all; }
+    .hm-backdrop { position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity .25s; }
+    #healora-modal-root.active .hm-backdrop { opacity:1; }
+    .hm-box { background:white; border-radius:20px; padding:28px; width:100%; max-width:440px; box-shadow:0 20px 60px rgba(0,0,0,.2); transform:translateY(20px); transition:transform .25s; }
+    #healora-modal-root.active .hm-box { transform:translateY(0); }
+    .hm-title { font-size:18px; font-weight:800; color:#1a202c; margin-bottom:4px; }
+    .hm-sub   { font-size:13px; color:#64748b; margin-bottom:20px; line-height:1.6; }
+    .hm-btns  { display:flex; gap:10px; margin-top:20px; }
+    .hm-btn   { flex:1; padding:12px; border:none; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:all .2s; }
+    .hm-btn.gray { background:#f1f5f9; color:#64748b; }
+    .hm-btn.gray:hover { background:#e2e8f0; }
+    .hm-btn.red  { background:#dc2626; color:white; }
+    .hm-btn.red:hover  { background:#b91c1c; }
+    .hm-btn:disabled { opacity:.6; cursor:not-allowed; }
+    .hm-input { width:100%; padding:11px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; color:#374151; outline:none; transition:border-color .2s; margin-bottom:6px; }
+    .hm-input:focus { border-color:#203f6a; }
+    .hm-group { margin-bottom:14px; }
+    .hm-label { font-size:12px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:block; }
+
+    @media (max-width:900px) { .settings-layout { grid-template-columns:1fr; } .settings-nav { position:static; display:flex; flex-wrap:wrap; gap:4px; } }
+    @media (max-width:768px) { .main-content { margin-left:70px; padding:20px; } }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/patient-sidebar', { currentPage: 'settings' }) %>
+<div id="healora-modal-root"></div>
+<div id="page-meta"
+  data-has-password="<%= hasPassword ? '1' : '0' %>"
+  style="display:none;">
+</div>
+
+<div class="main-content">
+
+  <div class="top-bar">
+    <h1 class="page-title">Settings</h1>
+    <button class="user-profile-btn">
+      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
+      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
+    </button>
+  </div>
+
+  <div class="settings-layout">
+
+    <!-- Sidebar nav -->
+    <div class="settings-nav">
+      <button class="snav-item active" onclick="switchSection('account', this)">
+        <i class="fas fa-user-circle"></i> Account Info
+      </button>
+      <% if (hasPassword) { %>
+      <button class="snav-item" onclick="switchSection('password', this)">
+        <i class="fas fa-lock"></i> Change Password
+      </button>
+      <% } %>
+      <button class="snav-item" onclick="switchSection('notifications', this)">
+        <i class="fas fa-bell"></i> Notifications
+      </button>
+      <button class="snav-item" onclick="switchSection('danger', this)">
+        <i class="fas fa-exclamation-triangle"></i> Danger Zone
+      </button>
+    </div>
+
+    <!-- Sections -->
+    <div>
+
+      <!-- ── Account Info ────────────────────────────── -->
+      <div class="settings-section active" id="section-account">
+        <div class="s-card">
+          <div class="s-card-title"><i class="fas fa-user-circle"></i> Account Information</div>
+          <div class="s-card-sub">Your account details and login method</div>
+
+          <div class="account-info-row">
+            <div>
+              <div class="ai-label">Full Name</div>
+              <div class="ai-value"><%= user.name %></div>
+            </div>
+            <a href="/patient/profile" style="font-size:12px;font-weight:700;color:#203f6a;text-decoration:none;">
+              <i class="fas fa-edit"></i> Edit
+            </a>
+          </div>
+
+          <div class="account-info-row">
+            <div>
+              <div class="ai-label">Email Address</div>
+              <div class="ai-value"><%= user.email %></div>
+            </div>
+          </div>
+
+          <div class="account-info-row">
+            <div>
+              <div class="ai-label">Login Method</div>
+              <div style="margin-top:4px;">
+                <% if (isGoogleUser) { %>
+                  <span class="auth-badge google">
+                    <i class="fab fa-google"></i> Google Account
+                  </span>
+                <% } else { %>
+                  <span class="auth-badge local">
+                    <i class="fas fa-envelope"></i> Email & Password
+                  </span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="account-info-row">
+            <div>
+              <div class="ai-label">Member Since</div>
+              <div class="ai-value">
+                <%= new Date(user.createdAt).toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }) %>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── Change Password ─────────────────────────── -->
+      <% if (hasPassword) { %>
+      <div class="settings-section" id="section-password">
+        <div class="s-card">
+          <div class="s-card-title"><i class="fas fa-lock"></i> Change Password</div>
+          <div class="s-card-sub">Choose a strong password with at least 6 characters</div>
+
+          <div class="s-alert" id="pwAlert"></div>
+
+          <div class="form-group">
+            <label class="form-label">Current Password</label>
+            <div class="input-wrap">
+              <input type="password" id="currentPw" class="form-input" placeholder="Enter current password">
+              <button type="button" class="toggle-pw" onclick="togglePw('currentPw', this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <div class="input-wrap">
+              <input type="password" id="newPw" class="form-input" placeholder="At least 6 characters">
+              <button type="button" class="toggle-pw" onclick="togglePw('newPw', this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirm New Password</label>
+            <div class="input-wrap">
+              <input type="password" id="confirmPw" class="form-input" placeholder="Repeat new password">
+              <button type="button" class="toggle-pw" onclick="togglePw('confirmPw', this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <button class="btn-save" id="savePwBtn" onclick="changePassword()">
+            <i class="fas fa-save"></i> Update Password
+          </button>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- ── Notifications ───────────────────────────── -->
+      <div class="settings-section" id="section-notifications">
+        <div class="s-card">
+          <div class="s-card-title"><i class="fas fa-bell"></i> Email Notification Preferences</div>
+          <div class="s-card-sub">Choose which emails you want to receive from Healora</div>
+
+          <div class="s-alert" id="notifAlert"></div>
+
+          <div class="notif-row">
+            <div class="notif-info">
+              <h4>Booking Confirmed</h4>
+              <p>Email when your appointment is successfully booked</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notif-bookingConfirmed"
+                <%= notifications.bookingConfirmed ? 'checked' : '' %>>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="notif-row">
+            <div class="notif-info">
+              <h4>Appointment Cancelled</h4>
+              <p>Email when an appointment is cancelled by you or the doctor</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notif-appointmentCancelled"
+                <%= notifications.appointmentCancelled ? 'checked' : '' %>>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="notif-row">
+            <div class="notif-info">
+              <h4>Refund Processed</h4>
+              <p>Email when a refund is credited to your wallet</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notif-refundProcessed"
+                <%= notifications.refundProcessed ? 'checked' : '' %>>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="notif-row">
+            <div class="notif-info">
+              <h4>Appointment Reminder</h4>
+              <p>Email reminder one day before your appointment</p>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="notif-appointmentReminder"
+                <%= notifications.appointmentReminder ? 'checked' : '' %>>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <div class="notif-save-wrap">
+            <button class="btn-save" id="saveNotifBtn" onclick="saveNotifications()">
+              <i class="fas fa-save"></i> Save Preferences
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Danger Zone ─────────────────────────────── -->
+      <div class="settings-section" id="section-danger">
+        <div class="danger-card">
+          <div class="danger-title"><i class="fas fa-exclamation-triangle"></i> Danger Zone</div>
+          <div class="danger-sub">
+            Once you delete your account, there is no going back. Please be certain before proceeding.
+          </div>
+          <ul class="danger-list">
+            <li><i class="fas fa-times-circle"></i> Your profile and personal data will be removed</li>
+            <li><i class="fas fa-times-circle"></i> Your appointment history will be deactivated</li>
+            <li><i class="fas fa-times-circle"></i> Your wallet balance will be forfeited</li>
+            <li><i class="fas fa-times-circle"></i> This action cannot be undone</li>
+          </ul>
+          <button class="btn-danger" onclick="openDeleteModal()">
+            <i class="fas fa-trash-alt"></i> Delete My Account
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  /* ── Section switch ───────────────────────────────── */
+  function switchSection(id, btn) {
+    document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('section-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* ── Toggle password visibility ──────────────────── */
+  function togglePw(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon  = btn.querySelector('i');
+    if (input.type === 'password') {
+      input.type    = 'text';
+      icon.className = 'fas fa-eye-slash';
+    } else {
+      input.type    = 'password';
+      icon.className = 'fas fa-eye';
+    }
+  }
+
+  /* ── Alert helper ─────────────────────────────────── */
+  function showAlert(id, type, msg) {
+    const el = document.getElementById(id);
+    el.className   = `s-alert ${type}`;
+    el.innerHTML   = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
+    el.style.display = 'flex';
+    if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 4000);
+  }
+
+  /* ── Change password ──────────────────────────────── */
+  async function changePassword() {
+    const currentPw = document.getElementById('currentPw').value.trim();
+    const newPw     = document.getElementById('newPw').value.trim();
+    const confirmPw = document.getElementById('confirmPw').value.trim();
+    const btn       = document.getElementById('savePwBtn');
+
+    if (!currentPw || !newPw || !confirmPw) {
+      showAlert('pwAlert', 'error', 'All fields are required.'); return;
+    }
+    if (newPw.length < 6) {
+      showAlert('pwAlert', 'error', 'New password must be at least 6 characters.'); return;
+    }
+    if (newPw !== confirmPw) {
+      showAlert('pwAlert', 'error', 'New passwords do not match.'); return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+    try {
+      const res  = await fetch('/patient/settings/change-password', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ currentPassword: currentPw, newPassword: newPw, confirmPassword: confirmPw })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showAlert('pwAlert', 'success', data.message);
+        document.getElementById('currentPw').value = '';
+        document.getElementById('newPw').value     = '';
+        document.getElementById('confirmPw').value = '';
+      } else {
+        showAlert('pwAlert', 'error', data.error || 'Failed to update password.');
+      }
+    } catch {
+      showAlert('pwAlert', 'error', 'Something went wrong. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Update Password';
+    }
+  }
+
+  /* ── Save notifications ───────────────────────────── */
+  async function saveNotifications() {
+    const btn = document.getElementById('saveNotifBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      const res  = await fetch('/patient/settings/notifications', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          bookingConfirmed:     document.getElementById('notif-bookingConfirmed').checked,
+          appointmentCancelled: document.getElementById('notif-appointmentCancelled').checked,
+          refundProcessed:      document.getElementById('notif-refundProcessed').checked,
+          appointmentReminder:  document.getElementById('notif-appointmentReminder').checked
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showAlert('notifAlert', 'success', 'Notification preferences saved.');
+      } else {
+        showAlert('notifAlert', 'error', data.error || 'Failed to save preferences.');
+      }
+    } catch {
+      showAlert('notifAlert', 'error', 'Something went wrong. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Preferences';
+    }
+  }
+
+  /* ── Delete account modal ─────────────────────────── */
+  const modalRoot  = document.getElementById('healora-modal-root');
+  const isPasswordSet = document.getElementById('page-meta').dataset.hasPassword === '1';
+
+  function showModal(html) {
+    modalRoot.innerHTML = `<div class="hm-backdrop" id="hm-backdrop">${html}</div>`;
+    document.getElementById('hm-backdrop').addEventListener('click', e => {
+      if (e.target === document.getElementById('hm-backdrop')) hideModal();
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => modalRoot.classList.add('active')));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideModal() {
+    modalRoot.classList.remove('active');
+    document.body.style.overflow = '';
+    setTimeout(() => { modalRoot.innerHTML = ''; }, 250);
+  }
+
+  function openDeleteModal() {
+    showModal(`
+      <div class="hm-box" onclick="event.stopPropagation()">
+        <div style="width:52px;height:52px;background:#fef2f2;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+          <i class="fas fa-trash-alt" style="color:#dc2626;font-size:22px;"></i>
+        </div>
+        <div class="hm-title">Delete Account</div>
+        <div class="hm-sub">
+          This will permanently deactivate your account. All your data, appointments and wallet balance will be lost. This cannot be undone.
+        </div>
+
+        <div class="hm-group">
+          <label class="hm-label">Reason (optional)</label>
+          <input type="text" id="deleteReason" class="hm-input" placeholder="Why are you leaving?">
+        </div>
+
+        ${isPasswordSet ? `
+        <div class="hm-group">
+          <label class="hm-label">Enter your password to confirm *</label>
+          <input type="password" id="deletePassword" class="hm-input" placeholder="Your current password">
+        </div>
+        ` : `
+        <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 14px;font-size:13px;color:#9a3412;margin-bottom:14px;">
+          <i class="fas fa-info-circle" style="margin-right:6px;"></i>
+          You are logged in with Google. Confirming will delete your account.
+        </div>
+        `}
+
+        <div id="deleteError" style="display:none;font-size:12px;color:#dc2626;font-weight:600;margin-bottom:10px;"></div>
+
+        <div class="hm-btns">
+          <button class="hm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="hm-btn red" id="confirmDeleteBtn" onclick="confirmDelete()">
+            <i class="fas fa-trash-alt" style="margin-right:6px;font-size:12px;"></i> Delete Account
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  async function confirmDelete() {
+    const reason   = document.getElementById('deleteReason')?.value.trim();
+    const password = document.getElementById('deletePassword')?.value.trim();
+    const btn      = document.getElementById('confirmDeleteBtn');
+    const errEl    = document.getElementById('deleteError');
+
+    if (isPasswordSet && !password) {
+      errEl.textContent    = 'Please enter your password to confirm.';
+      errEl.style.display  = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i> Deleting...';
+
+    try {
+      const res  = await fetch('/patient/settings/delete-account', {
+        method:  'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ password, reason })
+      });
+      const data = await res.json();
+      if (data.success) {
+        hideModal();
+        window.location.href = data.redirect || '/patient/login';
+      } else {
+        errEl.textContent   = data.error || 'Failed to delete account.';
+        errEl.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-trash-alt" style="margin-right:6px;font-size:12px;"></i> Delete Account';
+      }
+    } catch {
+      errEl.textContent   = 'Something went wrong. Please try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-trash-alt" style="margin-right:6px;font-size:12px;"></i> Delete Account';
+    }
+  }
+</script>
+</body>
+</html>

@@ -118,7 +118,7 @@
 
       <% if (totalPages > 1) { %>
         <div class="pagination-wrap">
-          <%- include('../partials/pagination', { currentPage, totalPages, selectedStatus: selectedType ? `type=${selectedType}` : '' }) %>
+          <%- include('../partials/pagination', { currentPage, totalPages, selectedStatus: selectedType ? `type=${selectedType}` : '', searchQuery: '', selectedDepartment: '', sortBy: '' }) %>
         </div>
       <% } %>
     <% } %>

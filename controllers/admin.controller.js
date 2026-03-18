@@ -5,6 +5,7 @@ import Appointment from "../models/appointment.model.js";
 import Wallet from '../models/wallet.model.js';
 import WalletTransaction from '../models/walletTransaction.model.js';
 import Payment from '../models/payment.model.js';
+import Invoice from '../models/invoice.model.js';
 import bcrypt from "bcryptjs";
 import { sendDoctorWelcomeEmail } from "../utils/sendEmail.js";
 import { HTTP_STATUS, PAGINATION, sanitizePagination } from "../constants/index.js";
@@ -468,15 +469,18 @@ export const addDoctor = async (req, res) => {
     }
 
     const newDoctor = new Doctor({
-      name,
-      email,
-      phone,
-      specialization,
-      department,
-      password: hashedPassword,
-      profileImage: finalImageUrl,
-      status: 'active' 
-    });
+  name,
+  email,
+  phone,
+  specialization,
+  department,
+  password: hashedPassword,
+  profileImage: finalImageUrl,
+  status: 'active',
+  consultationFee: consultationFee ? Number(consultationFee) : 0,
+  qualification:   qualification || '',
+  experience:      experience ? Number(experience) : 0
+});
 
     await newDoctor.save();
 
@@ -694,22 +698,31 @@ export const updateDoctor = async (req, res) => {
   try {
     const { id } = req.params;
     const { 
-      name, 
-      email, 
-      phone, 
-      password, 
-      specialization, 
-      department,
-      profileImage 
-    } = req.body;
+  name, 
+  email, 
+  phone, 
+  password, 
+  specialization, 
+  department,
+  profileImage,
+  consultationFee,
+  qualification,
+  experience
+} = req.body;
 
-    const updateData = {
-      name,
-      email,
-      phone,
-      specialization,
-      department,
-    };
+const updateData = {
+  name,
+  email,
+  phone,
+  specialization,
+  department,
+};
+
+if (consultationFee !== undefined && consultationFee !== '') {
+  updateData.consultationFee = Number(consultationFee);
+}
+if (qualification !== undefined) updateData.qualification = qualification;
+if (experience !== undefined && experience !== '') updateData.experience = Number(experience);
 
     if (password && password.trim()) {
       updateData.password = await bcrypt.hash(password.trim(), 10);
@@ -1068,5 +1081,106 @@ export const getAppointmentById = async (req, res) => {
   } catch (err) {
     logger.error('Get Appointment Error', 'Admin', err);
     res.status(500).json({ success: false, error: 'Failed to fetch appointment' });
+  }
+};
+
+/* ==================== GET ALL INVOICES (Admin) ==================== */
+export const getAdminInvoices = async (req, res) => {
+  try {
+    const {
+      search   = '',
+      type     = '',
+      dateFrom = '',
+      dateTo   = '',
+      page,
+      limit
+    } = req.query;
+
+    const { page: pageNum, limit: limitNum, skip } = sanitizePagination(
+      page, limit || 10
+    );
+
+    let query = {};
+    if (type && type !== 'all') query.type = type;
+
+    if (dateFrom || dateTo) {
+      query.createdAt = {};
+      if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
+    }
+
+    if (search.trim()) {
+      const [matchPatients, matchDoctors] = await Promise.all([
+        Patient.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id'),
+        Doctor.find({  name: { $regex: search.trim(), $options: 'i' } }).select('_id')
+      ]);
+      const apptIds = await Appointment.find({
+        $or: [
+          { patient: { $in: matchPatients.map(p => p._id) } },
+          { doctor:  { $in: matchDoctors.map(d => d._id)  } }
+        ]
+      }).select('_id');
+      query.appointment = { $in: apptIds.map(a => a._id) };
+    }
+
+    const [invoices, total] = await Promise.all([
+      Invoice.find(query)
+        .populate({
+          path: 'appointment',
+          populate: [
+            { path: 'patient', select: 'name email phone' },
+            { path: 'doctor',  select: 'name specialization department' }
+          ]
+        })
+        .populate('patient', 'name email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+      Invoice.countDocuments(query)
+    ]);
+
+    const [totalBooking, totalRefund, revenueAgg] = await Promise.all([
+      Invoice.countDocuments({ type: 'booking' }),
+      Invoice.countDocuments({ type: 'refund' }),
+      Invoice.aggregate([
+        { $match: { type: 'booking' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ])
+    ]);
+
+    const totalRevenue = revenueAgg[0]?.total || 0;
+
+    res.render('admin/invoices', {
+      title:    'Invoices - Healora Admin',
+      admin:    req.admin || req.user,
+      invoices,
+      pagination: {
+        total,
+        page:       pageNum,
+        limit:      limitNum,
+        totalPages: Math.ceil(total / limitNum)
+      },
+      filters: { search, type, dateFrom, dateTo },
+      stats: {
+        total:        await Invoice.countDocuments(),
+        totalBooking,
+        totalRefund,
+        totalRevenue
+      }
+    });
+  } catch (err) {
+    logger.error('Get Admin Invoices Error', 'Admin', err);
+    res.status(500).render('admin/invoices', {
+      title:   'Invoices - Healora Admin',
+      admin:    req.admin || req.user,
+      invoices: [],
+      pagination: { total:0, page:1, limit:10, totalPages:0 },
+      filters:  { search:'', type:'', dateFrom:'', dateTo:'' },
+      stats:    { total:0, totalBooking:0, totalRefund:0, totalRevenue:0 }
+    });
   }
 };

@@ -3,6 +3,7 @@ import Doctor from '../models/doctor.model.js';
 import Wallet from '../models/wallet.model.js';
 import WalletTransaction from '../models/walletTransaction.model.js';
 import Payment from '../models/payment.model.js';
+import Review from '../models/review.model.js';
 import { resolveSlots } from './availability.controller.js';
 import { generateInvoicePDF, saveInvoiceRecord } from '../utils/generateInvoice.js';
 import { sendBookingConfirmationEmail } from '../utils/sendEmail.js';
@@ -578,5 +579,96 @@ export const verifyTopup = async (req, res) => {
   } catch (err) {
     console.error('Verify topup error:', err);
     res.status(500).json({ success: false, error: 'Failed to verify payment' });
+  }
+};
+
+export const submitReview = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { rating, review } = req.body;
+    const patientId = req.user._id;
+
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, error: 'Rating must be between 1 and 5' });
+    }
+
+    const appointment = await Appointment.findById(id);
+    if (!appointment || appointment.patient.toString() !== patientId.toString()) {
+      return res.status(404).json({ success: false, error: 'Appointment not found' });
+    }
+
+    if (appointment.status !== 'completed') {
+      return res.status(400).json({ success: false, error: 'Can only rate completed appointments' });
+    }
+
+    await Review.findOneAndUpdate(
+      { appointment: id },
+      {
+        patient: patientId,
+        doctor:  appointment.doctor,
+        appointment: id,
+        rating:  Number(rating),
+        review:  review || ''
+      },
+      { upsert: true, new: true }
+    );
+
+    appointment.hasReview = true;
+    await appointment.save();
+
+    const allReviews = await Review.find({ doctor: appointment.doctor });
+    const avg = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+
+    await Doctor.findByIdAndUpdate(appointment.doctor, {
+      rating:      Math.round(avg * 10) / 10,
+      ratingCount: allReviews.length
+    });
+
+    res.json({ success: true, message: 'Review submitted successfully' });
+
+  } catch (err) {
+    console.error('Submit review error:', err);
+    res.status(500).json({ success: false, error: 'Failed to submit review' });
+  }
+};
+
+export const getInvoices = async (req, res) => {
+  try {
+    const patientId = req.user._id;
+    const { type, page } = req.query;
+    const limit   = 10;
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const skip    = (pageNum - 1) * limit;
+
+    const Invoice = (await import('../models/invoice.model.js')).default;
+
+    let query = { patient: patientId };
+    if (type && type !== 'all') query.type = type;
+
+    const [invoices, total] = await Promise.all([
+      Invoice.find(query)
+        .populate({
+          path: 'appointment',
+          populate: { path: 'doctor', select: 'name specialization department' }
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Invoice.countDocuments(query)
+    ]);
+
+    res.render('patient/invoices', {
+      title:       'My Invoices - Healora',
+      user:         req.user,
+      invoices,
+      total,
+      selectedType: type || 'all',
+      currentPage:  pageNum,
+      totalPages:   Math.ceil(total / limit),
+      currentPage: pageNum
+    });
+  } catch (err) {
+    console.error('Get invoices error:', err);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load invoices', user: req.user });
   }
 };
