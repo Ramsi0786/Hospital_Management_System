@@ -1,20 +1,379 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings Management - Healora</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="/css/admin/settings.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin/dashboard.css">
+  <link rel="stylesheet" href="/css/admin/settings.css">
 </head>
 <body>
 
-    <%- include('../partials/admin-sidebar', { currentPage: 'settings' }) %>
-    <%- include('../partials/admin-topbar', { admin: admin, breadcrumb: 'Settings' }) %>    
+<%- include('../partials/admin-sidebar', { currentPage: 'settings' }) %>
+<%- include('../partials/admin-topbar',  { admin, breadcrumb: 'Settings' }) %>
 
-    <%- include('../partials/logout-modal') %>
-    <%- include('../partials/admin-scripts') %>
+<div class="main-content">
+
+  <div class="page-header">
+    <div>
+      <h1>Settings</h1>
+      <p>Configure your hospital management system</p>
+    </div>
+    <button class="btn-save-all" id="saveAllBtn" onclick="saveAll()">
+      <i class="fas fa-save"></i> Save All Changes
+    </button>
+  </div>
+
+  <div class="settings-layout">
+
+    <!-- ── LEFT nav ── -->
+    <div class="settings-nav">
+      <button class="snav-btn active" onclick="switchTab('hospital', this)">
+        <i class="fas fa-hospital"></i> Hospital Info
+      </button>
+      <button class="snav-btn" onclick="switchTab('stats', this)">
+        <i class="fas fa-chart-bar"></i> Hospital Stats
+      </button>
+      <button class="snav-btn" onclick="switchTab('email', this)">
+        <i class="fas fa-envelope"></i> Notifications
+      </button>
+      <button class="snav-btn" onclick="switchTab('password', this)">
+        <i class="fas fa-lock"></i> Change Password
+      </button>
+    </div>
+
+    <!-- ── RIGHT sections ── -->
+    <div class="settings-content">
+
+      <!-- ── Hospital Info ── -->
+      <div class="s-section active" id="tab-hospital">
+        <div class="s-card">
+          <div class="s-card-head">
+            <div class="s-card-title"><i class="fas fa-hospital"></i> Hospital Information</div>
+            <div class="s-card-sub">Contact details shown on public pages, help center and invoices</div>
+          </div>
+          <div class="s-grid">
+            <div class="s-group">
+              <label class="s-label">Support Email</label>
+              <input type="email" class="s-input" id="hospital_email"
+                value="<%= settings.hospital_email %>"
+                placeholder="support@healora.com">
+              <div class="s-hint">Shown in help center, invoices and system emails</div>
+            </div>
+            <div class="s-group">
+              <label class="s-label">Phone Number</label>
+              <input type="text" class="s-input" id="hospital_phone"
+                value="<%= settings.hospital_phone %>"
+                placeholder="+91 12345 67890">
+              <div class="s-hint">Shown in help center and doctor profile pages</div>
+            </div>
+            <div class="s-group">
+              <label class="s-label">Tagline</label>
+              <input type="text" class="s-input" id="hospital_tagline"
+                value="<%= settings.hospital_tagline %>"
+                placeholder="Your Health, Our Priority">
+              <div class="s-hint">Shown on the landing page hero section</div>
+            </div>
+            <div class="s-group">
+              <label class="s-label">Address</label>
+              <input type="text" class="s-input" id="hospital_address"
+                value="<%= settings.hospital_address %>"
+                placeholder="Full hospital address">
+              <div class="s-hint">Shown on landing page and about section</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Hospital Stats ── -->
+      <div class="s-section" id="tab-stats">
+        <div class="s-card">
+          <div class="s-card-head">
+            <div class="s-card-title"><i class="fas fa-chart-bar"></i> Hospital Statistics</div>
+            <div class="s-card-sub">These numbers appear on the public landing page</div>
+          </div>
+          <div class="s-grid">
+            <div class="s-group">
+              <label class="s-label">Years of Experience</label>
+              <div class="s-input-wrap">
+                <input type="number" class="s-input" id="stats_experience"
+                  value="<%= settings.stats_experience %>" min="0" max="200"
+                  style="padding-right:56px;">
+                <span class="s-unit">years</span>
+              </div>
+              <div class="s-hint">Shown as "<%= settings.stats_experience %>+ Years Experience" on the landing page</div>
+            </div>
+            <div class="s-group">
+              <label class="s-label">Awards Won</label>
+              <div class="s-input-wrap">
+                <input type="number" class="s-input" id="stats_awards"
+                  value="<%= settings.stats_awards %>" min="0" max="1000"
+                  style="padding-right:72px;">
+                <span class="s-unit">awards</span>
+              </div>
+              <div class="s-hint">Shown as "<%= settings.stats_awards %>+ Awards Won" on the landing page</div>
+            </div>
+          </div>
+          <div class="s-info-box">
+            <i class="fas fa-info-circle"></i>
+            Doctor count and patient count are calculated automatically from the database — no need to set them manually.
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Email Notifications ── -->
+      <div class="s-section" id="tab-email">
+        <div class="s-card">
+          <div class="s-card-head">
+            <div class="s-card-title"><i class="fas fa-envelope"></i> Email Notifications</div>
+            <div class="s-card-sub">Control which system emails are sent to patients globally</div>
+          </div>
+
+          <%
+            const emailSettings = [
+              { key: 'email_booking_confirmed',     label: 'Booking Confirmed',     desc: 'Sent to patient when an appointment is successfully booked' },
+              { key: 'email_appointment_cancelled', label: 'Appointment Cancelled', desc: 'Sent when an appointment is cancelled by patient, doctor or admin' },
+              { key: 'email_refund_processed',      label: 'Refund Processed',      desc: 'Sent when a refund is credited to the patient wallet' },
+              { key: 'email_appointment_reminder',  label: 'Appointment Reminder',  desc: 'Sent one day before the scheduled appointment' }
+            ];
+          %>
+
+          <% emailSettings.forEach(es => { %>
+            <div class="s-toggle-row">
+              <div class="s-toggle-info">
+                <div class="s-toggle-label"><%= es.label %></div>
+                <div class="s-toggle-desc"><%= es.desc %></div>
+              </div>
+              <label class="s-toggle">
+                <input type="checkbox" id="<%= es.key %>"
+                  <%= settings[es.key] !== false ? 'checked' : '' %>>
+                <span class="s-toggle-slider"></span>
+              </label>
+            </div>
+          <% }) %>
+
+        </div>
+      </div>
+
+      <!-- ── Change Password ── -->
+      <div class="s-section" id="tab-password">
+        <div class="s-card">
+          <div class="s-card-head">
+            <div class="s-card-title"><i class="fas fa-lock"></i> Change Password</div>
+            <div class="s-card-sub">Update your admin account password</div>
+          </div>
+
+          <% const isSuperAdmin = (admin?.id === 'superAdmin'); %>
+
+          <% if (isSuperAdmin) { %>
+            <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:28px;text-align:center;">
+              <i class="fas fa-shield-alt" style="font-size:36px;color:#94a3b8;display:block;margin-bottom:12px;"></i>
+              <p style="font-size:14px;font-weight:700;color:#374151;margin-bottom:6px;">Super Admin Account</p>
+              <p style="font-size:13px;color:#94a3b8;margin:0;">Super admin credentials are managed via environment variables and cannot be changed here.</p>
+            </div>
+          <% } else { %>
+            <div style="max-width:440px;">
+
+              <div class="pw-alert" id="pw-alert"></div>
+
+              <div class="s-group" style="margin-bottom:16px;">
+                <label class="s-label">Current Password</label>
+                <div style="position:relative;">
+                  <input type="password" id="currentPw" class="s-input"
+                    placeholder="Enter current password"
+                    style="padding-right:42px;">
+                  <button type="button" onclick="togglePw('currentPw',this)"
+                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;padding:4px;">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="s-group" style="margin-bottom:16px;">
+                <label class="s-label">New Password</label>
+                <div style="position:relative;">
+                  <input type="password" id="newPw" class="s-input"
+                    placeholder="At least 6 characters"
+                    style="padding-right:42px;">
+                  <button type="button" onclick="togglePw('newPw',this)"
+                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;padding:4px;">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="s-group" style="margin-bottom:22px;">
+                <label class="s-label">Confirm New Password</label>
+                <div style="position:relative;">
+                  <input type="password" id="confirmPw" class="s-input"
+                    placeholder="Repeat new password"
+                    style="padding-right:42px;">
+                  <button type="button" onclick="togglePw('confirmPw',this)"
+                    style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:#94a3b8;cursor:pointer;font-size:14px;padding:4px;">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <button class="btn-save-all" id="savePwBtn" onclick="changePassword()">
+                <i class="fas fa-key"></i> Update Password
+              </button>
+
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/logout-modal') %>
+<%- include('../partials/loading') %>
+<%- include('../partials/admin-scripts') %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/alerts.js"></script>
+<script src="/js/loader.js"></script>
+
+<script>
+  /* ── Tab switching ── */
+  function switchTab(id, btn) {
+    document.querySelectorAll('.s-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.snav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  /* ── Password visibility toggle ── */
+  function togglePw(id, btn) {
+    const input    = document.getElementById(id);
+    const icon     = btn.querySelector('i');
+    input.type     = input.type === 'password' ? 'text' : 'password';
+    icon.className = input.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+  }
+
+  /* ── Password alert helper ── */
+  function showPwAlert(type, msg) {
+    const el = document.getElementById('pw-alert');
+    if (!el) return;
+    el.style.display    = 'flex';
+    el.style.background = type === 'success' ? '#f0fdf4' : '#fef2f2';
+    el.style.color      = type === 'success' ? '#059669' : '#dc2626';
+    el.style.border     = `1px solid ${type === 'success' ? '#bbf7d0' : '#fecaca'}`;
+    el.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}" style="margin-right:8px;"></i>${msg}`;
+    if (type === 'success') {
+      setTimeout(() => { el.style.display = 'none'; el.innerHTML = ''; }, 4000);
+    }
+  }
+
+  /* ── Collect all settings ── */
+  function collectSettings() {
+    const textFields = [
+      'hospital_email', 'hospital_phone',
+      'hospital_tagline', 'hospital_address'
+    ];
+    const numFields = [
+      'stats_experience', 'stats_awards'
+    ];
+    const boolFields = [
+      'email_booking_confirmed', 'email_appointment_cancelled',
+      'email_refund_processed',  'email_appointment_reminder'
+    ];
+
+    const data = {};
+
+    textFields.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) data[k] = el.value.trim();
+    });
+    numFields.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) data[k] = Number(el.value);
+    });
+    boolFields.forEach(k => {
+      const el = document.getElementById(k);
+      if (el) data[k] = el.checked;
+    });
+
+    return data;
+  }
+
+  /* ── Save all ── */
+  async function saveAll() {
+    const btn = document.getElementById('saveAllBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      const res  = await fetch('/admin/settings', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(collectSettings())
+      });
+      const data = await res.json();
+      if (data.success) {
+        Alert.success('Settings saved successfully!');
+      } else {
+        Alert.error(data.error || 'Failed to save settings.');
+      }
+    } catch {
+      Alert.error('Something went wrong. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save All Changes';
+    }
+  }
+
+  /* ── Change password ── */
+  async function changePassword() {
+    const currentPw = document.getElementById('currentPw')?.value.trim();
+    const newPw     = document.getElementById('newPw')?.value.trim();
+    const confirmPw = document.getElementById('confirmPw')?.value.trim();
+    const btn       = document.getElementById('savePwBtn');
+
+    if (!currentPw || !newPw || !confirmPw) {
+      showPwAlert('error', 'All fields are required.'); return;
+    }
+    if (newPw.length < 6) {
+      showPwAlert('error', 'New password must be at least 6 characters.'); return;
+    }
+    if (newPw !== confirmPw) {
+      showPwAlert('error', 'New passwords do not match.'); return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+    try {
+      const res  = await fetch('/admin/settings/change-password', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          currentPassword: currentPw,
+          newPassword:     newPw,
+          confirmPassword: confirmPw
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showPwAlert('success', data.message || 'Password updated successfully.');
+        document.getElementById('currentPw').value = '';
+        document.getElementById('newPw').value     = '';
+        document.getElementById('confirmPw').value = '';
+      } else {
+        showPwAlert('error', data.error || 'Failed to update password.');
+      }
+    } catch {
+      showPwAlert('error', 'Something went wrong. Please try again.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-key"></i> Update Password';
+    }
+  }
+</script>
 </body>
 </html>

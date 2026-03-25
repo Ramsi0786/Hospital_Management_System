@@ -391,3 +391,316 @@ export const sendAppointmentCancelledByDoctorEmail = async (email, patientName, 
 
   await transporter.sendMail(mailOptions);
 };
+
+/* ══════════════════════════════════════════════
+   LEAVE REQUEST EMAILS
+══════════════════════════════════════════════ */
+
+const baseUrl = () => process.env.BASE_URL || 'http://localhost:3000';
+
+const emailWrapper = (content) => `
+<!DOCTYPE html>
+<html>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+  <div style="max-width:600px;margin:0 auto;padding:28px 16px;">
+    <div style="background:linear-gradient(135deg,#0f4c75 0%,#1a7f8e 100%);border-radius:14px 14px 0 0;padding:28px 32px;text-align:center;">
+      <h1 style="margin:0;color:white;font-size:24px;font-weight:800;">HEALORA</h1>
+      <p style="margin:4px 0 0;color:rgba(255,255,255,.7);font-size:12px;">Hospital Management System</p>
+    </div>
+    <div style="background:white;border-radius:0 0 14px 14px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,.08);">
+      ${content}
+      <p style="margin:28px 0 0;font-size:12px;color:#94a3b8;text-align:center;">
+        © ${new Date().getFullYear()} Healora Hospital. This is an automated email.
+      </p>
+    </div>
+  </div>
+</body>
+</html>`;
+
+const infoRow = (label, value) =>
+  `<tr style="border-top:1px solid #f0f2f5;">
+    <td style="padding:8px 0;font-size:13px;color:#64748b;width:45%;">${label}</td>
+    <td style="padding:8px 0;font-size:13px;font-weight:700;color:#1a202c;">${value}</td>
+  </tr>`;
+
+const detailsTable = (rows) =>
+  `<div style="background:#f8fafc;border-radius:10px;padding:16px;margin:16px 0;">
+    <table style="width:100%;border-collapse:collapse;">
+      ${rows}
+    </table>
+  </div>`;
+
+// ── Admin: Normal leave request ──────────────────────────
+export const sendLeaveRequestAdminEmail = async (adminEmail, data) => {
+  const { doctorName, date, type, halfDayPeriod, reason,
+          affectedCount, earningsLoss, salaryImpact, withinAllowance } = data;
+
+  const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US',{
+    weekday:'long', month:'long', day:'numeric', year:'numeric'
+  });
+
+  const typeLabel = type === 'half'
+    ? `Half Day (${halfDayPeriod === 'morning' ? 'Morning' : 'Afternoon'})`
+    : 'Full Day';
+
+  const html = emailWrapper(`
+    <h2 style="font-size:20px;font-weight:800;color:#1a202c;margin:0 0 6px;">Leave Request Received</h2>
+    <p style="color:#64748b;margin:0 0 20px;">A new leave request requires your approval.</p>
+
+    ${detailsTable(`
+      ${infoRow('Doctor', `Dr. ${doctorName}`)}
+      ${infoRow('Date', dateLabel)}
+      ${infoRow('Leave Type', typeLabel)}
+      ${infoRow('Reason', reason)}
+      ${infoRow('Appointments Affected', `${affectedCount}`)}
+      ${infoRow('Consultation Fees Lost', `₹${earningsLoss}`)}
+      ${infoRow('Salary Impact', withinAllowance ? 'No deduction (within allowance)' : `₹${salaryImpact} deduction applicable`)}
+    `)}
+
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${baseUrl()}/admin/leave-requests"
+         style="display:inline-block;background:linear-gradient(135deg,#0f4c75,#1a7f8e);color:white;text-decoration:none;padding:13px 32px;border-radius:10px;font-size:14px;font-weight:700;">
+        Review Leave Request
+      </a>
+    </div>
+  `);
+
+  await transporter.sendMail({
+    from:    `"Healora Admin" <${process.env.SMTP_USER}>`,
+    to:      adminEmail,
+    subject: `Leave Request — Dr. ${doctorName} — ${dateLabel}`,
+    html
+  });
+};
+
+// ── Admin: Emergency leave request ──────────────────────
+export const sendEmergencyLeaveAdminEmail = async (adminEmail, data) => {
+  const { doctorName, date, reason, affectedCount,
+          earningsLoss, autoApproveAt } = data;
+
+  const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US',{
+    weekday:'long', month:'long', day:'numeric', year:'numeric'
+  });
+
+  const autoTime = new Date(autoApproveAt).toLocaleTimeString('en-US',{
+    hour:'2-digit', minute:'2-digit'
+  });
+
+  const html = emailWrapper(`
+    <div style="background:#fef2f2;border:2px solid #fecaca;border-radius:10px;padding:14px 18px;margin-bottom:20px;text-align:center;">
+      <p style="margin:0;font-size:18px;font-weight:800;color:#dc2626;">🚨 URGENT — Emergency Leave Request</p>
+      <p style="margin:6px 0 0;font-size:13px;color:#ef4444;">
+        Auto-approves at <strong>${autoTime}</strong> if no action taken
+      </p>
+    </div>
+
+    <h2 style="font-size:18px;font-weight:800;color:#1a202c;margin:0 0 16px;">Immediate Action Required</h2>
+
+    ${detailsTable(`
+      ${infoRow('Doctor', `Dr. ${doctorName}`)}
+      ${infoRow('Date', dateLabel)}
+      ${infoRow('Leave Type', 'Emergency — Full Day')}
+      ${infoRow('Reason', reason)}
+      ${infoRow('Appointments Affected', `${affectedCount}`)}
+      ${infoRow('Consultation Fees Lost', `₹${earningsLoss}`)}
+      ${infoRow('Auto-approves at', autoTime)}
+    `)}
+
+    <p style="font-size:13px;color:#64748b;line-height:1.6;margin-bottom:20px;">
+      If you do not respond within 2 hours, this leave will be <strong>automatically approved</strong>
+      and all affected appointments will be cancelled with full refunds.
+    </p>
+
+    <div style="text-align:center;margin:20px 0;display:flex;gap:12px;justify-content:center;">
+      <a href="${baseUrl()}/admin/leave-requests"
+         style="display:inline-block;background:#dc2626;color:white;text-decoration:none;padding:13px 28px;border-radius:10px;font-size:14px;font-weight:700;">
+        Review Now
+      </a>
+    </div>
+  `);
+
+  await transporter.sendMail({
+    from:    `"Healora Admin" <${process.env.SMTP_USER}>`,
+    to:      adminEmail,
+    subject: `🚨 URGENT: Emergency Leave — Dr. ${doctorName} — ${dateLabel}`,
+    html
+  });
+};
+
+// ── Doctor: Leave approved ───────────────────────────────
+export const sendLeaveApprovedEmail = async (doctorEmail, data) => {
+  const { doctorName, date, type, halfDayPeriod,
+          salaryDeductionAmount, withinAllowance, adminNote } = data;
+
+  const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US',{
+    weekday:'long', month:'long', day:'numeric', year:'numeric'
+  });
+
+  const typeLabel = type === 'half'
+    ? `Half Day (${halfDayPeriod === 'morning' ? 'Morning' : 'Afternoon'})`
+    : type === 'emergency' ? 'Emergency Leave' : 'Full Day';
+
+  const html = emailWrapper(`
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:#ecfdf5;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px;">✅</div>
+      <h2 style="font-size:20px;font-weight:800;color:#059669;margin:0;">Leave Approved</h2>
+    </div>
+
+    <p style="color:#374151;margin-bottom:20px;">Dear Dr. <strong>${doctorName}</strong>,</p>
+    <p style="color:#64748b;line-height:1.6;margin-bottom:16px;">
+      Your leave request has been <strong style="color:#059669;">approved</strong> by the administration.
+    </p>
+
+    ${detailsTable(`
+      ${infoRow('Date', dateLabel)}
+      ${infoRow('Leave Type', typeLabel)}
+      ${infoRow('Salary Deduction', withinAllowance ? 'None — within your monthly allowance' : `₹${salaryDeductionAmount} (pending confirmation)`)}
+    `)}
+
+    ${adminNote ? `
+      <div style="background:#f0f9ff;border-left:3px solid #0f4c75;border-radius:6px;padding:12px 16px;margin:16px 0;">
+        <p style="margin:0;font-size:13px;color:#374151;"><strong>Admin Note:</strong> ${adminNote}</p>
+      </div>` : ''}
+
+    <p style="font-size:13px;color:#64748b;line-height:1.6;margin-top:16px;">
+      All appointments scheduled for this date have been cancelled and patients have been notified.
+    </p>
+  `);
+
+  await transporter.sendMail({
+    from:    `"Healora Admin" <${process.env.SMTP_USER}>`,
+    to:      doctorEmail,
+    subject: `Leave Approved — ${dateLabel}`,
+    html
+  });
+};
+
+// ── Doctor: Leave rejected ───────────────────────────────
+export const sendLeaveRejectedEmail = async (doctorEmail, data) => {
+  const { doctorName, date, type, adminNote } = data;
+
+  const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US',{
+    weekday:'long', month:'long', day:'numeric', year:'numeric'
+  });
+
+  const html = emailWrapper(`
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:#fef2f2;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px;">❌</div>
+      <h2 style="font-size:20px;font-weight:800;color:#dc2626;margin:0;">Leave Request Rejected</h2>
+    </div>
+
+    <p style="color:#374151;margin-bottom:16px;">Dear Dr. <strong>${doctorName}</strong>,</p>
+    <p style="color:#64748b;line-height:1.6;margin-bottom:16px;">
+      Unfortunately, your leave request for <strong>${dateLabel}</strong> has been <strong style="color:#dc2626;">rejected</strong>.
+    </p>
+
+    ${adminNote ? `
+      <div style="background:#fef2f2;border-left:3px solid #dc2626;border-radius:6px;padding:12px 16px;margin:16px 0;">
+        <p style="margin:0;font-size:13px;color:#374151;"><strong>Reason:</strong> ${adminNote}</p>
+      </div>` : ''}
+
+    <p style="font-size:13px;color:#64748b;line-height:1.6;">
+      Your scheduled appointments remain active. If you have concerns, please contact the administration directly.
+    </p>
+  `);
+
+  await transporter.sendMail({
+    from:    `"Healora Admin" <${process.env.SMTP_USER}>`,
+    to:      doctorEmail,
+    subject: `Leave Request Rejected — ${dateLabel}`,
+    html
+  });
+};
+
+// ── Doctor: Auto-approved ────────────────────────────────
+export const sendLeaveAutoApprovedEmail = async (doctorEmail, data) => {
+  const { doctorName, date, salaryDeductionAmount, withinAllowance } = data;
+
+  const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US',{
+    weekday:'long', month:'long', day:'numeric', year:'numeric'
+  });
+
+  const html = emailWrapper(`
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:#fffbeb;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px;">⏰</div>
+      <h2 style="font-size:20px;font-weight:800;color:#d97706;margin:0;">Emergency Leave Auto-Approved</h2>
+    </div>
+
+    <p style="color:#374151;margin-bottom:16px;">Dear Dr. <strong>${doctorName}</strong>,</p>
+    <p style="color:#64748b;line-height:1.6;margin-bottom:16px;">
+      Your emergency leave request for <strong>${dateLabel}</strong> has been
+      <strong style="color:#d97706;">automatically approved</strong> as no admin response
+      was received within 2 hours.
+    </p>
+
+    ${detailsTable(`
+      ${infoRow('Date', dateLabel)}
+      ${infoRow('Type', 'Emergency Leave — Auto Approved')}
+      ${infoRow('Salary Deduction', withinAllowance ? 'None — within allowance' : `₹${salaryDeductionAmount} (pending admin confirmation)`)}
+    `)}
+
+    <p style="font-size:13px;color:#64748b;margin-top:16px;">
+      All affected appointments have been cancelled and patients have been notified with full refunds.
+      We wish you a speedy recovery.
+    </p>
+  `);
+
+  await transporter.sendMail({
+    from:    `"Healora" <${process.env.SMTP_USER}>`,
+    to:      doctorEmail,
+    subject: `Emergency Leave Auto-Approved — ${dateLabel}`,
+    html
+  });
+};
+
+// ── Patient: Appointment cancelled due to doctor leave ───
+export const sendAppointmentCancelledLeaveEmail = async (patientEmail, data) => {
+  const { patientName, doctorName, date, timeSlot, refundAmount, paymentMethod } = data;
+
+  const dateLabel = new Date(date + 'T00:00:00').toLocaleDateString('en-US',{
+    weekday:'long', month:'long', day:'numeric', year:'numeric'
+  });
+
+  const refundHtml = paymentMethod !== 'cash' && refundAmount > 0
+    ? `<div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;margin:16px 0;">
+        <p style="font-weight:700;color:#059669;margin:0 0 6px;">💰 Full Refund Issued</p>
+        <p style="font-size:13px;color:#374151;margin:0;">
+          ₹${refundAmount} has been credited to your Healora wallet immediately.
+        </p>
+       </div>`
+    : '';
+
+  const html = emailWrapper(`
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="width:60px;height:60px;background:#fffbeb;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:26px;margin-bottom:12px;">📅</div>
+      <h2 style="font-size:20px;font-weight:800;color:#d97706;margin:0;">Appointment Cancelled</h2>
+    </div>
+
+    <p style="color:#374151;margin-bottom:16px;">Dear <strong>${patientName}</strong>,</p>
+    <p style="color:#64748b;line-height:1.6;margin-bottom:16px;">
+      We regret to inform you that your appointment with <strong>Dr. ${doctorName}</strong>
+      on <strong>${dateLabel}</strong> at <strong>${timeSlot}</strong> has been cancelled
+      due to the doctor being unavailable on that day.
+    </p>
+
+    ${refundHtml}
+
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${baseUrl()}/patient/doctors"
+         style="display:inline-block;background:linear-gradient(135deg,#0f4c75,#1a7f8e);color:white;text-decoration:none;padding:13px 28px;border-radius:10px;font-size:14px;font-weight:700;">
+        Book Another Appointment
+      </a>
+    </div>
+
+    <p style="font-size:13px;color:#94a3b8;text-align:center;">
+      We sincerely apologize for the inconvenience caused.
+    </p>
+  `);
+
+  await transporter.sendMail({
+    from:    `"Healora" <${process.env.SMTP_USER}>`,
+    to:      patientEmail,
+    subject: `Appointment Cancelled — Dr. ${doctorName} — ${dateLabel}`,
+    html
+  });
+};

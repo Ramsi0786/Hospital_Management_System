@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs';
 import RefreshToken from '../models/refreshToken.model.js';
 import Wallet from '../models/wallet.model.js';
 import WalletTransaction from '../models/walletTransaction.model.js';
-
+import Notification from '../models/notification.model.js';
 
 export const getDashboard = (req, res) => {
   res.render("patient/dashboard", {
@@ -42,7 +42,6 @@ export const getDashboardStats = async (req, res) => {
       .limit(4)
       .select('doctor date timeSlot status consultationFee department');
 
-    // ── Appointment chart — last 6 months ──────────
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
     sixMonthsAgo.setDate(1);
@@ -57,7 +56,6 @@ export const getDashboardStats = async (req, res) => {
       { $sort: { '_id.year': 1, '_id.month': 1 } }
     ]);
 
-    // ── Spending chart — last 6 months ──────────────
     const spendingByMonth = await WalletTransaction.aggregate([
       { $match: {
         patient:         patientId,
@@ -675,5 +673,59 @@ export const deleteAccount = async (req, res) => {
   } catch (err) {
     console.error('Delete account error:', err);
     res.status(500).json({ success: false, error: 'Failed to delete account.' });
+  }
+};
+
+export const getNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({
+      recipient:     req.user._id,
+      recipientType: 'patient'
+    }).sort({ createdAt: -1 }).limit(20);
+
+    const unreadCount = await Notification.countDocuments({
+      recipient:     req.user._id,
+      recipientType: 'patient',
+      isRead:        false
+    });
+
+    res.json({ success: true, notifications, unreadCount });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch notifications' });
+  }
+};
+
+export const markAllRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { recipient: req.user._id, recipientType: 'patient', isRead: false },
+      { isRead: true }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to mark notifications' });
+  }
+};
+
+export const markOneRead = async (req, res) => {
+  try {
+    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to mark notification' });
+  }
+};
+
+export const getAppointmentPrescription = async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment || appointment.patient.toString() !== req.user._id.toString()) {
+      return res.status(404).json({ success: false, error: 'Appointment not found' });
+    }
+    const Prescription = (await import('../models/prescription.model.js')).default;
+    const prescription = await Prescription.findOne({ appointment: req.params.id });
+    res.json({ success: true, prescription: prescription || null });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch prescription' });
   }
 };

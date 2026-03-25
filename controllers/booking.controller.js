@@ -7,6 +7,7 @@ import Review from '../models/review.model.js';
 import { resolveSlots } from './availability.controller.js';
 import { generateInvoicePDF, saveInvoiceRecord } from '../utils/generateInvoice.js';
 import { sendBookingConfirmationEmail } from '../utils/sendEmail.js';
+import { notifyAppointmentBooked, notifyAppointmentCancelled, notifyRefundProcessed } from '../utils/createNotification.js';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
@@ -170,7 +171,8 @@ export const createBooking = async (req, res) => {
 
       const patient = await (await import('../models/patient.model.js')).default.findById(patientId).select('name email phone');
       sendInvoiceAndEmail(appointment, doctor, patient);
-
+      notifyAppointmentBooked(appointment, doctor, patient).catch(e => console.error('Notify error:', e));
+      
       return res.json({
         success: true,
         method:  'cash',
@@ -224,7 +226,8 @@ export const createBooking = async (req, res) => {
 
       const patient = await (await import('../models/patient.model.js')).default.findById(patientId).select('name email phone');
       sendInvoiceAndEmail(appointment, doctor, patient);
-
+      notifyAppointmentBooked(appointment, doctor, patient).catch(e => console.error('Notify error:', e));
+      
       return res.json({
         success: true,
         method:  'wallet',
@@ -332,7 +335,8 @@ export const verifyRazorpayPayment = async (req, res) => {
 
     const patientDoc = await (await import('../models/patient.model.js')).default.findById(patientId).select('name email phone');
     sendInvoiceAndEmail(appointment, doctor, patientDoc);
-
+    notifyAppointmentBooked(appointment, doctor, patientDoc).catch(e => console.error('Notify error:', e));
+    
     res.json({
       success: true,
       appointmentId: appointment._id,
@@ -454,7 +458,23 @@ appointment.refundStatus       = isCash ? 'none' : (amount > 0 ? 'pending' : 'no
 
     await appointment.save();
 
-    res.json({
+// ── Notifications ──
+try {
+  const [docN, patN] = await Promise.all([
+    Doctor.findById(appointment.doctor).select('name _id'),
+    Promise.resolve({ _id: patientId, name: req.user.name })
+  ]);
+  if (docN) {
+    await notifyAppointmentCancelled(appointment, docN, patN, 'patient');
+    if (amount > 0) {
+      await notifyRefundProcessed(patN, amount, appointment._id);
+    }
+  }
+} catch (notifErr) {
+  console.error('Notify error (non-fatal):', notifErr);
+}
+
+res.json({
   success: true,
   message: amount > 0
     ? `Appointment cancelled. ₹${amount} refund (${percentage}%) will be processed.`

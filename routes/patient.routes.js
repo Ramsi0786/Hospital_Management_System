@@ -50,6 +50,7 @@ router.post('/appointments/:id/cancel',                        bookingController
 router.post('/appointments/:id/review',                        bookingController.submitReview);
 router.get('/appointments/:appointmentId/invoice/download',    bookingController.downloadInvoice);
 router.get('/appointments/:id',                                patientController.getAppointmentDetail);
+router.get('/appointments/:id/prescription', patientController.getAppointmentPrescription);
 
 router.route('/setup-password')
   .get((req, res) => res.render("patient/setup-password", { title: "Setup Password - Healora" }))
@@ -87,6 +88,11 @@ router.get('/settings',                      patientController.getSettings);
 router.post('/settings/change-password',     patientController.changePassword);
 router.post('/settings/notifications',       patientController.updateNotifications);
 router.delete('/settings/delete-account',    patientController.deleteAccount);
+
+router.get('/notifications',          patientController.getNotifications);
+router.patch('/notifications/read',   patientController.markAllRead);
+router.patch('/notifications/:id/read', patientController.markOneRead);
+
 
 router.route('/logout')
   .get(authController.logout)

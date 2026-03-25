@@ -139,7 +139,14 @@
       <% }) %>
     </div>
     <% if (totalPages > 1) { %>
-      <%- include('../partials/pagination', { currentPage, totalPages, selectedStatus }) %>
+      <%- include('../partials/pagination', { 
+  currentPage, 
+  totalPages, 
+  selectedStatus,
+  searchQuery: '',
+  selectedDepartment: '',
+  sortBy: ''
+}) %>
     <% } %>
   <% } %>
 </div>

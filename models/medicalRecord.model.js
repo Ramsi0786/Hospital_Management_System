@@ -8,7 +8,9 @@ const medicalRecordSchema = new mongoose.Schema({
   fileUrl:   { type: String, required: true },
   fileType:  { type: String, enum: ['pdf', 'image'], required: true },
   publicId:  { type: String, required: true },
-  recordDate:{ type: String, required: true }
+  recordDate:{ type: String, required: true },
+  appointment: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment', default: null },
+  doctor:      { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor',      default: null }
 }, { timestamps: true });
 
 export default mongoose.model('MedicalRecord', medicalRecordSchema);

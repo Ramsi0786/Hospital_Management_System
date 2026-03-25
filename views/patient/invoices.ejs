@@ -147,15 +147,9 @@
 <%- include('../partials/patient-sidebar', { currentPage: 'invoices' }) %>
 
 <div class="main-content">
-  <div class="top-bar">
-    <h1 class="page-title">My Invoices</h1>
-    <button class="user-profile-btn">
-      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
-      <span class="user-name-text" style="font-size:14px;font-weight:600;color:#2d3748;">
-        Hello <%= user.name.split(' ')[0] %>
-      </span>
-    </button>
-  </div>
+    <%- include('../partials/patient-topbar', {
+    pageTitle:    'My Invoices',
+  }) %>
 
   <%
     const allInvoices   = invoices;

@@ -107,13 +107,9 @@
 <div id="healora-modal-root"></div>
 
 <div class="main-content">
-  <div class="top-bar">
-    <h1 class="page-title">Medical Records</h1>
-    <button class="user-profile-btn">
-      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
-      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
-    </button>
-  </div>
+    <%- include('../partials/patient-topbar', {
+    pageTitle:    'Medical Records',
+  }) %>
 
   <div class="tabs-row">
     <div class="tab-list">
@@ -147,7 +143,43 @@
         </p>
       <% } else { %>
         <div class="records-grid" style="margin-top:24px;text-align:left;">
-          <%- include('./partials/record-cards', { records }) %>
+          <% records.forEach(record => { %>
+            <div class="record-card" id="record-<%= record._id %>">
+              <span class="record-type-badge badge-prescription">Prescription</span>
+              <div class="record-header">
+                <div class="record-icon <%= record.fileType || 'pdf' %>">
+                  <i class="fas fa-prescription" style="color:#2563eb;"></i>
+                </div>
+                <div style="min-width:0;">
+                  <div class="record-title"><%= record.title %></div>
+                  <div class="record-date">
+                    <i class="fas fa-calendar"></i>
+                    <%= new Date(record.recordDate + 'T00:00:00').toLocaleDateString('en-US',{ day:'numeric', month:'short', year:'numeric' }) %>
+                  </div>
+                </div>
+              </div>
+              <% if (record.notes) { %>
+                <div class="record-notes"><%= record.notes.substring(0, 120) %><%= record.notes.length > 120 ? '…' : '' %></div>
+              <% } %>
+              <div class="record-actions">
+                <% if (record.fileUrl) { %>
+                  <button class="btn-action btn-view"
+                    onclick="viewRecord('<%= record.fileType %>', '<%= record.fileUrl %>')">
+                    <i class="fas fa-eye"></i> View File
+                  </button>
+                  <a href="<%= record.fileUrl %>" download
+                     class="btn-action btn-view" style="background:#f0fdf4;color:#059669;text-decoration:none;">
+                    <i class="fas fa-download"></i> Download
+                  </a>
+                <% } else { %>
+                  <div style="font-size:12px;color:#94a3b8;padding:8px 0;font-weight:500;">
+                    <i class="fas fa-file-medical" style="margin-right:4px;"></i>
+                    Text prescription — no file attached
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          <% }) %>
         </div>
       <% } %>
     </div>

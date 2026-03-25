@@ -19,13 +19,9 @@
 <div id="healora-modal-root"></div>
 
 <div class="main-content">
-  <div class="top-bar">
-    <h1 class="page-title">My Wallet</h1>
-    <button class="user-profile-btn">
-      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
-      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
-    </button>
-  </div>
+    <%- include('../partials/patient-topbar', {
+    pageTitle:    'My Wallet'
+  }) %>
 
   <div class="top-grid">
     <div class="balance-card">

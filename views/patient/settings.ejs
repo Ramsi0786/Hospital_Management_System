@@ -13,13 +13,6 @@
     body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
     .main-content { margin-left:230px; padding:30px; min-height:100vh; }
 
-    /* Top bar */
-    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
-    .page-title { font-size:26px; font-weight:800; color:#1a202c; }
-    .user-profile-btn { display:flex; align-items:center; gap:10px; background:white; padding:8px 16px; border-radius:50px; border:none; box-shadow:0 2px 8px rgba(0,0,0,.08); cursor:default; }
-    .user-avatar-small { width:35px; height:35px; border-radius:50%; background:#203f6a; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; }
-    .user-name { font-size:14px; font-weight:600; color:#2d3748; }
-
     /* Layout */
     .settings-layout { display:grid; grid-template-columns:220px 1fr; gap:24px; align-items:start; }
 
@@ -48,39 +41,78 @@
     .auth-badge.google { background:#fff0f0; color:#e53e3e; }
     .auth-badge.local  { background:#f0fdf4; color:#059669; }
 
-    /* Form */
+    /* ── Password form ── */
     .form-group { margin-bottom:18px; }
-    .form-label { font-size:12px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px; display:block; }
-    .form-input { width:100%; padding:11px 14px; border:1.5px solid #e2e8f0; border-radius:10px; font-size:14px; font-family:inherit; color:#374151; outline:none; transition:border-color .2s; background:white; }
-    .form-input:focus { border-color:#203f6a; }
-    .form-input.error { border-color:#dc2626; }
-    .input-wrap { position:relative; }
-    .toggle-pw { position:absolute; right:12px; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; cursor:pointer; font-size:14px; padding:4px; }
-    .toggle-pw:hover { color:#374151; }
+    .form-group:last-of-type { margin-bottom:0; }
+    .form-label { font-size:11px; font-weight:700; color:#374151; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; display:block; }
 
-    .btn-save { padding:11px 28px; background:#203f6a; color:white; border:none; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px; }
-    .btn-save:hover { background:#1a3456; transform:translateY(-1px); }
-    .btn-save:disabled { background:#94a3b8; cursor:not-allowed; transform:none; }
+    .fi-wrap { position:relative; }
+    .form-input {
+      width:100%; padding:11px 42px 11px 14px;
+      border:1.5px solid #e2e8f0; border-radius:10px;
+      font-size:13px; font-weight:500;
+      font-family:'Plus Jakarta Sans',sans-serif;
+      color:#1a202c; background:white; outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .form-input:focus { border-color:#203f6a; box-shadow:0 0 0 3px rgba(32,63,106,.08); }
+    .form-input.field-error   { border-color:#dc2626; }
+    .form-input.field-success { border-color:#059669; }
+
+    .toggle-pw {
+      position:absolute; right:13px; top:50%;
+      transform:translateY(-50%);
+      background:none; border:none; color:#94a3b8;
+      cursor:pointer; font-size:13px; padding:0;
+      transition:color .2s; line-height:1;
+    }
+    .toggle-pw:hover { color:#203f6a; }
+
+    /* Strength bar */
+    .strength-wrap { margin-top:8px; }
+    .strength-bar-bg { height:4px; border-radius:2px; background:#e2e8f0; overflow:hidden; margin-bottom:5px; }
+    .strength-bar-fill { height:100%; border-radius:2px; transition:width .3s, background .3s; width:0%; }
+    .strength-label { font-size:11px; font-weight:600; color:#94a3b8; }
+
+    /* Rules checklist */
+    .pw-rules {
+      background:#f8fafc; border:1.5px solid #e2e8f0;
+      border-radius:10px; padding:12px 14px; margin-top:8px;
+      display:none;
+    }
+    .pw-rules.visible { display:block; }
+    .pw-rule { display:flex; align-items:center; gap:7px; font-size:11px; font-weight:600; color:#94a3b8; padding:2px 0; transition:color .2s; }
+    .pw-rule i { font-size:10px; transition:color .2s; }
+    .pw-rule.valid   { color:#059669; }
+    .pw-rule.invalid { color:#94a3b8; }
 
     /* Alert */
-    .s-alert { padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:16px; display:none; align-items:center; gap:8px; }
-    .s-alert.success { background:#f0fdf4; color:#059669; border:1px solid #bbf7d0; display:flex; }
-    .s-alert.error   { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; display:flex; }
+    .s-alert { padding:12px 16px; border-radius:10px; font-size:13px; font-weight:600; margin-bottom:16px; display:none; align-items:center; gap:8px; animation:alertIn .25s ease; }
+    @keyframes alertIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+    .s-alert.success { background:#f0fdf4; color:#059669; border:1.5px solid rgba(5,150,105,.2); display:flex; }
+    .s-alert.error   { background:#fef2f2; color:#dc2626; border:1.5px solid rgba(220,38,38,.2); display:flex; }
+    .s-alert i { flex-shrink:0; }
+
+    .btn-save {
+      padding:11px 28px; background:#203f6a; color:white;
+      border:none; border-radius:10px; font-size:14px; font-weight:700;
+      font-family:inherit; cursor:pointer; transition:all .2s;
+      display:inline-flex; align-items:center; gap:8px; margin-top:18px;
+    }
+    .btn-save:hover:not(:disabled) { background:#1a3456; transform:translateY(-1px); box-shadow:0 4px 12px rgba(32,63,106,.25); }
+    .btn-save:disabled { opacity:.6; cursor:not-allowed; transform:none; }
 
     /* Notification toggles */
     .notif-row { display:flex; align-items:center; justify-content:space-between; padding:16px 0; border-bottom:1px solid #f0f2f5; }
     .notif-row:last-child { border-bottom:none; }
     .notif-info h4 { font-size:14px; font-weight:700; color:#1a202c; margin-bottom:3px; }
     .notif-info p  { font-size:12px; color:#94a3b8; margin:0; }
-
-    /* Toggle switch */
     .toggle-switch { position:relative; width:46px; height:26px; flex-shrink:0; }
     .toggle-switch input { opacity:0; width:0; height:0; }
     .toggle-slider { position:absolute; cursor:pointer; inset:0; background:#e2e8f0; border-radius:26px; transition:.3s; }
     .toggle-slider:before { content:''; position:absolute; width:20px; height:20px; left:3px; bottom:3px; background:white; border-radius:50%; transition:.3s; box-shadow:0 1px 4px rgba(0,0,0,.15); }
     .toggle-switch input:checked + .toggle-slider { background:#203f6a; }
     .toggle-switch input:checked + .toggle-slider:before { transform:translateX(20px); }
-
     .notif-save-wrap { margin-top:20px; display:flex; align-items:center; gap:14px; }
 
     /* Danger zone */
@@ -92,11 +124,6 @@
     .danger-list li i { color:#dc2626; font-size:11px; }
     .btn-danger { padding:11px 24px; background:white; color:#dc2626; border:2px solid #fecaca; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; transition:all .2s; display:inline-flex; align-items:center; gap:8px; }
     .btn-danger:hover { background:#fef2f2; border-color:#dc2626; }
-
-    /* Google notice */
-    .google-notice { background:#fff7ed; border:1.5px solid #fed7aa; border-radius:12px; padding:16px 18px; display:flex; align-items:flex-start; gap:12px; margin-bottom:20px; }
-    .google-notice i { color:#ea580c; font-size:18px; margin-top:1px; flex-shrink:0; }
-    .google-notice p { font-size:13px; color:#9a3412; margin:0; line-height:1.6; }
 
     /* Modal */
     #healora-modal-root { position:fixed; inset:0; z-index:9999; pointer-events:none; }
@@ -133,14 +160,7 @@
 </div>
 
 <div class="main-content">
-
-  <div class="top-bar">
-    <h1 class="page-title">Settings</h1>
-    <button class="user-profile-btn">
-      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
-      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
-    </button>
-  </div>
+  <%- include('../partials/patient-topbar', { pageTitle: 'Settings' }) %>
 
   <div class="settings-layout">
 
@@ -165,7 +185,7 @@
     <!-- Sections -->
     <div>
 
-      <!-- ── Account Info ────────────────────────────── -->
+      <!-- ── Account Info ── -->
       <div class="settings-section active" id="section-account">
         <div class="s-card">
           <div class="s-card-title"><i class="fas fa-user-circle"></i> Account Information</div>
@@ -180,31 +200,24 @@
               <i class="fas fa-edit"></i> Edit
             </a>
           </div>
-
           <div class="account-info-row">
             <div>
               <div class="ai-label">Email Address</div>
               <div class="ai-value"><%= user.email %></div>
             </div>
           </div>
-
           <div class="account-info-row">
             <div>
               <div class="ai-label">Login Method</div>
               <div style="margin-top:4px;">
                 <% if (isGoogleUser) { %>
-                  <span class="auth-badge google">
-                    <i class="fab fa-google"></i> Google Account
-                  </span>
+                  <span class="auth-badge google"><i class="fab fa-google"></i> Google Account</span>
                 <% } else { %>
-                  <span class="auth-badge local">
-                    <i class="fas fa-envelope"></i> Email & Password
-                  </span>
+                  <span class="auth-badge local"><i class="fas fa-envelope"></i> Email & Password</span>
                 <% } %>
               </div>
             </div>
           </div>
-
           <div class="account-info-row">
             <div>
               <div class="ai-label">Member Since</div>
@@ -213,43 +226,75 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
 
-      <!-- ── Change Password ─────────────────────────── -->
+      <!-- ── Change Password ── -->
       <% if (hasPassword) { %>
       <div class="settings-section" id="section-password">
         <div class="s-card">
           <div class="s-card-title"><i class="fas fa-lock"></i> Change Password</div>
-          <div class="s-card-sub">Choose a strong password with at least 6 characters</div>
+          <div class="s-card-sub">Keep your account secure with a strong password</div>
 
           <div class="s-alert" id="pwAlert"></div>
 
+          <!-- Current Password -->
           <div class="form-group">
             <label class="form-label">Current Password</label>
-            <div class="input-wrap">
-              <input type="password" id="currentPw" class="form-input" placeholder="Enter current password">
+            <div class="fi-wrap">
+              <input type="password" id="currentPw" class="form-input"
+                placeholder="Enter your current password"
+                autocomplete="current-password">
               <button type="button" class="toggle-pw" onclick="togglePw('currentPw', this)">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
           </div>
 
+          <!-- New Password -->
           <div class="form-group">
             <label class="form-label">New Password</label>
-            <div class="input-wrap">
-              <input type="password" id="newPw" class="form-input" placeholder="At least 6 characters">
+            <div class="fi-wrap">
+              <input type="password" id="newPw" class="form-input"
+                placeholder="Enter a new password"
+                autocomplete="new-password"
+                oninput="onNewPwInput()">
               <button type="button" class="toggle-pw" onclick="togglePw('newPw', this)">
                 <i class="fas fa-eye"></i>
               </button>
             </div>
+            <!-- Strength bar -->
+            <div class="strength-wrap" id="strengthWrap" style="display:none;">
+              <div class="strength-bar-bg">
+                <div class="strength-bar-fill" id="strengthFill"></div>
+              </div>
+              <div class="strength-label" id="strengthLabel"></div>
+            </div>
+            <!-- Rules -->
+            <div class="pw-rules" id="pwRules">
+              <div class="pw-rule" id="rule-len">
+                <i class="fas fa-circle"></i> At least 6 characters
+              </div>
+              <div class="pw-rule" id="rule-upper">
+                <i class="fas fa-circle"></i> At least one uppercase letter
+              </div>
+              <div class="pw-rule" id="rule-num">
+                <i class="fas fa-circle"></i> At least one number
+              </div>
+              <div class="pw-rule" id="rule-diff">
+                <i class="fas fa-circle"></i> Different from current password
+              </div>
+            </div>
           </div>
 
+          <!-- Confirm Password -->
           <div class="form-group">
             <label class="form-label">Confirm New Password</label>
-            <div class="input-wrap">
-              <input type="password" id="confirmPw" class="form-input" placeholder="Repeat new password">
+            <div class="fi-wrap">
+              <input type="password" id="confirmPw" class="form-input"
+                placeholder="Re-enter your new password"
+                autocomplete="new-password"
+                oninput="onConfirmInput()">
               <button type="button" class="toggle-pw" onclick="togglePw('confirmPw', this)">
                 <i class="fas fa-eye"></i>
               </button>
@@ -257,13 +302,13 @@
           </div>
 
           <button class="btn-save" id="savePwBtn" onclick="changePassword()">
-            <i class="fas fa-save"></i> Update Password
+            <i class="fas fa-shield-halved"></i> Update Password
           </button>
         </div>
       </div>
       <% } %>
 
-      <!-- ── Notifications ───────────────────────────── -->
+      <!-- ── Notifications ── -->
       <div class="settings-section" id="section-notifications">
         <div class="s-card">
           <div class="s-card-title"><i class="fas fa-bell"></i> Email Notification Preferences</div>
@@ -282,7 +327,6 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
-
           <div class="notif-row">
             <div class="notif-info">
               <h4>Appointment Cancelled</h4>
@@ -294,7 +338,6 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
-
           <div class="notif-row">
             <div class="notif-info">
               <h4>Refund Processed</h4>
@@ -306,7 +349,6 @@
               <span class="toggle-slider"></span>
             </label>
           </div>
-
           <div class="notif-row">
             <div class="notif-info">
               <h4>Appointment Reminder</h4>
@@ -327,7 +369,7 @@
         </div>
       </div>
 
-      <!-- ── Danger Zone ─────────────────────────────── -->
+      <!-- ── Danger Zone ── -->
       <div class="settings-section" id="section-danger">
         <div class="danger-card">
           <div class="danger-title"><i class="fas fa-exclamation-triangle"></i> Danger Zone</div>
@@ -351,7 +393,7 @@
 </div>
 
 <script>
-  /* ── Section switch ───────────────────────────────── */
+  /* ── Section switch ── */
   function switchSection(id, btn) {
     document.querySelectorAll('.settings-section').forEach(s => s.classList.remove('active'));
     document.querySelectorAll('.snav-item').forEach(b => b.classList.remove('active'));
@@ -359,33 +401,97 @@
     btn.classList.add('active');
   }
 
-  /* ── Toggle password visibility ──────────────────── */
+  /* ── Toggle password visibility ── */
   function togglePw(inputId, btn) {
     const input = document.getElementById(inputId);
-    const icon  = btn.querySelector('i');
-    if (input.type === 'password') {
-      input.type    = 'text';
-      icon.className = 'fas fa-eye-slash';
+    const isText = input.type === 'text';
+    input.type = isText ? 'password' : 'text';
+    btn.querySelector('i').className = isText ? 'fas fa-eye' : 'fas fa-eye-slash';
+  }
+
+  /* ── Password strength ── */
+  function getStrength(pw) {
+    let score = 0;
+    if (pw.length >= 6)              score++;
+    if (pw.length >= 10)             score++;
+    if (/[A-Z]/.test(pw))            score++;
+    if (/[0-9]/.test(pw))            score++;
+    if (/[^A-Za-z0-9]/.test(pw))     score++;
+    return score;
+  }
+
+  const STRENGTH_MAP = [
+    { label: '',            color: '',              w: '0%'   },
+    { label: 'Weak',        color: '#E8354A',       w: '25%'  },
+    { label: 'Fair',        color: '#F5A623',       w: '50%'  },
+    { label: 'Good',        color: '#F5A623',       w: '65%'  },
+    { label: 'Strong',      color: '#0DBF7E',       w: '85%'  },
+    { label: 'Very strong', color: '#0DBF7E',       w: '100%' },
+  ];
+
+  function setRule(id, valid) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'pw-rule ' + (valid ? 'valid' : 'invalid');
+    el.querySelector('i').className = valid ? 'fas fa-check-circle' : 'fas fa-circle';
+  }
+
+  function onNewPwInput() {
+    const pw   = document.getElementById('newPw').value;
+    const curr = document.getElementById('currentPw').value;
+    const rules       = document.getElementById('pwRules');
+    const strengthWrap = document.getElementById('strengthWrap');
+
+    if (pw.length > 0) {
+      rules.classList.add('visible');
+      strengthWrap.style.display = 'block';
     } else {
-      input.type    = 'password';
-      icon.className = 'fas fa-eye';
+      rules.classList.remove('visible');
+      strengthWrap.style.display = 'none';
+    }
+
+    setRule('rule-len',   pw.length >= 6);
+    setRule('rule-upper', /[A-Z]/.test(pw));
+    setRule('rule-num',   /[0-9]/.test(pw));
+    setRule('rule-diff',  pw !== curr || curr === '');
+
+    const s = STRENGTH_MAP[Math.min(getStrength(pw), 5)];
+    document.getElementById('strengthFill').style.width      = s.w;
+    document.getElementById('strengthFill').style.background = s.color;
+    document.getElementById('strengthLabel').textContent     = s.label;
+    document.getElementById('strengthLabel').style.color     = s.color;
+
+    onConfirmInput();
+  }
+
+  function onConfirmInput() {
+    const pw      = document.getElementById('newPw').value;
+    const confirm = document.getElementById('confirmPw').value;
+    const el      = document.getElementById('confirmPw');
+    if (confirm.length === 0) {
+      el.classList.remove('field-error', 'field-success'); return;
+    }
+    if (pw === confirm) {
+      el.classList.remove('field-error'); el.classList.add('field-success');
+    } else {
+      el.classList.remove('field-success'); el.classList.add('field-error');
     }
   }
 
-  /* ── Alert helper ─────────────────────────────────── */
+  /* ── Alert helper ── */
   function showAlert(id, type, msg) {
     const el = document.getElementById(id);
-    el.className   = `s-alert ${type}`;
-    el.innerHTML   = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
+    el.className = 's-alert ' + type;
+    el.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${msg}`;
     el.style.display = 'flex';
     if (type === 'success') setTimeout(() => { el.style.display = 'none'; }, 4000);
   }
 
-  /* ── Change password ──────────────────────────────── */
+  /* ── Change password ── */
   async function changePassword() {
     const currentPw = document.getElementById('currentPw').value.trim();
-    const newPw     = document.getElementById('newPw').value.trim();
-    const confirmPw = document.getElementById('confirmPw').value.trim();
+    const newPw     = document.getElementById('newPw').value;
+    const confirmPw = document.getElementById('confirmPw').value;
     const btn       = document.getElementById('savePwBtn');
 
     if (!currentPw || !newPw || !confirmPw) {
@@ -397,8 +503,11 @@
     if (newPw !== confirmPw) {
       showAlert('pwAlert', 'error', 'New passwords do not match.'); return;
     }
+    if (currentPw === newPw) {
+      showAlert('pwAlert', 'error', 'New password must be different from current password.'); return;
+    }
 
-    btn.disabled = true;
+    btn.disabled  = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
 
     try {
@@ -409,25 +518,28 @@
       });
       const data = await res.json();
       if (data.success) {
-        showAlert('pwAlert', 'success', data.message);
-        document.getElementById('currentPw').value = '';
-        document.getElementById('newPw').value     = '';
-        document.getElementById('confirmPw').value = '';
+        showAlert('pwAlert', 'success', 'Password updated successfully. Stay secure!');
+        document.getElementById('currentPw').value  = '';
+        document.getElementById('newPw').value      = '';
+        document.getElementById('confirmPw').value  = '';
+        document.getElementById('pwRules').classList.remove('visible');
+        document.getElementById('strengthWrap').style.display = 'none';
+        document.getElementById('confirmPw').classList.remove('field-success', 'field-error');
       } else {
         showAlert('pwAlert', 'error', data.error || 'Failed to update password.');
       }
     } catch {
       showAlert('pwAlert', 'error', 'Something went wrong. Please try again.');
     } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-save"></i> Update Password';
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-shield-halved"></i> Update Password';
     }
   }
 
-  /* ── Save notifications ───────────────────────────── */
+  /* ── Save notifications ── */
   async function saveNotifications() {
     const btn = document.getElementById('saveNotifBtn');
-    btn.disabled = true;
+    btn.disabled  = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
     try {
@@ -450,14 +562,14 @@
     } catch {
       showAlert('notifAlert', 'error', 'Something went wrong. Please try again.');
     } finally {
-      btn.disabled = false;
+      btn.disabled  = false;
       btn.innerHTML = '<i class="fas fa-save"></i> Save Preferences';
     }
   }
 
-  /* ── Delete account modal ─────────────────────────── */
-  const modalRoot  = document.getElementById('healora-modal-root');
-  const isPasswordSet = document.getElementById('page-meta').dataset.hasPassword === '1';
+  /* ── Delete account modal ── */
+  const modalRoot      = document.getElementById('healora-modal-root');
+  const isPasswordSet  = document.getElementById('page-meta').dataset.hasPassword === '1';
 
   function showModal(html) {
     modalRoot.innerHTML = `<div class="hm-backdrop" id="hm-backdrop">${html}</div>`;
@@ -484,12 +596,10 @@
         <div class="hm-sub">
           This will permanently deactivate your account. All your data, appointments and wallet balance will be lost. This cannot be undone.
         </div>
-
         <div class="hm-group">
           <label class="hm-label">Reason (optional)</label>
           <input type="text" id="deleteReason" class="hm-input" placeholder="Why are you leaving?">
         </div>
-
         ${isPasswordSet ? `
         <div class="hm-group">
           <label class="hm-label">Enter your password to confirm *</label>
@@ -501,9 +611,7 @@
           You are logged in with Google. Confirming will delete your account.
         </div>
         `}
-
         <div id="deleteError" style="display:none;font-size:12px;color:#dc2626;font-weight:600;margin-bottom:10px;"></div>
-
         <div class="hm-btns">
           <button class="hm-btn gray" onclick="hideModal()">Cancel</button>
           <button class="hm-btn red" id="confirmDeleteBtn" onclick="confirmDelete()">
@@ -521,12 +629,12 @@
     const errEl    = document.getElementById('deleteError');
 
     if (isPasswordSet && !password) {
-      errEl.textContent    = 'Please enter your password to confirm.';
-      errEl.style.display  = 'block';
+      errEl.textContent   = 'Please enter your password to confirm.';
+      errEl.style.display = 'block';
       return;
     }
 
-    btn.disabled = true;
+    btn.disabled  = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i> Deleting...';
 
     try {
@@ -542,13 +650,13 @@
       } else {
         errEl.textContent   = data.error || 'Failed to delete account.';
         errEl.style.display = 'block';
-        btn.disabled = false;
+        btn.disabled  = false;
         btn.innerHTML = '<i class="fas fa-trash-alt" style="margin-right:6px;font-size:12px;"></i> Delete Account';
       }
     } catch {
       errEl.textContent   = 'Something went wrong. Please try again.';
       errEl.style.display = 'block';
-      btn.disabled = false;
+      btn.disabled  = false;
       btn.innerHTML = '<i class="fas fa-trash-alt" style="margin-right:6px;font-size:12px;"></i> Delete Account';
     }
   }

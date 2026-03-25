@@ -15,6 +15,39 @@
   </div>
 
   <div class="topbar-right">
+
+    <!-- Bell icon -->
+    <div class="notif-wrap" id="notifWrap">
+      <button class="notif-btn" id="notifBtn" onclick="toggleNotifDropdown()">
+        <i class="fas fa-bell"></i>
+        <span class="notif-badge" id="notifBadge" style="display:none;">0</span>
+      </button>
+
+      <div class="notif-dropdown" id="notifDropdown">
+
+        <!-- Header -->
+        <div class="notif-header">
+          <span class="notif-header-title">Notifications</span>
+          <button class="notif-mark-all" onclick="markAllRead()">Mark all read</button>
+        </div>
+
+        <!-- Tabs -->
+        <div class="notif-tabs">
+          <button class="notif-tab active" data-tab="unread"
+            onclick="switchNotifTab('unread')" id="tab-unread">Unread</button>
+          <button class="notif-tab" data-tab="all"
+            onclick="switchNotifTab('all')" id="tab-all">All</button>
+        </div>
+
+        <!-- List -->
+        <div class="notif-list" id="notifList">
+          <div class="notif-loading"><i class="fas fa-spinner fa-spin"></i></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- User info -->
     <div class="topbar-user">
       <div class="topbar-avatar">
         <% if (locals.user && user.profileImage) { %>
@@ -74,10 +107,7 @@
     text-decoration: none;
   }
 
-  .topbar-back i {
-    font-size: 12px;
-  }
-
+  .topbar-back i { font-size: 12px; }
   .topbar-title-wrap { min-width: 0; }
 
   .topbar-title {
@@ -86,9 +116,6 @@
     color: #1a202c;
     margin: 0;
     line-height: 1.2;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   .topbar-subtitle {
@@ -98,8 +125,219 @@
     font-weight: 500;
   }
 
-  .topbar-right { flex-shrink: 0; }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
 
+  /* ── Bell button ── */
+  .notif-wrap { position: relative; }
+
+  .notif-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 1.5px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: #374151;
+    transition: all .2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  }
+
+  .notif-btn:hover  { background: #f8fafc; border-color: #203f6a; color: #203f6a; }
+  .notif-btn.active { background: #203f6a; border-color: #203f6a; color: white; }
+
+  .notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    background: #dc2626;
+    color: white;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* ── Dropdown ── */
+  .notif-dropdown {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    width: 340px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.14);
+    border: 1.5px solid #f0f2f5;
+    z-index: 9999;
+    display: none;
+    overflow: hidden;
+  }
+
+  .notif-dropdown.show { display: block; animation: notifFadeIn .2s ease; }
+
+  @keyframes notifFadeIn {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── Header ── */
+  .notif-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px 12px;
+    border-bottom: 1.5px solid #f0f2f5;
+  }
+
+  .notif-header-title { font-size: 14px; font-weight: 800; color: #1a202c; }
+
+  .notif-mark-all {
+    font-size: 12px;
+    font-weight: 600;
+    color: #203f6a;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    transition: color .2s;
+  }
+
+  .notif-mark-all:hover { text-decoration: underline; }
+
+  /* ── Tabs ── */
+  .notif-tabs {
+    display: flex;
+    border-bottom: 1.5px solid #f0f2f5;
+    padding: 0 4px;
+  }
+
+  .notif-tab {
+    flex: 1;
+    padding: 10px 8px;
+    background: none;
+    border: none;
+    border-bottom: 2.5px solid transparent;
+    font-size: 13px;
+    font-weight: 600;
+    color: #94a3b8;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s;
+    margin-bottom: -1.5px;
+  }
+
+  .notif-tab:hover { color: #374151; }
+  .notif-tab.active { color: #203f6a; border-bottom-color: #203f6a; }
+
+  /* ── List ── */
+  .notif-list { max-height: 360px; overflow-y: auto; }
+  .notif-list::-webkit-scrollbar       { width: 4px; }
+  .notif-list::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+
+  .notif-loading {
+    text-align: center;
+    padding: 30px;
+    color: #94a3b8;
+    font-size: 20px;
+  }
+
+  /* ── Item ── */
+  .notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #f8fafc;
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .notif-item:last-child { border-bottom: none; }
+  .notif-item:hover      { background: #f8fafc; }
+  .notif-item.unread     { background: #eff6ff; }
+  .notif-item.unread:hover { background: #dbeafe; }
+
+  .notif-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .ni-booked    { background: #ecfdf5; color: #059669; }
+  .ni-confirmed { background: #eff6ff; color: #2563eb; }
+  .ni-cancelled { background: #fef2f2; color: #dc2626; }
+  .ni-refund    { background: #f0fdf4; color: #059669; }
+  .ni-completed { background: #f5f3ff; color: #7c3aed; }
+  .ni-default   { background: #f8fafc; color: #64748b; }
+
+  .notif-content  { flex: 1; min-width: 0; }
+
+  .notif-item-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1a202c;
+    margin-bottom: 2px;
+  }
+
+  .notif-item-msg {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .notif-item-time {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .notif-unread-dot {
+    width: 8px;
+    height: 8px;
+    background: #203f6a;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  /* ── Empty states ── */
+  .notif-empty {
+    text-align: center;
+    padding: 36px 20px;
+    color: #94a3b8;
+  }
+
+  .notif-empty i { font-size: 30px; margin-bottom: 10px; display: block; }
+  .notif-empty p { font-size: 13px; margin: 0 0 4px; font-weight: 700; color: #374151; }
+  .notif-empty span { font-size: 11px; color: #94a3b8; }
+
+  /* ── User pill ── */
   .topbar-user {
     display: flex;
     align-items: center;
@@ -126,34 +364,200 @@
     overflow: hidden;
   }
 
-  .topbar-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-  }
+  .topbar-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
 
-  .topbar-user-info {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.3;
-  }
+  .topbar-user-info { display:flex; flex-direction:column; line-height:1.3; }
+  .topbar-greeting  { font-size:11px; color:#94a3b8; font-weight:500; }
+  .topbar-name      { font-size:14px; font-weight:700; color:#1a202c; }
 
-  .topbar-greeting {
-    font-size: 11px;
-    color: #94a3b8;
-    font-weight: 500;
-  }
-
-  .topbar-name {
-    font-size: 14px;
-    font-weight: 700;
-    color: #1a202c;
-  }
-
-  @media (max-width: 768px) {
-    .topbar-title { font-size: 20px; }
-    .topbar-user-info { display: none; }
-    .topbar-user { padding: 6px; border-radius: 50%; }
+  @media (max-width:768px) {
+    .topbar-title    { font-size:20px; }
+    .topbar-user-info { display:none; }
+    .topbar-user     { padding:6px; border-radius:50%; }
+    .notif-dropdown  { width:300px; right:-40px; }
   }
 </style>
+
+<script>
+  const NOTIF_ICONS = {
+    appointment_booked:    { cls: 'ni-booked',    icon: 'fa-calendar-plus'  },
+    appointment_confirmed: { cls: 'ni-confirmed', icon: 'fa-check-circle'   },
+    appointment_cancelled: { cls: 'ni-cancelled', icon: 'fa-times-circle'   },
+    appointment_completed: { cls: 'ni-completed', icon: 'fa-check-double'   },
+    refund_processed:      { cls: 'ni-refund',    icon: 'fa-wallet'         },
+    appointment_reminder:  { cls: 'ni-default',   icon: 'fa-bell'           }
+  };
+
+  function timeAgo(dateStr) {
+    const diff = (Date.now() - new Date(dateStr)) / 1000;
+    if (diff < 60)    return 'Just now';
+    if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+    return `${Math.floor(diff / 86400)}d ago`;
+  }
+
+  function renderNotifItem(n) {
+    const ic = NOTIF_ICONS[n.type] || NOTIF_ICONS.appointment_reminder;
+    return `
+      <div class="notif-item ${n.isRead ? '' : 'unread'}"
+           onclick="handleNotifClick('${n._id}', '${n.link || ''}')">
+        <div class="notif-icon ${ic.cls}">
+          <i class="fas ${ic.icon}"></i>
+        </div>
+        <div class="notif-content">
+          <div class="notif-item-title">${n.title}</div>
+          <div class="notif-item-msg">${n.message}</div>
+          <div class="notif-item-time">${timeAgo(n.createdAt)}</div>
+        </div>
+        ${!n.isRead ? '<div class="notif-unread-dot"></div>' : ''}
+      </div>`;
+  }
+
+  let _allNotifs = [];
+  let _activeTab = 'unread';
+
+  /* ── Load from API ── */
+  async function loadNotifications() {
+    try {
+      const res  = await fetch('/patient/notifications');
+      const data = await res.json();
+      if (!data.success) return;
+
+      _allNotifs = data.notifications;
+      updateBadge(data.unreadCount);
+      renderActiveTab();
+    } catch (err) {
+      console.error('Load notifications error:', err);
+    }
+  }
+
+  /* ── Render current tab ── */
+  function renderActiveTab() {
+    const unread = _allNotifs.filter(n => !n.isRead);
+    const all    = _allNotifs;
+
+    const unreadTab = document.getElementById('tab-unread');
+    const allTab    = document.getElementById('tab-all');
+    if (unreadTab) unreadTab.textContent = unread.length > 0 ? `Unread (${unread.length})` : 'Unread';
+    if (allTab)    allTab.textContent    = all.length    > 0 ? `All (${all.length})`        : 'All';
+
+    const list  = document.getElementById('notifList');
+    if (!list) return;
+
+    const items = _activeTab === 'unread' ? unread : all;
+
+    if (_activeTab === 'unread' && unread.length === 0) {
+      list.innerHTML = `
+        <div class="notif-empty">
+          <i class="fas fa-check-circle" style="color:#059669;"></i>
+          <p>All caught up!</p>
+          <span>No unread notifications</span>
+        </div>`;
+      return;
+    }
+
+    if (_activeTab === 'all' && all.length === 0) {
+      list.innerHTML = `
+        <div class="notif-empty">
+          <i class="fas fa-bell-slash"></i>
+          <p>No notifications yet</p>
+          <span>You'll see updates here</span>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = items.map(renderNotifItem).join('');
+  }
+
+  /* ── Tab switch ── */
+  function switchNotifTab(tab) {
+    _activeTab = tab;
+    document.querySelectorAll('.notif-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === tab)
+    );
+    renderActiveTab();
+  }
+
+  /* ── Click notification ── */
+  async function handleNotifClick(id, link) {
+    try {
+      await fetch(`/patient/notifications/${id}/read`, { method: 'PATCH' });
+    } catch {}
+
+    const n = _allNotifs.find(n => n._id === id);
+    if (n) n.isRead = true;
+
+    const unreadCount = _allNotifs.filter(n => !n.isRead).length;
+    updateBadge(unreadCount);
+    renderActiveTab();
+
+    if (link) window.location.href = link;
+  }
+
+  /* ── Mark all read ── */
+  async function markAllRead() {
+    try {
+      await fetch('/patient/notifications/read', { method: 'PATCH' });
+    } catch {}
+
+    _allNotifs.forEach(n => n.isRead = true);
+    updateBadge(0);
+    renderActiveTab();
+  }
+
+  /* ── Badge helper ── */
+  function updateBadge(count) {
+    const badge = document.getElementById('notifBadge');
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent   = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  /* ── Toggle dropdown ── */
+  function toggleNotifDropdown() {
+    const dropdown = document.getElementById('notifDropdown');
+    const btn      = document.getElementById('notifBtn');
+    const isOpen   = dropdown.classList.contains('show');
+
+    if (isOpen) {
+      dropdown.classList.remove('show');
+      btn.classList.remove('active');
+    } else {
+      // Reset to unread tab on open
+      _activeTab = 'unread';
+      document.querySelectorAll('.notif-tab').forEach(t =>
+        t.classList.toggle('active', t.dataset.tab === 'unread')
+      );
+      dropdown.classList.add('show');
+      btn.classList.add('active');
+      loadNotifications();
+    }
+  }
+
+  function closeNotifDropdown() {
+    document.getElementById('notifDropdown')?.classList.remove('show');
+    document.getElementById('notifBtn')?.classList.remove('active');
+  }
+
+  /* ── Close on outside click ── */
+  document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('notifWrap');
+    if (wrap && !wrap.contains(e.target)) closeNotifDropdown();
+  });
+
+  /* ── Load badge count on page load ── */
+  (async () => {
+    try {
+      const res  = await fetch('/patient/notifications');
+      const data = await res.json();
+      if (data.success) {
+        _allNotifs = data.notifications;
+        updateBadge(data.unreadCount);
+      }
+    } catch {}
+  })();
+</script>

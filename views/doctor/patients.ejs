@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
+    .main-content { margin-left:230px; padding:30px; min-height:100vh; }
+
+    /* Search bar */
+    .search-wrap {
+      background:white; border-radius:12px; padding:16px 20px;
+      box-shadow:0 2px 8px rgba(0,0,0,.05); border:1.5px solid #f0f2f5;
+      display:flex; gap:12px; align-items:center; margin-bottom:20px;
+    }
+
+    .search-input-wrap {
+      flex:1; position:relative;
+    }
+
+    .search-input-wrap i {
+      position:absolute; left:12px; top:50%;
+      transform:translateY(-50%); color:#94a3b8; font-size:14px;
+    }
+
+    .search-input {
+      width:100%; padding:10px 14px 10px 36px;
+      border:1.5px solid #e2e8f0; border-radius:10px;
+      font-size:14px; font-family:inherit; color:#374151;
+      outline:none; transition:border-color .2s;
+    }
+
+    .search-input:focus { border-color:#0f4c75; }
+
+    .total-badge {
+      font-size:13px; font-weight:700; color:#64748b;
+      background:#f1f5f9; padding:8px 16px; border-radius:8px;
+      white-space:nowrap; flex-shrink:0;
+    }
+
+    /* Patient cards grid */
+    .patients-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(300px,1fr));
+      gap:16px;
+    }
+
+    .pat-card {
+      background:white; border-radius:14px; padding:20px;
+      box-shadow:0 2px 10px rgba(0,0,0,.06); border:1.5px solid #f0f2f5;
+      transition:all .2s; cursor:pointer;
+    }
+
+    .pat-card:hover {
+      transform:translateY(-2px);
+      box-shadow:0 6px 20px rgba(0,0,0,.1);
+      border-color:#e2e8f0;
+    }
+
+    .pat-card-top {
+      display:flex; align-items:center; gap:14px; margin-bottom:14px;
+    }
+
+    .pat-av {
+      width:50px; height:50px; border-radius:50%;
+      background:linear-gradient(135deg,#0f4c75,#1a7f8e);
+      color:white; font-size:18px; font-weight:800;
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; overflow:hidden;
+      border:3px solid #f0f2f5;
+    }
+
+    .pat-av img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+
+    .pat-name  { font-size:15px; font-weight:800; color:#1a202c; margin-bottom:2px; }
+    .pat-email { font-size:12px; color:#94a3b8; font-weight:500; }
+
+    .pat-meta {
+      display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px;
+    }
+
+    .meta-pill {
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:12px; font-weight:600; color:#374151;
+      background:#f8fafc; padding:4px 10px; border-radius:6px;
+      border:1px solid #f0f2f5;
+    }
+
+    .meta-pill i { color:#0f4c75; font-size:11px; }
+
+    .pat-card-foot {
+      border-top:1px solid #f8fafc; padding-top:12px;
+      display:flex; justify-content:space-between; align-items:center;
+    }
+
+    .last-appt { font-size:12px; color:#64748b; font-weight:500; }
+    .last-appt strong { color:#1a202c; font-weight:700; }
+
+    .appt-count {
+      font-size:11px; font-weight:700; color:#0f4c75;
+      background:#f0f9ff; padding:4px 10px; border-radius:20px;
+      border:1px solid #bae6fd;
+    }
+
+    /* Empty */
+    .empty-state {
+      text-align:center; padding:60px 20px; background:white;
+      border-radius:16px; box-shadow:0 2px 10px rgba(0,0,0,.06);
+    }
+
+    .empty-state i  { font-size:48px; color:#e2e8f0; display:block; margin-bottom:14px; }
+    .empty-state h4 { font-size:18px; font-weight:800; color:#1a202c; margin-bottom:6px; }
+    .empty-state p  { font-size:13px; color:#94a3b8; margin:0; }
+
+    /* Pagination */
+    .pg-row { display:flex; gap:6px; justify-content:center; margin-top:24px; flex-wrap:wrap; }
+    .pg-btn { min-width:36px; height:36px; padding:0 10px; border-radius:8px; font-size:13px; font-weight:700; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; color:#64748b; background:white; border:1.5px solid #e2e8f0; transition:all .2s; }
+    .pg-btn:hover  { border-color:#0f4c75; color:#0f4c75; }
+    .pg-btn.active { background:#0f4c75; color:white; border-color:#0f4c75; }
+
+    /* Modal */
+    #doc-modal-root { position:fixed; inset:0; z-index:9999; pointer-events:none; font-family:'Plus Jakarta Sans',sans-serif; }
+    #doc-modal-root.active { pointer-events:all; }
+    .dm-backdrop { position:absolute; inset:0; background:rgba(8,18,38,.75); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity .25s; }
+    #doc-modal-root.active .dm-backdrop { opacity:1; }
+    .dm-box { background:white; border-radius:18px; padding:28px; width:100%; max-width:480px; box-shadow:0 24px 60px rgba(0,0,0,.25); transform:translateY(20px); transition:transform .25s; max-height:88vh; overflow-y:auto; }
+    #doc-modal-root.active .dm-box { transform:translateY(0); }
+
+    .dm-row { display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px solid #f0f2f5; }
+    .dm-row:last-child { border-bottom:none; }
+    .dm-row span:first-child { color:#64748b; font-weight:500; }
+    .dm-row span:last-child  { color:#1a202c; font-weight:700; }
+
+    .dm-btn { flex:1; padding:12px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .2s; background:#f1f5f9; color:#64748b; }
+    .dm-btn:hover { background:#e2e8f0; }
+
+    @media (max-width:768px) {
+      .main-content { margin-left:0; padding:20px; padding-top:70px; }
+      .patients-grid { grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/doctor-sidebar', { currentPage: 'patients' }) %>
+<div id="doc-modal-root"></div>
+
+<div class="main-content">
+
+  <%- include('../partials/doctor-topbar', {
+    pageTitle:    'My Patients',
+    pageSubtitle: 'Patients who have booked with you',
+    backUrl:      null,
+    backLabel:    null
+  }) %>
+
+  <!-- Search -->
+  <div class="search-wrap">
+    <div class="search-input-wrap">
+      <i class="fas fa-search"></i>
+      <input type="text" class="search-input" id="searchInput"
+        placeholder="Search by name, email or phone..."
+        value="<%= searchQuery %>"
+        onkeydown="if(event.key==='Enter') doSearch()">
+    </div>
+    <% if (searchQuery) { %>
+      <a href="/doctor/patients" style="font-size:13px;font-weight:700;color:#94a3b8;text-decoration:none;padding:8px 12px;border-radius:8px;background:#f1f5f9;">
+        <i class="fas fa-times"></i> Clear
+      </a>
+    <% } %>
+    <div class="total-badge">
+      <%= total %> patient<%= total !== 1 ? 's' : '' %>
+    </div>
+  </div>
+
+  <% if (patients.length === 0) { %>
+    <div class="empty-state">
+      <i class="fas fa-users"></i>
+      <h4><%= searchQuery ? 'No patients found' : 'No patients yet' %></h4>
+      <p><%= searchQuery ? `No results for "${searchQuery}"` : 'Patients who book appointments with you will appear here.' %></p>
+    </div>
+
+  <% } else { %>
+
+    <!-- Hidden data for JS -->
+    <div id="pat-data-store" style="display:none;"
+      data-patients='<%- JSON.stringify(patients.map(p => ({
+        id:          p._id,
+        name:        p.name,
+        email:       p.email       || "",
+        phone:       p.phone       || "",
+        age:         p.age         || "",
+        gender:      p.gender      || "",
+        bloodGroup:  p.bloodGroup  || "",
+        profileImage: p.profileImage || "",
+        apptCount:   p.apptCount   || 0,
+        lastDate:    p.lastAppointment ? p.lastAppointment.date    : "",
+        lastStatus:  p.lastAppointment ? p.lastAppointment.status  : "",
+        lastSlot:    p.lastAppointment ? p.lastAppointment.timeSlot : ""
+      }))) %>'>
+    </div>
+
+    <div class="patients-grid">
+      <% patients.forEach(p => { %>
+        <div class="pat-card" onclick="openPatModal('<%= p._id %>')">
+          <div class="pat-card-top">
+            <div class="pat-av">
+              <% if (p.profileImage) { %>
+                <img src="<%= p.profileImage %>" alt="">
+              <% } else { %>
+                <%= p.name.charAt(0).toUpperCase() %>
+              <% } %>
+            </div>
+            <div style="min-width:0;">
+              <div class="pat-name"><%= p.name %></div>
+              <div class="pat-email"><%= p.email || 'No email' %></div>
+            </div>
+          </div>
+
+          <div class="pat-meta">
+            <% if (p.age) { %>
+              <span class="meta-pill"><i class="fas fa-birthday-cake"></i><%= p.age %> yrs</span>
+            <% } %>
+            <% if (p.gender) { %>
+              <span class="meta-pill" style="text-transform:capitalize;">
+                <i class="fas fa-venus-mars"></i><%= p.gender %>
+              </span>
+            <% } %>
+            <% if (p.bloodGroup) { %>
+              <span class="meta-pill"><i class="fas fa-tint"></i><%= p.bloodGroup %></span>
+            <% } %>
+            <% if (p.phone) { %>
+              <span class="meta-pill"><i class="fas fa-phone"></i><%= p.phone %></span>
+            <% } %>
+          </div>
+
+          <div class="pat-card-foot">
+            <div class="last-appt">
+              <% if (p.lastAppointment) { %>
+                Last: <strong>
+                  <%= new Date(p.lastAppointment.date + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) %>
+                </strong>
+              <% } else { %>
+                No appointments yet
+              <% } %>
+            </div>
+            <span class="appt-count">
+              <%= p.apptCount %> visit<%= p.apptCount !== 1 ? 's' : '' %>
+            </span>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <% if (totalPages > 1) { %>
+      <div class="pg-row">
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a href="/doctor/patients?page=<%= i %><%= searchQuery ? '&search=' + searchQuery : '' %>"
+             class="pg-btn <%= currentPage_ === i ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+    <% } %>
+
+  <% } %>
+</div>
+
+<script>
+  const PATIENTS = JSON.parse(
+    document.getElementById('pat-data-store')?.dataset.patients || '[]'
+  );
+
+  function doSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    window.location.href = q
+      ? `/doctor/patients?search=${encodeURIComponent(q)}`
+      : '/doctor/patients';
+  }
+
+  // Search on Enter already handled by onkeydown
+  // Also search on 500ms debounce
+  let _searchTimer;
+  document.getElementById('searchInput')?.addEventListener('input', function() {
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(doSearch, 500);
+  });
+
+  /* ── Modal ── */
+  const modalRoot = document.getElementById('doc-modal-root');
+
+  function showModal(html) {
+    modalRoot.innerHTML = `<div class="dm-backdrop" id="dm-backdrop">${html}</div>`;
+    document.getElementById('dm-backdrop').addEventListener('click', e => {
+      if (e.target === document.getElementById('dm-backdrop')) hideModal();
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => modalRoot.classList.add('active')));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideModal() {
+    modalRoot.classList.remove('active');
+    document.body.style.overflow = '';
+    setTimeout(() => { modalRoot.innerHTML = ''; }, 260);
+  }
+
+  function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US',{
+      weekday:'short', month:'short', day:'numeric', year:'numeric'
+    });
+  }
+
+  function openPatModal(id) {
+    const p = PATIENTS.find(p => p.id === id);
+    if (!p) return;
+
+    const avatarHtml = p.profileImage
+      ? `<img src="${p.profileImage}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`
+      : `<span style="font-size:22px;font-weight:800;color:white;">${p.name.charAt(0).toUpperCase()}</span>`;
+
+    showModal(`
+      <div class="dm-box" onclick="event.stopPropagation()">
+
+        <!-- Header -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;padding-bottom:16px;border-bottom:1.5px solid #f0f2f5;">
+          <div style="width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#0f4c75,#1a7f8e);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+            ${avatarHtml}
+          </div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:#1a202c;">${p.name}</div>
+            <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${p.email || 'No email'}</div>
+          </div>
+        </div>
+
+        <!-- Details -->
+        <div style="background:#f8fafc;border-radius:10px;padding:14px 16px;margin-bottom:18px;">
+          ${p.phone      ? `<div class="dm-row"><span>Phone</span><span>${p.phone}</span></div>` : ''}
+          ${p.age        ? `<div class="dm-row"><span>Age</span><span>${p.age} years</span></div>` : ''}
+          ${p.gender     ? `<div class="dm-row"><span>Gender</span><span style="text-transform:capitalize;">${p.gender}</span></div>` : ''}
+          ${p.bloodGroup ? `<div class="dm-row"><span>Blood Group</span><span>${p.bloodGroup}</span></div>` : ''}
+          <div class="dm-row"><span>Total Visits</span><span>${p.apptCount} appointment${p.apptCount !== 1 ? 's' : ''}</span></div>
+          ${p.lastDate   ? `<div class="dm-row"><span>Last Visit</span><span>${fmtDate(p.lastDate)}</span></div>` : ''}
+          ${p.lastStatus ? `<div class="dm-row"><span>Last Status</span><span style="text-transform:capitalize;">${p.lastStatus}</span></div>` : ''}
+        </div>
+
+        <button class="dm-btn" onclick="hideModal()">Close</button>
+      </div>
+    `);
+  }
+</script>
+</body>
+</html>
