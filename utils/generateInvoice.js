@@ -24,6 +24,14 @@ export const generateInvoicePDF = (data) => {
   return new Promise((resolve, reject) => {
     const { appointment, doctor, patient } = data;
 
+    // ── Time formatter ────────────────────────────────────────────────────────
+    const formatTime = (timeSlot) => {
+      const [hour, min] = timeSlot.split(':').map(Number);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const h = hour % 12 || 12;
+      return `${h}:${String(min).padStart(2, '0')} ${ampm}`;
+    };
+
     const doc    = new PDFDocument({ margin: 50, size: 'A4' });
     const chunks = [];
 
@@ -35,7 +43,7 @@ export const generateInvoicePDF = (data) => {
     const MARGIN    = 50;
     const COL_RIGHT = W - MARGIN;
 
-    // ── Colours ──────────────────────────────────────────────────────────────
+    // ── Colours ───────────────────────────────────────────────────────────────
     const NAVY   = '#203f6a';
     const TEAL   = '#1a7f8e';
     const GREY   = '#64748b';
@@ -49,8 +57,7 @@ export const generateInvoicePDF = (data) => {
       doc.moveTo(MARGIN, y).lineTo(COL_RIGHT, y).strokeColor(color).lineWidth(1).stroke();
     };
 
-    // ════════════════════════  HEADER — gradient-like banner ════════════════════════
-    
+    // ════════════════════════ HEADER ════════════════════════
     doc.rect(0, 0, W, 100).fill(NAVY);
     doc.rect(W * 0.65, 0, W * 0.35, 100).fill(TEAL);
 
@@ -64,7 +71,7 @@ export const generateInvoicePDF = (data) => {
     doc.fillColor('rgba(255,255,255,0.8)').font('Helvetica').fontSize(10)
       .text(`#${appointment._id.toString().slice(-8).toUpperCase()}`, 0, 58, { align: 'right', width: W - MARGIN });
 
-    // ════════════════════════ META ROW : Date, Status, Payment ════════════════════════
+    // ════════════════════════ META ROW ════════════════════════
     doc.rect(0, 100, W, 38).fill(LIGHT);
 
     const invoiceDate = new Date().toLocaleDateString('en-IN', {
@@ -75,12 +82,11 @@ export const generateInvoicePDF = (data) => {
     });
 
     doc.fillColor(GREY).font('Helvetica').fontSize(9);
-    doc.text(`Invoice Date: ${invoiceDate}`,       MARGIN,        112);
-    doc.text(`Appointment: ${apptDate} · ${appointment.timeSlot}`, 210, 112);
-    doc.text(`Payment: ${appointment.paymentMethod.toUpperCase()}`, 430, 112);
+    doc.text(`Invoice Date: ${invoiceDate}`,                                    MARGIN, 112);
+    doc.text(`Appointment: ${apptDate} · ${formatTime(appointment.timeSlot)}`,  210,    112);
+    doc.text(`Payment: ${appointment.paymentMethod.toUpperCase()}`,             430,    112);
 
-    // ════════════════════════ BILLED TO / DOCTOR SECTION ════════════════════════
-    
+    // ════════════════════════ BILLED TO / DOCTOR ════════════════════════
     let y = 160;
 
     doc.fillColor(GREY).font('Helvetica').fontSize(9).text('BILLED TO', MARGIN, y);
@@ -93,27 +99,24 @@ export const generateInvoicePDF = (data) => {
     doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(13)
       .text(`Dr. ${doctor.name}`, 340, y + 14);
     doc.fillColor(GREY).font('Helvetica').fontSize(10)
-      .text(doctor.specialization,               340, y + 30)
-      .text(`${doctor.department} Department`,   340, y + 44);
+      .text(doctor.specialization,             340, y + 30)
+      .text(`${doctor.department} Department`, 340, y + 44);
 
-    //────── DIVIDER ──────────────────────────────────────────
-    
+    // ════════════════════════ DIVIDER ════════════════════════
     y += 80;
     hr(y);
 
     // ════════════════════════ SERVICE TABLE HEADER ════════════════════════
-    
     y += 16;
     doc.rect(MARGIN, y, W - MARGIN * 2, 28).fill(NAVY);
 
     doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(10);
-    doc.text('DESCRIPTION',  MARGIN + 10,  y + 9);
-    doc.text('DATE',         280,          y + 9);
-    doc.text('TIME',         370,          y + 9);
-    doc.text('AMOUNT',       0,            y + 9, { align: 'right', width: W - MARGIN - 10 });
+    doc.text('DESCRIPTION', MARGIN + 10, y + 9);
+    doc.text('DATE',        280,         y + 9);
+    doc.text('TIME',        370,         y + 9);
+    doc.text('AMOUNT',      0,           y + 9, { align: 'right', width: W - MARGIN - 10 });
 
     // ════════════════════════ SERVICE ROW ════════════════════════
-    
     y += 36;
     doc.rect(MARGIN, y - 6, W - MARGIN * 2, 34).fill('#f8fafc');
 
@@ -123,15 +126,14 @@ export const generateInvoicePDF = (data) => {
       .text(`${doctor.specialization} · ${doctor.department}`, MARGIN + 10, y + 14);
 
     doc.fillColor(BLACK).font('Helvetica').fontSize(10)
-      .text(apptDate,                 280, y + 4)
-      .text(appointment.timeSlot,     370, y + 4);
+      .text(apptDate,                         280, y + 4)
+      .text(formatTime(appointment.timeSlot), 370, y + 4);
 
     doc.fillColor(BLACK).font('Helvetica-Bold').fontSize(12)
       .text(`Rs. ${appointment.consultationFee}`, 0, y + 4,
             { align: 'right', width: W - MARGIN - 10 });
 
-    // ════════════════════════ REASON (if provided) ════════════════════════
-    
+    // ════════════════════════ REASON ════════════════════════
     y += 50;
     if (appointment.reason) {
       doc.fillColor(GREY).font('Helvetica').fontSize(9)
@@ -141,8 +143,7 @@ export const generateInvoicePDF = (data) => {
       y += 40;
     }
 
-    // ════════════════════════ TOTALS BOX ════════════════════════  
-    
+    // ════════════════════════ TOTALS ════════════════════════
     y += 10;
     hr(y);
 
@@ -175,10 +176,9 @@ export const generateInvoicePDF = (data) => {
       .text(`Rs. ${appointment.consultationFee}`, 0, y + 6,
             { align: 'right', width: W - MARGIN - 10 });
 
-    // ════════════════════════ PAYMENT STATUS BADGE ════════════════════════
-   
+    // ════════════════════════ PAYMENT STATUS ════════════════════════
     y += 50;
-    const statusColor = appointment.paymentStatus === 'paid' ? GREEN :
+    const statusColor = appointment.paymentStatus === 'paid'    ? GREEN :
                         appointment.paymentStatus === 'pending' ? '#d97706' : '#dc2626';
     const statusText  = appointment.paymentStatus === 'paid'    ? 'PAID' :
                         appointment.paymentStatus === 'pending' ? 'PAYMENT PENDING' : 'UNPAID';
@@ -196,7 +196,6 @@ export const generateInvoicePDF = (data) => {
     }
 
     // ════════════════════════ FOOTER ════════════════════════
-    
     const footerY = doc.page.height - 70;
     doc.rect(0, footerY, W, 70).fill(LIGHT);
     hr(footerY, '#e2e8f0');

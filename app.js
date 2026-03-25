@@ -12,16 +12,20 @@ import doctorRoutes from "./routes/doctor.routes.js";
 import adminRoutes from "./routes/admin/routes.js";
 import oauthRoutes from "./routes/oauth.routes.js";
 import staticRoutes from "./routes/static.routes.js";
+import { attachSettings } from './middleware/settings.middleware.js';
+import { startAutoApproveJob } from './jobs/autoApproveLeave.js';
 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 connectDB();
+startAutoApproveJob();
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '15mb' }));
+app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use(cookieParser());
+app.use(attachSettings);
 app.use(
   session({
     secret: process.env.JWT_SECRET,
@@ -30,7 +34,7 @@ app.use(
     cookie: {
       secure: process.env.NODE_ENV === 'production', 
       httpOnly: true,
-      maxAge: 600000 // 10 minutes
+      maxAge: 600000
     }
   })
 );

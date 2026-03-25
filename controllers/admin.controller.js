@@ -5,80 +5,218 @@ import Appointment from "../models/appointment.model.js";
 import Wallet from '../models/wallet.model.js';
 import WalletTransaction from '../models/walletTransaction.model.js';
 import Payment from '../models/payment.model.js';
+import Invoice from '../models/invoice.model.js';
 import bcrypt from "bcryptjs";
+import Notification from '../models/notification.model.js';
 import { sendDoctorWelcomeEmail } from "../utils/sendEmail.js";
+import { notifyAppointmentCancelled, notifyRefundProcessed, notifyAppointmentStatusChanged } from '../utils/createNotification.js';
 import { HTTP_STATUS, PAGINATION, sanitizePagination } from "../constants/index.js";
 import logger from "../utils/logger.js";
 import cloudinary from "../config/cloudinary.js";
-import Razorpay from 'razorpay';
+import Admin from '../models/admin.model.js';
+
 
 /* ==================== GET DASHBOARD ==================== */
 
 export const getDashboard = async (req, res) => {
   try {
-    const admin = req.admin || req.user;
-    const adminName = admin.id === "superAdmin" ? "Super Admin" : admin.name || "Admin";
+    const admin     = req.admin || req.user;
+    const adminName = admin.name || "Admin";
 
-    const now = new Date();
-    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const now   = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const [totalAppointments, totalPatients, totalDoctors,
-           recentPatients, recentDoctors, recentAppointments] = await Promise.all([
+    const [
+      totalAppointments,
+      totalPatients,
+      totalDoctors,
+      pendingCount,
+      confirmedCount,
+      completedCount,
+      cancelledCount,
+      todayCount,
+    ] = await Promise.all([
       Appointment.countDocuments(),
       Patient.countDocuments(),
       Doctor.countDocuments(),
+      Appointment.countDocuments({ status: 'pending' }),
+      Appointment.countDocuments({ status: 'confirmed' }),
+      Appointment.countDocuments({ status: 'completed' }),
+      Appointment.countDocuments({ status: 'cancelled' }),
+      Appointment.countDocuments({ date: { $gte: today } }),
+    ]);
+
+    const revenueAgg = await Invoice.aggregate([
+      { $match: { type: 'booking' } },
+      { $group: { _id: null, total: { $sum: '$amount' } } }
+    ]);
+    const totalRevenue = revenueAgg[0]?.total || 0;
+
+    const weeklyData = [];
+    for (let i = 6; i >= 0; i--) {
+      const dayStart = new Date(today);
+      dayStart.setDate(today.getDate() - i);
+      const dayEnd = new Date(dayStart);
+      dayEnd.setDate(dayStart.getDate() + 1);
+
+      const [appts, rev] = await Promise.all([
+        Appointment.countDocuments({ date: { $gte: dayStart, $lt: dayEnd } }),
+        Invoice.aggregate([
+          { $match: { type: 'booking', createdAt: { $gte: dayStart, $lt: dayEnd } } },
+          { $group: { _id: null, total: { $sum: '$amount' } } }
+        ])
+      ]);
+
+      weeklyData.push({
+        label:        dayStart.toLocaleDateString('en-US', { weekday: 'short' }),
+        appointments: appts,
+        revenue:      rev[0]?.total || 0,
+      });
+    }
+
+    const monthlyEarnings = [];
+    for (let i = 5; i >= 0; i--) {
+      const mStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mEnd   = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+
+      const rev = await Invoice.aggregate([
+        { $match: { type: 'booking', createdAt: { $gte: mStart, $lt: mEnd } } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]);
+
+      monthlyEarnings.push({
+        label:    mStart.toLocaleDateString('en-US', { month: 'short' }),
+        earnings: rev[0]?.total || 0,
+      });
+    }
+
+    const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+
+    const [recentPatients, recentDoctors, recentAppointments] = await Promise.all([
       Patient.find({ createdAt: { $gte: last24Hours } }).select('name createdAt'),
       Doctor.find({ createdAt: { $gte: last24Hours } }).select('name createdAt'),
-      Appointment.find({ createdAt: { $gte: last24Hours } }).select('createdAt')
+      Appointment.find({ createdAt: { $gte: last24Hours } })
+        .populate('patient', 'name')
+        .populate('doctor', 'name')
+        .select('createdAt status patient doctor')
     ]);
 
     const recentActivities = [];
 
-    recentPatients.forEach(p => {
-      recentActivities.push({
-        type: "Patient",
-        message: `${p.name} registered`,
-        date: p.createdAt
-      });
-    });
+    recentPatients.forEach(p => recentActivities.push({
+      type:    'Patient',
+      icon:    'fa-user-plus',
+      message: `${p.name} registered as a new patient`,
+      date:    p.createdAt,
+    }));
 
-    recentDoctors.forEach(d => {
-      recentActivities.push({
-        type: "Doctor",
-        message: `Dr. ${d.name} added`,
-        date: d.createdAt
-      });
-    });
+    recentDoctors.forEach(d => recentActivities.push({
+      type:    'Doctor',
+      icon:    'fa-user-md',
+      message: `Dr. ${d.name} was added to the system`,
+      date:    d.createdAt,
+    }));
 
-    recentAppointments.forEach(a => {
-      recentActivities.push({
-        type: "Appointment",
-        message: "New appointment scheduled",
-        date: a.createdAt
-      });
-    });
+    recentAppointments.forEach(a => recentActivities.push({
+      type:    'Appointment',
+      icon:    'fa-calendar-check',
+      message: `${a.patient?.name || 'A patient'} booked with Dr. ${a.doctor?.name || 'a doctor'}`,
+      date:    a.createdAt,
+    }));
 
     recentActivities.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    res.render("admin/dashboard", {
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const [newDoctorsThisMonth, newPatientsThisMonth] = await Promise.all([
+      Doctor.countDocuments({ createdAt: { $gte: monthStart } }),
+      Patient.countDocuments({ createdAt: { $gte: monthStart } }),
+    ]);
+
+    res.render('admin/dashboard', {
       admin,
       title: `${adminName} Dashboard - Healora`,
+
       totalAppointments,
       totalPatients,
       totalDoctors,
-      recentActivities: recentActivities.slice(0, 5)
+      totalRevenue,
+      todayCount,
+      newDoctorsThisMonth,
+      newPatientsThisMonth,
+
+      stats: {
+        total:     totalAppointments,
+        pending:   pendingCount,
+        confirmed: confirmedCount,
+        completed: completedCount,
+        cancelled: cancelledCount,
+      },
+
+      weeklyData,
+      monthlyEarnings,
+
+      recentActivities: recentActivities.slice(0, 8),
     });
 
   } catch (error) {
-    logger.error("Dashboard error", "Admin", error);
-    res.render("admin/dashboard", {
-      admin: req.admin || req.user,
-      title: "Dashboard - Healora",
+    logger.error('Dashboard error', 'Admin', error);
+    res.render('admin/dashboard', {
+      admin:             req.admin || req.user,
+      title:             'Dashboard - Healora',
       totalAppointments: 0,
-      totalPatients: 0,
-      totalDoctors: 0,
-      recentActivities: []
+      totalPatients:     0,
+      totalDoctors:      0,
+      totalRevenue:      0,
+      todayCount:        0,
+      newDoctorsThisMonth:  0,
+      newPatientsThisMonth: 0,
+      stats:             { total: 0, pending: 0, confirmed: 0, completed: 0, cancelled: 0 },
+      weeklyData:        [],
+      monthlyEarnings:   [],
+      recentActivities:  [],
     });
+  }
+};
+
+export const getAdminNotifications = async (req, res) => {
+  try {
+    const admin = req.admin || req.user;
+    const notifications = await Notification.find({
+      recipient:     admin._id || admin.id,
+      recipientType: 'admin'
+    }).sort({ createdAt: -1 }).limit(20);
+
+    const unreadCount = await Notification.countDocuments({
+      recipient:     admin._id || admin.id,
+      recipientType: 'admin',
+      isRead:        false
+    });
+
+    res.json({ success: true, notifications, unreadCount });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch notifications' });
+  }
+};
+
+export const markAllAdminNotifsRead = async (req, res) => {
+  try {
+    const admin = req.admin || req.user;
+    await Notification.updateMany(
+      { recipient: admin._id || admin.id, recipientType: 'admin', isRead: false },
+      { isRead: true }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+};
+
+export const markAdminNotifRead = async (req, res) => {
+  try {
+    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
   }
 };
 
@@ -468,15 +606,18 @@ export const addDoctor = async (req, res) => {
     }
 
     const newDoctor = new Doctor({
-      name,
-      email,
-      phone,
-      specialization,
-      department,
-      password: hashedPassword,
-      profileImage: finalImageUrl,
-      status: 'active' 
-    });
+  name,
+  email,
+  phone,
+  specialization,
+  department,
+  password: hashedPassword,
+  profileImage: finalImageUrl,
+  status: 'active',
+  consultationFee: consultationFee ? Number(consultationFee) : 0,
+  qualification:   qualification || '',
+  experience:      experience ? Number(experience) : 0
+});
 
     await newDoctor.save();
 
@@ -694,22 +835,31 @@ export const updateDoctor = async (req, res) => {
   try {
     const { id } = req.params;
     const { 
-      name, 
-      email, 
-      phone, 
-      password, 
-      specialization, 
-      department,
-      profileImage 
-    } = req.body;
+  name, 
+  email, 
+  phone, 
+  password, 
+  specialization, 
+  department,
+  profileImage,
+  consultationFee,
+  qualification,
+  experience
+} = req.body;
 
-    const updateData = {
-      name,
-      email,
-      phone,
-      specialization,
-      department,
-    };
+const updateData = {
+  name,
+  email,
+  phone,
+  specialization,
+  department,
+};
+
+if (consultationFee !== undefined && consultationFee !== '') {
+  updateData.consultationFee = Number(consultationFee);
+}
+if (qualification !== undefined) updateData.qualification = qualification;
+if (experience !== undefined && experience !== '') updateData.experience = Number(experience);
 
     if (password && password.trim()) {
       updateData.password = await bcrypt.hash(password.trim(), 10);
@@ -1036,7 +1186,27 @@ export const updateAppointmentStatus = async (req, res) => {
 
     await appointment.save();
 
-    logger.info(`Appointment ${id} → ${status} by admin`, 'Admin');
+logger.info(`Appointment ${id} → ${status} by admin`, 'Admin');
+
+// ── Notifications ────────────────────────────────────
+try {
+  const [docN, patN] = await Promise.all([
+    Doctor.findById(appointment.doctor).select('name _id'),
+    Patient.findById(appointment.patient).select('name _id')
+  ]);
+  if (docN && patN) {
+    if (status === 'cancelled') {
+      await notifyAppointmentCancelled(appointment, docN, patN, 'admin');
+      if (appointment.refundAmount > 0) {
+        await notifyRefundProcessed(patN, appointment.refundAmount, appointment._id);
+      }
+    } else {
+      await notifyAppointmentStatusChanged(appointment, docN, patN, status);
+    }
+  }
+} catch (notifErr) {
+  logger.warn('Notification error (non-fatal)', 'Admin', notifErr);
+}
 
     let message = `Appointment ${status} successfully.`;
     if (appointment.refundAmount > 0) {
@@ -1070,3 +1240,227 @@ export const getAppointmentById = async (req, res) => {
     res.status(500).json({ success: false, error: 'Failed to fetch appointment' });
   }
 };
+
+/* ==================== GET ALL INVOICES (Admin) ==================== */
+export const getAdminInvoices = async (req, res) => {
+  try {
+    const {
+      search   = '',
+      type     = '',
+      dateFrom = '',
+      dateTo   = '',
+      page,
+      limit
+    } = req.query;
+
+    const { page: pageNum, limit: limitNum, skip } = sanitizePagination(
+      page, limit || 10
+    );
+
+    let query = {};
+    if (type && type !== 'all') query.type = type;
+
+    if (dateFrom || dateTo) {
+      query.createdAt = {};
+      if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const end = new Date(dateTo);
+        end.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = end;
+      }
+    }
+
+    if (search.trim()) {
+      const [matchPatients, matchDoctors] = await Promise.all([
+        Patient.find({ name: { $regex: search.trim(), $options: 'i' } }).select('_id'),
+        Doctor.find({  name: { $regex: search.trim(), $options: 'i' } }).select('_id')
+      ]);
+      const apptIds = await Appointment.find({
+        $or: [
+          { patient: { $in: matchPatients.map(p => p._id) } },
+          { doctor:  { $in: matchDoctors.map(d => d._id)  } }
+        ]
+      }).select('_id');
+      query.appointment = { $in: apptIds.map(a => a._id) };
+    }
+
+    const [invoices, total] = await Promise.all([
+      Invoice.find(query)
+        .populate({
+          path: 'appointment',
+          populate: [
+            { path: 'patient', select: 'name email phone' },
+            { path: 'doctor',  select: 'name specialization department' }
+          ]
+        })
+        .populate('patient', 'name email')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limitNum),
+      Invoice.countDocuments(query)
+    ]);
+
+    const [totalBooking, totalRefund, revenueAgg] = await Promise.all([
+      Invoice.countDocuments({ type: 'booking' }),
+      Invoice.countDocuments({ type: 'refund' }),
+      Invoice.aggregate([
+        { $match: { type: 'booking' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ])
+    ]);
+
+    const totalRevenue = revenueAgg[0]?.total || 0;
+
+    res.render('admin/invoices', {
+      title:    'Invoices - Healora Admin',
+      admin:    req.admin || req.user,
+      invoices,
+      pagination: {
+        total,
+        page:       pageNum,
+        limit:      limitNum,
+        totalPages: Math.ceil(total / limitNum)
+      },
+      filters: { search, type, dateFrom, dateTo },
+      stats: {
+        total:        await Invoice.countDocuments(),
+        totalBooking,
+        totalRefund,
+        totalRevenue
+      }
+    });
+  } catch (err) {
+    logger.error('Get Admin Invoices Error', 'Admin', err);
+    res.status(500).render('admin/invoices', {
+      title:   'Invoices - Healora Admin',
+      admin:    req.admin || req.user,
+      invoices: [],
+      pagination: { total:0, page:1, limit:10, totalPages:0 },
+      filters:  { search:'', type:'', dateFrom:'', dateTo:'' },
+      stats:    { total:0, totalBooking:0, totalRefund:0, totalRevenue:0 }
+    });
+  }
+};
+
+/* ==================== GET SETTINGS ==================== */
+export const getSettings = async (req, res) => {
+  try {
+    const rows = await Settings.find({});
+    const map  = {
+      hospital_email:                 'support@healora.com',
+      hospital_phone:                 '+91 12345 67890',
+      hospital_address:               'Healora Hospital, Medical District',
+      hospital_tagline:               'Your Health, Our Priority',
+      stats_experience:               10,
+      stats_awards:                   15,
+      booking_window_days:            7,
+      slot_duration_minutes:          30,
+      cancellation_refund_percentage: 90,
+      cancellation_window_hours:      12,
+      wallet_min_topup:               10,
+      wallet_max_topup:               50000,
+      email_booking_confirmed:        true,
+      email_appointment_cancelled:    true,
+      email_refund_processed:         true,
+      email_appointment_reminder:     true
+    };
+    rows.forEach(s => { map[s.key] = s.value; });
+
+    res.render('admin/settings', {
+      title:    'Settings - Healora Admin',
+      admin:    req.admin || req.user,
+      settings: map
+    });
+  } catch (err) {
+    logger.error('Get Settings Error', 'Admin', err);
+    res.status(500).render('error', { title: 'Error', message: 'Failed to load settings' });
+  }
+};
+
+/* ==================== SAVE SETTINGS ==================== */
+export const saveSettings = async (req, res) => {
+  try {
+    const data = req.body;
+    const ops  = Object.entries(data).map(([key, value]) =>
+      Settings.findOneAndUpdate(
+        { key },
+        { key, value },
+        { upsert: true, new: true }
+      )
+    );
+    await Promise.all(ops);
+    logger.info('Settings updated by admin', 'Admin');
+    res.json({ success: true, message: 'Settings saved successfully' });
+  } catch (err) {
+    logger.error('Save Settings Error', 'Admin', err);
+    res.status(500).json({ success: false, error: 'Failed to save settings' });
+  }
+};
+
+/* ==================== CHANGE ADMIN PASSWORD ==================== */
+export const changeAdminPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const adminId = (req.admin || req.user)?.id;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, error: 'All fields are required.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters.' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, error: 'New passwords do not match.' });
+    }
+
+    const admin = await Admin.findById(adminId).select('password');
+    if (!admin) {
+      return res.status(404).json({ success: false, error: 'Admin not found.' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, admin.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, error: 'Current password is incorrect.' });
+    }
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ success: false, error: 'New password must be different.' });
+    }
+
+    admin.password = await bcrypt.hash(newPassword, 10);
+    await admin.save();
+
+    logger.info(`Admin password changed: ${adminId}`, 'Admin');
+    res.json({ success: true, message: 'Password changed successfully.' });
+
+  } catch (err) {
+    logger.error('Change Admin Password Error', 'Admin', err);
+    res.status(500).json({ success: false, error: 'Failed to change password.' });
+  }
+};
+
+/* ==================== UPDATE SETTINGS ==================== */
+export const updateSettings = async (req, res) => {
+  try {
+    const updates = req.body;
+
+    const ops = Object.entries(updates).map(([key, value]) => ({
+      updateOne: {
+        filter: { key },
+        update: { $set: { key, value } },
+        upsert: true
+      }
+    }));
+
+    if (ops.length > 0) {
+      await Settings.bulkWrite(ops);
+    }
+
+    logger.info('Settings updated by admin', 'Admin');
+    res.json({ success: true, message: 'Settings saved successfully.' });
+  } catch (err) {
+    logger.error('Update Settings Error', 'Admin', err);
+    res.status(500).json({ success: false, error: 'Failed to save settings.' });
+  }
+};
+
+

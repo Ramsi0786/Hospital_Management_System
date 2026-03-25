@@ -34,6 +34,7 @@ router.route('/reset-password')
 router.use(protect);
 
 router.get('/dashboard', patientController.getDashboard);
+router.get('/dashboard/stats', patientController.getDashboardStats);
 
 router.get('/doctors',            patientController.getAllDoctors);
 router.get('/doctors/:id/slots',  patientController.getDoctorSlots);
@@ -44,9 +45,12 @@ router.get('/appointments/book',                  bookingController.renderBookin
 router.post('/appointments/book',                 bookingController.createBooking);
 router.post('/appointments/razorpay/create-order', bookingController.createRazorpayOrder);
 router.post('/appointments/razorpay/verify',       bookingController.verifyRazorpayPayment);
-router.get('/appointments/:id/success',            bookingController.bookingSuccess);
-router.post('/appointments/:id/cancel',            bookingController.cancelAppointment);
-router.get('/appointments/:id',                    patientController.getAppointmentDetail);
+router.get('/appointments/:id/success',                        bookingController.bookingSuccess);
+router.post('/appointments/:id/cancel',                        bookingController.cancelAppointment);
+router.post('/appointments/:id/review',                        bookingController.submitReview);
+router.get('/appointments/:appointmentId/invoice/download',    bookingController.downloadInvoice);
+router.get('/appointments/:id',                                patientController.getAppointmentDetail);
+router.get('/appointments/:id/prescription', patientController.getAppointmentPrescription);
 
 router.route('/setup-password')
   .get((req, res) => res.render("patient/setup-password", { title: "Setup Password - Healora" }))
@@ -66,6 +70,29 @@ router.put('/update-profile',          patientController.updatePatientProfile);
 router.get('/wallet',                        bookingController.getWallet);
 router.post('/wallet/topup/create-order',    bookingController.createTopupOrder);
 router.post('/wallet/topup/verify',          bookingController.verifyTopup);
+
+router.get('/invoices', bookingController.getInvoices);
+
+router.get('/medical-records/counts',    patientController.getMedicalRecordCounts);
+router.get('/medical-records',           patientController.getMedicalRecords);
+router.post('/medical-records/upload',   patientController.uploadMedicalRecord);
+router.delete('/medical-records/:id',    patientController.deleteMedicalRecord);
+
+router.get('/help', (req, res) => res.render('patient/help-center', {
+  title: 'Help Center - Healora',
+  user:   req.user,
+  currentPage: 'help'
+}));
+
+router.get('/settings',                      patientController.getSettings);
+router.post('/settings/change-password',     patientController.changePassword);
+router.post('/settings/notifications',       patientController.updateNotifications);
+router.delete('/settings/delete-account',    patientController.deleteAccount);
+
+router.get('/notifications',          patientController.getNotifications);
+router.patch('/notifications/read',   patientController.markAllRead);
+router.patch('/notifications/:id/read', patientController.markOneRead);
+
 
 router.route('/logout')
   .get(authController.logout)

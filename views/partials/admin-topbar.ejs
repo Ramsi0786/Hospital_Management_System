@@ -1,184 +1,547 @@
 <style>
+  .top-bar {
+    position: fixed;
+    top: 0; left: 240px; right: 0;
+    height: 65px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    z-index: 999;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 30px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
 
-    .top-bar {
-      position: fixed;
-      top: 0;
-      left: 240px;
-      right: 0;
-      height: 65px;
-      background: white;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      z-index: 999;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 30px;
-    }
+  .breadcrumb-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #718096;
+    font-size: 14px;
+  }
 
-    .breadcrumb-nav {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #718096;
-      font-size: 14px;
-    }
+  .breadcrumb-nav i { font-size: 13px; }
 
-    .breadcrumb-nav i {
-      font-size: 13px;
-    }
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
 
-    .top-bar-right {
-      display: flex;
-      align-items: center;
-      gap: 20px;
-    }
+  /* ── Bell ── */
+  .admin-notif-wrap { position: relative; }
 
-    .profile-dropdown {
-      position: relative;
-    }
+  .admin-notif-btn {
+    position: relative;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    color: #374151;
+    transition: all .2s;
+  }
 
-    .profile-btn {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      padding: 8px 14px;
-      border-radius: 10px;
-      transition: all 0.3s;
-      background: none;
-      border: none;
-    }
+  .admin-notif-btn:hover  { background: #f1f5f9; border-color: #203f6a; color: #203f6a; }
+  .admin-notif-btn.active { background: #203f6a; border-color: #203f6a; color: white; }
 
-    .profile-btn:hover {
-      background: #f7fafc;
-    }
+  .admin-notif-badge {
+    position: absolute;
+    top: -4px; right: -4px;
+    min-width: 18px; height: 18px;
+    background: #dc2626;
+    color: white;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid white;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
 
-    .profile-avatar {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: #203f6a;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 15px;
-    }
+  /* ── Dropdown ── */
+  .admin-notif-dropdown {
+    position: absolute;
+    top: 48px; right: 0;
+    width: 340px;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.14);
+    border: 1.5px solid #f0f2f5;
+    z-index: 9999;
+    display: none;
+    overflow: hidden;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
 
-    .profile-info {
-      text-align: left;
-    }
+  .admin-notif-dropdown.show {
+    display: block;
+    animation: adminNotifFadeIn .2s ease;
+  }
 
-    .profile-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: #2d3748;
-      display: block;
-    }
+  @keyframes adminNotifFadeIn {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
 
-    .profile-role {
-      font-size: 12px;
-      color: #a0aec0;
-    }
+  .an-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px 12px;
+    border-bottom: 1.5px solid #f0f2f5;
+  }
 
-    .dropdown-menu-custom {
-      position: absolute;
-      top: 55px;
-      right: 0;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      min-width: 200px;
-      display: none;
-      z-index: 1000;
-      padding: 8px;
-    }
+  .an-header-title { font-size: 14px; font-weight: 800; color: #1a202c; }
 
-    .dropdown-menu-custom.show {
-      display: block;
-      animation: fadeIn 0.2s ease;
-    }
+  .an-mark-all {
+    font-size: 12px; font-weight: 600;
+    color: #203f6a; background: none;
+    border: none; cursor: pointer;
+    font-family: inherit; transition: color .2s;
+  }
 
-    @keyframes fadeIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+  .an-mark-all:hover { text-decoration: underline; }
 
-    .dropdown-item-custom {
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      cursor: pointer;
-      transition: all 0.2s;
-      color: #4a5568;
-      font-size: 14px;
-      border: none;
-      background: none;
-      width: 100%;
-      text-align: left;
-      border-radius: 8px;
-    }
+  .an-tabs {
+    display: flex;
+    border-bottom: 1.5px solid #f0f2f5;
+    padding: 0 4px;
+  }
 
-    .dropdown-item-custom:hover {
-      background: #f7fafc;
-    }
+  .an-tab {
+    flex: 1; padding: 10px 8px;
+    background: none; border: none;
+    border-bottom: 2.5px solid transparent;
+    font-size: 13px; font-weight: 600;
+    color: #94a3b8; cursor: pointer;
+    font-family: inherit; transition: all .2s;
+    margin-bottom: -1.5px;
+  }
 
-    .dropdown-item-custom i {
-      width: 18px;
-      color: #718096;
-    }
+  .an-tab:hover  { color: #374151; }
+  .an-tab.active { color: #203f6a; border-bottom-color: #203f6a; }
 
+  .an-list {
+    max-height: 360px;
+    overflow-y: auto;
+  }
+
+  .an-list::-webkit-scrollbar       { width: 4px; }
+  .an-list::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+
+  .an-loading {
+    text-align: center;
+    padding: 30px;
+    color: #94a3b8;
+    font-size: 20px;
+  }
+
+  .an-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #f8fafc;
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .an-item:last-child  { border-bottom: none; }
+  .an-item:hover       { background: #f8fafc; }
+  .an-item.unread      { background: #f0f9ff; }
+  .an-item.unread:hover{ background: #e0f2fe; }
+
+  .an-icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .an-i-emergency { background: #fef2f2; color: #dc2626; }
+  .an-i-leave     { background: #fffbeb; color: #d97706; }
+  .an-i-salary    { background: #f5f3ff; color: #7c3aed; }
+  .an-i-default   { background: #f8fafc; color: #64748b; }
+
+  .an-content { flex: 1; min-width: 0; }
+
+  .an-item-title {
+    font-size: 13px; font-weight: 700;
+    color: #1a202c; margin-bottom: 2px;
+  }
+
+  .an-item-msg {
+    font-size: 12px; color: #64748b;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .an-item-time {
+    font-size: 11px; color: #94a3b8;
+    margin-top: 4px; font-weight: 500;
+  }
+
+  .an-dot {
+    width: 8px; height: 8px;
+    background: #203f6a;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .an-empty {
+    text-align: center;
+    padding: 36px 20px;
+    color: #94a3b8;
+  }
+
+  .an-empty i { font-size: 30px; margin-bottom: 10px; display: block; }
+  .an-empty p { font-size: 13px; margin: 0 0 4px; font-weight: 700; color: #374151; }
+  .an-empty span { font-size: 11px; color: #94a3b8; }
+
+  /* ── Profile ── */
+  .profile-dropdown { position: relative; }
+
+  .profile-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: 10px;
+    transition: all .3s;
+    background: none;
+    border: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .profile-btn:hover { background: #f7fafc; }
+
+  .profile-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: #203f6a;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 15px;
+  }
+
+  .profile-info { text-align: left; }
+  .profile-name { font-size: 14px; font-weight: 600; color: #2d3748; display: block; }
+  .profile-role { font-size: 12px; color: #a0aec0; }
+
+  .dropdown-menu-custom {
+    position: absolute;
+    top: 55px; right: 0;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    min-width: 200px;
+    display: none;
+    z-index: 1000;
+    padding: 8px;
+  }
+
+  .dropdown-menu-custom.show {
+    display: block;
+    animation: fadeIn .2s ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity:0; transform:translateY(-10px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  .dropdown-item-custom {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all .2s;
+    color: #4a5568;
+    font-size: 14px;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    border-radius: 8px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .dropdown-item-custom:hover { background: #f7fafc; }
+  .dropdown-item-custom i { width: 18px; color: #718096; }
 </style>
 
 <div class="top-bar">
   <nav class="breadcrumb-nav">
     <i class="fas fa-home"></i>
     <span>Dashboard</span>
-    <% if (breadcrumb) { %>
-      <span class="separator">/</span>
+    <% if (typeof breadcrumb !== 'undefined' && breadcrumb) { %>
+      <span>/</span>
       <span><%= breadcrumb %></span>
     <% } %>
   </nav>
 
   <div class="top-bar-right">
+
+    <!-- Notification Bell -->
+    <div class="admin-notif-wrap" id="adminNotifWrap">
+      <button class="admin-notif-btn" id="adminNotifBtn"
+        onclick="toggleAdminNotif()">
+        <i class="fas fa-bell"></i>
+        <span class="admin-notif-badge" id="adminNotifBadge"
+          style="display:none;">0</span>
+      </button>
+
+      <div class="admin-notif-dropdown" id="adminNotifDropdown">
+        <div class="an-header">
+          <span class="an-header-title">Notifications</span>
+          <button class="an-mark-all" onclick="markAllAdminRead()">
+            Mark all read
+          </button>
+        </div>
+        <div class="an-tabs">
+          <button class="an-tab active" data-tab="unread"
+            onclick="switchAnTab('unread')" id="an-tab-unread">
+            Unread
+          </button>
+          <button class="an-tab" data-tab="all"
+            onclick="switchAnTab('all')" id="an-tab-all">
+            All
+          </button>
+        </div>
+        <div class="an-list" id="adminNotifList">
+          <div class="an-loading">
+            <i class="fas fa-spinner fa-spin"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Profile -->
     <div class="profile-dropdown">
       <button class="profile-btn" onclick="toggleProfileDropdown()">
         <div class="profile-avatar">
-          <% 
+          <%
             let initials = 'A';
             if (admin && admin.name) {
-              initials = admin.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-            } else if (admin && admin.id === 'superAdmin') {
-              initials = 'SA';
+              initials = admin.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
             }
           %>
           <%= initials %>
         </div>
         <div class="profile-info">
-          <span class="profile-name"><%= admin?.name || 'Super Admin' %></span>
+          <span class="profile-name"><%= admin?.name || 'Admin' %></span>
           <span class="profile-role">Administrator</span>
         </div>
-        <i class="fas fa-chevron-down" style="font-size: 11px; color: #a0aec0;"></i>
+        <i class="fas fa-chevron-down"
+          style="font-size:11px;color:#a0aec0;"></i>
       </button>
 
       <div class="dropdown-menu-custom" id="profileDropdown">
-        <button class="dropdown-item-custom">
-          <i class="fas fa-user"></i>
-          <span>Profile</span>
+        <button class="dropdown-item-custom"
+          onclick="window.location.href='/admin/settings'">
+          <i class="fas fa-cog"></i>
+          <span>Settings</span>
         </button>
         <button class="dropdown-item-custom" onclick="showLogoutModal()">
           <i class="fas fa-sign-out-alt"></i>
           <span>Logout</span>
-        </button> 
+        </button>
       </div>
     </div>
+
   </div>
 </div>
+
+<script>
+  /* ── Icon map ── */
+  const AN_ICONS = {
+    leave_emergency: { cls: 'an-i-emergency', icon: 'fa-exclamation-circle' },
+    leave_request:   { cls: 'an-i-leave',     icon: 'fa-calendar-minus'     },
+    salary_deduction:{ cls: 'an-i-salary',    icon: 'fa-money-bill-wave'    },
+    default:         { cls: 'an-i-default',   icon: 'fa-bell'               }
+  };
+
+  function anTimeAgo(d) {
+    const diff = (Date.now() - new Date(d)) / 1000;
+    if (diff < 60)    return 'Just now';
+    if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return `${Math.floor(diff/86400)}d ago`;
+  }
+
+  function anRenderItem(n) {
+    const ic = AN_ICONS[n.type] || AN_ICONS.default;
+    return `
+      <div class="an-item ${n.isRead ? '' : 'unread'}"
+           onclick="handleAnClick('${n._id}','${n.link||''}')">
+        <div class="an-icon ${ic.cls}">
+          <i class="fas ${ic.icon}"></i>
+        </div>
+        <div class="an-content">
+          <div class="an-item-title">${n.title}</div>
+          <div class="an-item-msg">${n.message}</div>
+          <div class="an-item-time">${anTimeAgo(n.createdAt)}</div>
+        </div>
+        ${!n.isRead ? '<div class="an-dot"></div>' : ''}
+      </div>`;
+  }
+
+  let _anNotifs = [];
+  let _anTab    = 'unread';
+
+  async function loadAdminNotifs() {
+    try {
+      const res  = await fetch('/admin/api/notifications');
+      const data = await res.json();
+      if (!data.success) return;
+      _anNotifs = data.notifications;
+      anUpdateBadge(data.unreadCount);
+      anRenderTab();
+    } catch {}
+  }
+
+  function anRenderTab() {
+    const unread = _anNotifs.filter(n => !n.isRead);
+    const all    = _anNotifs;
+
+    const ut = document.getElementById('an-tab-unread');
+    const at = document.getElementById('an-tab-all');
+    if (ut) ut.textContent = unread.length > 0 ? `Unread (${unread.length})` : 'Unread';
+    if (at) at.textContent = all.length    > 0 ? `All (${all.length})`        : 'All';
+
+    const list = document.getElementById('adminNotifList');
+    if (!list) return;
+
+    const items = _anTab === 'unread' ? unread : all;
+
+    if (_anTab === 'unread' && !unread.length) {
+      list.innerHTML = `
+        <div class="an-empty">
+          <i class="fas fa-check-circle" style="color:#059669;"></i>
+          <p>All caught up!</p>
+          <span>No unread notifications</span>
+        </div>`;
+      return;
+    }
+
+    if (_anTab === 'all' && !all.length) {
+      list.innerHTML = `
+        <div class="an-empty">
+          <i class="fas fa-bell-slash"></i>
+          <p>No notifications yet</p>
+          <span>Leave requests will appear here</span>
+        </div>`;
+      return;
+    }
+
+    list.innerHTML = items.map(anRenderItem).join('');
+  }
+
+  function switchAnTab(tab) {
+    _anTab = tab;
+    document.querySelectorAll('.an-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === tab)
+    );
+    anRenderTab();
+  }
+
+  async function handleAnClick(id, link) {
+    await fetch(`/admin/api/notifications/${id}/read`,
+      { method: 'PATCH' }).catch(() => {});
+    const n = _anNotifs.find(n => n._id === id);
+    if (n) n.isRead = true;
+    anUpdateBadge(_anNotifs.filter(n => !n.isRead).length);
+    anRenderTab();
+    if (link) window.location.href = link;
+  }
+
+  async function markAllAdminRead() {
+    await fetch('/admin/api/notifications/read',
+      { method: 'PATCH' }).catch(() => {});
+    _anNotifs.forEach(n => n.isRead = true);
+    anUpdateBadge(0);
+    anRenderTab();
+  }
+
+  function anUpdateBadge(count) {
+    const b = document.getElementById('adminNotifBadge');
+    if (!b) return;
+    if (count > 0) {
+      b.textContent   = count > 99 ? '99+' : count;
+      b.style.display = 'flex';
+    } else {
+      b.style.display = 'none';
+    }
+  }
+
+  function toggleAdminNotif() {
+    const d   = document.getElementById('adminNotifDropdown');
+    const btn = document.getElementById('adminNotifBtn');
+    if (d.classList.contains('show')) {
+      d.classList.remove('show');
+      btn.classList.remove('active');
+    } else {
+      _anTab = 'unread';
+      document.querySelectorAll('.an-tab').forEach(t =>
+        t.classList.toggle('active', t.dataset.tab === 'unread')
+      );
+      d.classList.add('show');
+      btn.classList.add('active');
+      loadAdminNotifs();
+    }
+  }
+
+  /* ── Close on outside click ── */
+  document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('adminNotifWrap');
+    if (wrap && !wrap.contains(e.target)) {
+      document.getElementById('adminNotifDropdown')
+        ?.classList.remove('show');
+      document.getElementById('adminNotifBtn')
+        ?.classList.remove('active');
+    }
+    // Also close profile dropdown
+    const pd = document.getElementById('profileDropdown');
+    const pb = document.querySelector('.profile-btn');
+    if (pd && pb && !pb.contains(e.target) && !pd.contains(e.target)) {
+      pd.classList.remove('show');
+    }
+  });
+
+  function toggleProfileDropdown() {
+    document.getElementById('profileDropdown')
+      ?.classList.toggle('show');
+  }
+
+  /* ── Load badge on page load ── */
+  (async () => {
+    try {
+      const res  = await fetch('/admin/api/notifications');
+      const data = await res.json();
+      if (data.success) {
+        _anNotifs = data.notifications;
+        anUpdateBadge(data.unreadCount);
+      }
+    } catch {}
+  })();
+</script>

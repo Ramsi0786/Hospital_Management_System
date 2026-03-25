@@ -13,7 +13,8 @@ const doctorSchema = new mongoose.Schema({
     experience: { type: Number, default: 0 }, 
     consultationFee: { type: Number, default: 500 }, 
     profileImage: { type: String, default: '' }, 
-    rating: { type: Number, default: 4.5, min: 0, max: 5 }, 
+    rating:       { type: Number, default: 0, min: 0, max: 5 },
+    ratingCount:  { type: Number, default: 0 },
     
     status: { 
         type: String, 

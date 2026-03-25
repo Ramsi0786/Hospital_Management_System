@@ -181,7 +181,14 @@
               .filter(([k,v]) => v)
               .map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
           %>
-          <%- include('../partials/pagination', { currentPage: pagination.page, totalPages: pagination.totalPages, selectedStatus: q }) %>
+          <%- include('../partials/pagination', { 
+  currentPage: pagination.page, 
+  totalPages: pagination.totalPages, 
+  selectedStatus: q,
+  searchQuery: filters.search || '',
+  selectedDepartment: filters.department || '',
+  sortBy: filters.sort || ''
+}) %>
         </div>
       <% } %>
     <% } %>

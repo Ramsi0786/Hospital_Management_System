@@ -1,472 +1,393 @@
-<div class="modern-sidebar" id="doctorSidebar">
+<div class="doc-sidebar" id="docSidebar">
 
-  <div class="sidebar-header">
-    <div class="logo-container">
-      <span class="logo-text">Healora</span>
-    </div>
-    <button class="sidebar-toggle" id="doctorSidebarToggle">
-      <i class="fas fa-bars"></i>
-    </button>
+  <div class="doc-sidebar-logo">
+    <a href="/" class="doc-logo-link">Healora</a>
   </div>
 
-  <nav class="sidebar-nav">
-    <div class="nav-section">
-      <span class="nav-section-title">MAIN MENU</span>
-
-      <a href="/doctor/dashboard" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">
-        <div class="nav-icon"><i class="fas fa-home"></i></div>
-        <span class="nav-text">Dashboard</span>
-        <div class="nav-indicator"></div>
+  <nav class="doc-sidebar-nav">
+    <div class="doc-nav-section">
+      <span class="doc-nav-label">MAIN</span>
+      <a href="/doctor/dashboard"
+        class="doc-nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">
+        <i class="fas fa-home"></i><span>Dashboard</span>
       </a>
-
-      <a href="/doctor/profile" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'profile' ? 'active' : '' %>">
-        <div class="nav-icon"><i class="fas fa-user-md"></i></div>
-        <span class="nav-text">My Profile</span>
-        <div class="nav-indicator"></div>
+      <a href="/doctor/appointments"
+        class="doc-nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'appointments' ? 'active' : '' %>">
+        <i class="fas fa-calendar-check"></i><span>Appointments</span>
       </a>
-
-      <a href="/doctor/appointments" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'appointments' ? 'active' : '' %>">
-        <div class="nav-icon"><i class="fas fa-calendar-check"></i></div>
-        <span class="nav-text">Appointments</span>
-        <div class="nav-indicator"></div>
+      <a href="/doctor/patients"
+        class="doc-nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'patients' ? 'active' : '' %>">
+        <i class="fas fa-users"></i><span>My Patients</span>
       </a>
     </div>
 
-    <div class="nav-section">
-      <span class="nav-section-title">FINANCE</span>
-
-      <a href="/doctor/transactions" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'transactions' ? 'active' : '' %>">
-        <div class="nav-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-        <span class="nav-text">Transactions</span>
-        <div class="nav-indicator"></div>
+    <div class="doc-nav-section">
+      <span class="doc-nav-label">MANAGE</span>
+      <a href="/doctor/availability"
+        class="doc-nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'availability' ? 'active' : '' %>">
+        <i class="fas fa-clock"></i><span>Availability</span>
       </a>
     </div>
 
-    <div class="nav-section">
-      <span class="nav-section-title">ACCOUNT</span>
-
-      <a href="/doctor/settings" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'settings' ? 'active' : '' %>">
-        <div class="nav-icon"><i class="fas fa-cog"></i></div>
-        <span class="nav-text">Settings</span>
-        <div class="nav-indicator"></div>
+    <div class="doc-nav-section">
+      <span class="doc-nav-label">ACCOUNT</span>
+      <a href="/doctor/profile"
+        class="doc-nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'profile' ? 'active' : '' %>">
+        <i class="fas fa-user-md"></i><span>My Profile</span>
+      </a>
+      <a href="/doctor/settings"
+        class="doc-nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'settings' ? 'active' : '' %>">
+        <i class="fas fa-cog"></i><span>Settings</span>
       </a>
     </div>
   </nav>
 
-  <div class="sidebar-footer">
-    <div class="user-profile-card">
-      <div class="user-avatar-circle">
+  <!-- Bottom profile + logout -->
+  <div class="doc-sidebar-foot">
+    <div class="doc-foot-profile">
+      <div class="doc-foot-avatar">
         <% if (locals.user && user.profileImage) { %>
-          <img src="<%= user.profileImage %>" alt="<%= user.name %>" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
+          <img src="<%= user.profileImage %>" alt="<%= user.name %>">
         <% } else { %>
           <%= locals.user ? user.name.charAt(0).toUpperCase() : 'D' %>
         <% } %>
       </div>
-      <div class="user-info">
-        <div class="user-name"><%= locals.user ? user.name.split(' ')[0] : 'Doctor' %></div>
-        <div class="user-role"><%= locals.user && user.specialization ? user.specialization : 'Specialist' %></div>
+      <div class="doc-foot-info">
+        <div class="doc-foot-name"><%= locals.user ? user.name.split(' ')[0] : 'Doctor' %></div>
+        <div class="doc-foot-role"><%= locals.user && user.specialization ? user.specialization : 'Specialist' %></div>
       </div>
-      <button class="logout-btn" onclick="showDoctorLogoutModal()" title="Logout">
-        <i class="fas fa-sign-out-alt"></i>
-      </button>
     </div>
+    <button class="doc-foot-logout" onclick="showDoctorLogoutModal()" title="Logout">
+      <i class="fas fa-sign-out-alt"></i>
+    </button>
   </div>
 </div>
 
-<div class="sidebar-overlay" id="doctorSidebarOverlay"></div>
+<!-- Mobile overlay -->
+<div class="doc-sidebar-overlay" id="docSidebarOverlay" onclick="toggleDocSidebar()"></div>
+
+<!-- Mobile toggle button -->
+<button class="doc-mobile-toggle" id="docMobileToggle" onclick="toggleDocSidebar()">
+  <i class="fas fa-bars"></i>
+</button>
 
 <!-- Logout Modal -->
-<div class="doctor-logout-modal" id="doctorLogoutModal">
-  <div class="logout-modal-box">
-    <div class="logout-modal-icon">
-      <i class="fas fa-sign-out-alt"></i>
-    </div>
+<div class="doc-logout-modal" id="doctorLogoutModal">
+  <div class="doc-logout-box">
+    <div class="doc-logout-icon"><i class="fas fa-sign-out-alt"></i></div>
     <h3>Confirm Logout</h3>
     <p>Are you sure you want to logout from your doctor account?</p>
-    <div class="logout-modal-buttons">
-      <button class="logout-modal-cancel" onclick="closeDoctorLogoutModal()">Cancel</button>
-      <button class="logout-modal-confirm" onclick="confirmDoctorLogout()">Logout</button>
+    <div class="doc-logout-btns">
+      <button onclick="closeDoctorLogoutModal()">Cancel</button>
+      <button onclick="confirmDoctorLogout()" class="doc-logout-confirm">Logout</button>
     </div>
   </div>
 </div>
 
 <style>
-  .modern-sidebar {
+  /* ── Sidebar ── */
+  .doc-sidebar {
     position: fixed;
-    top: 0;
-    left: 0;
+    top: 0; left: 0;
     height: 100vh;
     width: 230px;
-    background: linear-gradient(180deg, #1a1f37 0%, #0f1419 100%);
+    background: linear-gradient(180deg, #0f4c75 0%, #0a3553 100%);
     display: flex;
     flex-direction: column;
     z-index: 1000;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 16px rgba(0,0,0,.15);
+    transition: transform .3s ease;
   }
 
-  .sidebar-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 24px 20px;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+  /* ── Logo ── */
+  .doc-sidebar-logo {
+    padding: 22px 20px 18px;
+    border-bottom: 1px solid rgba(255,255,255,.1);
+    flex-shrink: 0;
   }
 
-  .logo-container {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .logo-text {
+  .doc-logo-link {
     font-size: 22px;
-    font-weight: 700;
+    font-weight: 800;
     color: white;
-    letter-spacing: -0.5px;
+    text-decoration: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 
-  .sidebar-toggle {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.08);
-    border: none;
-    color: rgba(255,255,255,0.8);
-    cursor: pointer;
-    transition: all 0.3s;
-    display: none;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .sidebar-toggle:hover {
-    background: rgba(255,255,255,0.12);
-    color: white;
-  }
-
-  .sidebar-nav {
+  /* ── Nav ── */
+  .doc-sidebar-nav {
     flex: 1;
     overflow-y: auto;
-    padding: 20px 12px;
+    padding: 18px 10px;
   }
 
-  .sidebar-nav::-webkit-scrollbar { width: 4px; }
-  .sidebar-nav::-webkit-scrollbar-track { background: transparent; }
-  .sidebar-nav::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
-    border-radius: 4px;
+  .doc-sidebar-nav::-webkit-scrollbar { width: 3px; }
+  .doc-sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,.15);
+    border-radius: 2px;
   }
 
-  .nav-section { margin-bottom: 28px; }
+  .doc-nav-section { margin-bottom: 24px; }
 
-  .nav-section-title {
-    font-size: 11px;
+  .doc-nav-label {
+    font-size: 10px;
     font-weight: 700;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,.35);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    padding: 0 16px;
-    margin-bottom: 12px;
+    letter-spacing: 1.2px;
+    padding: 0 14px;
     display: block;
+    margin-bottom: 6px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 
-  .nav-item {
-    display: flex;
-    align-items: center;
-    padding: 12px 16px;
-    margin-bottom: 4px;
-    border-radius: 12px;
-    text-decoration: none;
-    color: rgba(255,255,255,0.7);
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .nav-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    width: 3px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    transform: scaleY(0);
-    transition: transform 0.3s;
-  }
-
-  .nav-item:hover {
-    background: rgba(255,255,255,0.08);
-    color: white;
-    text-decoration: none;
-  }
-
-  .nav-item.active {
-    background: rgba(102,126,234,0.15);
-    color: white;
-  }
-
-  .nav-item.active::before { transform: scaleY(1); }
-
-  .nav-icon {
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 14px;
-    font-size: 16px;
-    flex-shrink: 0;
-  }
-
-  .nav-text {
-    flex: 1;
-    font-size: 14px;
-    font-weight: 500;
-    white-space: nowrap;
-  }
-
-  .nav-indicator {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #667eea;
-    margin-left: 8px;
-    opacity: 0;
-    transition: opacity 0.3s;
-    flex-shrink: 0;
-  }
-
-  .nav-item.active .nav-indicator { opacity: 1; }
-
-  /* Footer */
-  .sidebar-footer {
-    padding: 16px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-  }
-
-  .user-profile-card {
+  .doc-nav-item {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 12px;
-    transition: all 0.3s;
-  }
-
-  .user-profile-card:hover { background: rgba(255,255,255,0.08); }
-
-  .user-avatar-circle {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: 700;
-    flex-shrink: 0;
-    overflow: hidden;
-  }
-
-  .user-info { flex: 1; min-width: 0; }
-
-  .user-name {
+    padding: 11px 14px;
+    margin-bottom: 2px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: rgba(255,255,255,.65);
     font-size: 14px;
     font-weight: 600;
+    transition: all .2s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    position: relative;
+  }
+
+  .doc-nav-item i {
+    width: 18px;
+    text-align: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .doc-nav-item:hover {
+    background: rgba(255,255,255,.1);
     color: white;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    text-decoration: none;
   }
 
-  .user-role {
-    font-size: 11px;
-    color: rgba(255,255,255,0.45);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    margin-top: 2px;
+  .doc-nav-item.active {
+    background: rgba(255,255,255,.15);
+    color: white;
+    border-left: 3px solid #1a7f8e;
+    padding-left: 11px;
   }
 
-  .logout-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    background: rgba(239,68,68,0.1);
-    border: none;
-    color: #ef4444;
-    cursor: pointer;
-    transition: all 0.3s;
+  /* ── Footer ── */
+  .doc-sidebar-foot {
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255,255,255,.1);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+
+  .doc-foot-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .doc-foot-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1a7f8e, #0f4c75);
+    color: white;
+    font-size: 15px;
+    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-  }
-
-  .logout-btn:hover {
-    background: rgba(239,68,68,0.2);
-    transform: scale(1.05);
-  }
-
-  /* Overlay */
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .sidebar-overlay.active {
-    display: block;
-    opacity: 1;
-  }
-
-  /* Collapsed */
-  .modern-sidebar.collapsed { width: 80px; }
-
-  .modern-sidebar.collapsed .logo-text,
-  .modern-sidebar.collapsed .nav-text,
-  .modern-sidebar.collapsed .nav-section-title,
-  .modern-sidebar.collapsed .nav-indicator,
-  .modern-sidebar.collapsed .user-info {
-    opacity: 0;
-    width: 0;
     overflow: hidden;
   }
 
-  .modern-sidebar.collapsed .sidebar-header { justify-content: center; }
-  .modern-sidebar.collapsed .logo-container { gap: 0; }
-  .modern-sidebar.collapsed .user-profile-card { justify-content: center; padding: 8px; }
-  .modern-sidebar.collapsed .logout-btn { display: none; }
-
-  /* Logout Modal */
-  .doctor-logout-modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(4px);
-  }
-
-  .doctor-logout-modal.show { display: flex; }
-
-  .logout-modal-box {
-    background: #1e293b;
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 16px;
-    padding: 32px 28px;
-    text-align: center;
-    max-width: 340px;
-    width: 90%;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-  }
-
-  .logout-modal-icon {
-    width: 60px;
-    height: 60px;
-    background: rgba(239,68,68,0.1);
+  .doc-foot-avatar img {
+    width: 100%; height: 100%;
+    object-fit: cover;
     border-radius: 50%;
+  }
+
+  .doc-foot-info { min-width: 0; }
+
+  .doc-foot-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .doc-foot-role {
+    font-size: 11px;
+    color: rgba(255,255,255,.45);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .doc-foot-logout {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    background: rgba(239,68,68,.12);
+    border: none;
+    color: #fca5a5;
+    cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin: 0 auto 16px;
-    font-size: 24px;
+    font-size: 14px;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+
+  .doc-foot-logout:hover {
+    background: rgba(239,68,68,.25);
     color: #f87171;
   }
 
-  .logout-modal-box h3 { font-size: 18px; font-weight: 700; color: #f1f5f9; margin-bottom: 8px; }
-  .logout-modal-box p  { font-size: 14px; color: #94a3b8; margin-bottom: 24px; }
-
-  .logout-modal-buttons { display: flex; gap: 10px; }
-
-  .logout-modal-cancel,
-  .logout-modal-confirm {
-    flex: 1;
-    padding: 10px;
+  /* ── Mobile toggle ── */
+  .doc-mobile-toggle {
+    display: none;
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 1100;
+    width: 40px; height: 40px;
     border-radius: 10px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
+    background: #0f4c75;
     border: none;
-    transition: all 0.2s;
-  }
-
-  .logout-modal-cancel { background: rgba(255,255,255,0.06); color: #94a3b8; }
-  .logout-modal-cancel:hover { background: rgba(255,255,255,0.1); color: #f1f5f9; }
-
-  .logout-modal-confirm {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
     color: white;
-    box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+    font-size: 16px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,.2);
   }
-  .logout-modal-confirm:hover { background: linear-gradient(135deg, #f87171, #ef4444); }
 
-  /* Mobile */
+  /* ── Overlay ── */
+  .doc-sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.5);
+    z-index: 999;
+  }
+
+  .doc-sidebar-overlay.show { display: block; }
+
+  /* ── Logout Modal ── */
+  .doc-logout-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .doc-logout-modal.show { display: flex; }
+
+  .doc-logout-box {
+    background: white;
+    border-radius: 16px;
+    padding: 32px 28px;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  .doc-logout-icon {
+    width: 56px; height: 56px;
+    background: #fef2f2;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #dc2626;
+    margin: 0 auto 16px;
+  }
+
+  .doc-logout-box h3 {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1a202c;
+    margin-bottom: 8px;
+  }
+
+  .doc-logout-box p {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 20px;
+  }
+
+  .doc-logout-btns { display: flex; gap: 10px; }
+
+  .doc-logout-btns button {
+    flex: 1;
+    padding: 11px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #f1f5f9;
+    color: #64748b;
+    transition: all .2s;
+    font-family: inherit;
+  }
+
+  .doc-logout-btns button:hover { background: #e2e8f0; }
+
+  .doc-logout-confirm {
+    background: #dc2626 !important;
+    color: white !important;
+  }
+
+  .doc-logout-confirm:hover { background: #b91c1c !important; }
+
+  /* ── Responsive ── */
   @media (max-width: 768px) {
-    .sidebar-toggle { display: flex; }
+    .doc-sidebar {
+      transform: translateX(-100%);
+      width: 260px;
+    }
 
-    .modern-sidebar { transform: translateX(-100%); }
-
-    .modern-sidebar.collapsed {
+    .doc-sidebar.open {
       transform: translateX(0);
-      width: 280px;
     }
 
-    .modern-sidebar.collapsed .logo-text,
-    .modern-sidebar.collapsed .nav-text,
-    .modern-sidebar.collapsed .nav-section-title,
-    .modern-sidebar.collapsed .nav-indicator,
-    .modern-sidebar.collapsed .user-info {
-      opacity: 1;
-      width: auto;
+    .doc-mobile-toggle { display: flex; }
+
+    .main-content {
+      margin-left: 0 !important;
+      padding-top: 70px !important;
     }
-
-    .modern-sidebar.collapsed .logout-btn { display: flex; }
   }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-20px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-
-  .nav-item { animation: slideIn 0.3s ease-out; }
 </style>
 
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const sidebar = document.getElementById('doctorSidebar');
-    const toggle  = document.getElementById('doctorSidebarToggle');
-    const overlay = document.getElementById('doctorSidebarOverlay');
-
-    function toggleSidebar() {
-      sidebar.classList.toggle('collapsed');
-      overlay.classList.toggle('active');
-    }
-
-    toggle.addEventListener('click', toggleSidebar);
-    overlay.addEventListener('click', toggleSidebar);
-
-    if (window.innerWidth <= 768) {
-      sidebar.classList.add('collapsed');
-    }
-
-    window.addEventListener('resize', function () {
-      if (window.innerWidth <= 768) {
-        sidebar.classList.add('collapsed');
-      }
-    });
-  });
+  function toggleDocSidebar() {
+    const sidebar = document.getElementById('docSidebar');
+    const overlay = document.getElementById('docSidebarOverlay');
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+  }
 
   function showDoctorLogoutModal() {
     document.getElementById('doctorLogoutModal').classList.add('show');
@@ -482,7 +403,7 @@
       .catch(() => window.location.href = '/doctor/login');
   }
 
-  document.getElementById('doctorLogoutModal').addEventListener('click', function (e) {
+  document.getElementById('doctorLogoutModal').addEventListener('click', function(e) {
     if (e.target === this) closeDoctorLogoutModal();
   });
 </script>

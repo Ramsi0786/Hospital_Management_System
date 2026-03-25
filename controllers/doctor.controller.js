@@ -5,16 +5,376 @@ import { WeeklyAvailability, MonthlyAvailability, DailyException } from '../mode
 import Wallet from '../models/wallet.model.js';
 import WalletTransaction from '../models/walletTransaction.model.js';
 import Payment from '../models/payment.model.js';
-import Razorpay from 'razorpay';
 import { sendAppointmentCancelledByDoctorEmail } from '../utils/sendEmail.js';
 import { sanitizePagination } from '../constants/index.js';
+import Prescription   from '../models/prescription.model.js';
+import MedicalRecord  from '../models/medicalRecord.model.js';
+import Notification   from '../models/notification.model.js';
+import cloudinary     from '../config/cloudinary.js';
+import bcrypt         from 'bcryptjs';
+import Patient        from '../models/patient.model.js';
+import { resolveSlots, getWeeklyAvailability as _getWeekly, setWeeklyAvailability as _setWeekly, getDailyExceptions as _getExceptions, setDailyException as _setException, deleteDailyException as _deleteException } from './availability.controller.js';
 
 
-export const getDashboard = (req, res) => {
-  res.render("doctor/dashboard", {
-    title: `Dr. ${req.user.name}'s Dashboard - Healora`,
-    currentPage: 'dashboard'
-  });
+export const getDashboard = async (req, res) => {
+  try {
+    const doctorId = req.user._id;
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const [total, pending, confirmed, completed, cancelled, todayAppointments] = await Promise.all([
+      Appointment.countDocuments({ doctor: doctorId }),
+      Appointment.countDocuments({ doctor: doctorId, status: 'pending' }),
+      Appointment.countDocuments({ doctor: doctorId, status: 'confirmed' }),
+      Appointment.countDocuments({ doctor: doctorId, status: 'completed' }),
+      Appointment.countDocuments({ doctor: doctorId, status: 'cancelled' }),
+      Appointment.find({ doctor: doctorId, date: todayStr })
+        .populate('patient', 'name profileImage age gender phone')
+        .sort({ timeSlot: 1 })
+    ]);
+
+    const nextAppointment = await Appointment.findOne({
+      doctor: doctorId,
+      date:   { $gte: todayStr },
+      status: { $in: ['pending', 'confirmed'] }
+    })
+    .populate('patient', 'name profileImage')
+    .sort({ date: 1, timeSlot: 1 });
+
+    const last7 = [];
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      last7.push(d.toISOString().split('T')[0]);
+    }
+
+    const weeklyData = await Promise.all(
+      last7.map(async (date) => {
+        const [appts, revenue] = await Promise.all([
+          Appointment.countDocuments({ doctor: doctorId, date }),
+          Appointment.aggregate([
+            {
+              $match: {
+                doctor: doctorId,
+                date,
+                status: 'completed',
+                paymentStatus: 'paid'
+              }
+            },
+            { $group: { _id: null, total: { $sum: '$consultationFee' } } }
+          ])
+        ]);
+        return {
+          date,
+          label: new Date(date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short' }),
+          appointments: appts,
+          revenue: revenue[0]?.total || 0
+        };
+      })
+    );
+
+    // ── Monthly earnings (last 6 months) ──
+    const monthlyEarnings = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      const year  = d.getFullYear();
+      const month = d.getMonth() + 1;
+      const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+
+      const result = await Appointment.aggregate([
+        {
+          $match: {
+            doctor: doctorId,
+            date:   { $regex: `^${monthStr}` },
+            status: 'completed',
+            paymentStatus: 'paid'
+          }
+        },
+        { $group: { _id: null, total: { $sum: '$consultationFee' } } }
+      ]);
+
+      monthlyEarnings.push({
+        label:    d.toLocaleDateString('en-US', { month: 'short' }),
+        earnings: result[0]?.total || 0
+      });
+    }
+
+    const totalEarningsResult = await Appointment.aggregate([
+      {
+        $match: {
+          doctor: doctorId,
+          status: 'completed',
+          paymentStatus: 'paid'
+        }
+      },
+      { $group: { _id: null, total: { $sum: '$consultationFee' } } }
+    ]);
+    const totalEarnings = totalEarningsResult[0]?.total || 0;
+
+    res.render('doctor/dashboard', {
+      title:    `Dr. ${req.user.name}'s Dashboard - Healora`,
+      user:      req.user,
+      currentPage: 'dashboard',
+      stats: { total, pending, confirmed, completed, cancelled },
+      todayAppointments,
+      nextAppointment,
+      weeklyData,
+      monthlyEarnings,
+      totalEarnings
+    });
+  } catch (err) {
+    console.error('Doctor dashboard error:', err);
+    res.render('doctor/dashboard', {
+      title: 'Dashboard - Healora',
+      user:   req.user,
+      currentPage: 'dashboard',
+      stats: { total:0, pending:0, confirmed:0, completed:0, cancelled:0 },
+      todayAppointments: [],
+      nextAppointment:   null,
+      weeklyData:        [],
+      monthlyEarnings:   [],
+      totalEarnings:     0
+    });
+  }
+};
+
+/* ==================== GET PATIENTS ==================== */
+export const getPatients = async (req, res) => {
+  try {
+    const doctorId = req.user._id;
+    const { search = '', page } = req.query;
+    const { page: pageNum, limit: limitNum, skip } = sanitizePagination(page, 10);
+
+    const patientIds = await Appointment.distinct('patient', { doctor: doctorId });
+
+    let patientQuery = { _id: { $in: patientIds } };
+    if (search.trim()) {
+      patientQuery.$or = [
+        { name:  { $regex: search.trim(), $options: 'i' } },
+        { email: { $regex: search.trim(), $options: 'i' } },
+        { phone: { $regex: search.trim(), $options: 'i' } }
+      ];
+    }
+
+    const [patients, total] = await Promise.all([
+      Patient.find(patientQuery)
+        .select('name email phone profileImage age gender bloodGroup createdAt')
+        .sort({ name: 1 })
+        .skip(skip)
+        .limit(limitNum),
+      Patient.countDocuments(patientQuery)
+    ]);
+
+    const patientsWithLastAppt = await Promise.all(
+      patients.map(async (p) => {
+        const last = await Appointment.findOne({
+          doctor: doctorId, patient: p._id
+        }).sort({ date: -1 }).select('date status timeSlot');
+        const apptCount = await Appointment.countDocuments({
+          doctor: doctorId, patient: p._id
+        });
+        return { ...p.toObject(), lastAppointment: last, apptCount };
+      })
+    );
+
+    res.render('doctor/patients', {
+      title:       'My Patients - Healora',
+      user:         req.user,
+      currentPage: 'patients',
+      patients:     patientsWithLastAppt,
+      total,
+      searchQuery:  search,
+      currentPage_: pageNum,
+      totalPages:   Math.ceil(total / limitNum)
+    });
+  } catch (err) {
+    console.error('Get patients error:', err);
+    res.render('doctor/patients', {
+      title: 'My Patients - Healora',
+      user:   req.user,
+      currentPage: 'patients',
+      patients: [], total: 0, searchQuery: '',
+      currentPage_: 1, totalPages: 0
+    });
+  }
+};
+
+/* ==================== GET / SAVE PRESCRIPTION ==================== */
+export const getPrescription = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const doctorId = req.user._id;
+
+    const appointment = await Appointment.findOne({
+      _id: appointmentId, doctor: doctorId
+    }).populate('patient', 'name email age gender bloodGroup profileImage');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, error: 'Appointment not found' });
+    }
+
+    const prescription = await Prescription.findOne({ appointment: appointmentId });
+
+    res.json({ success: true, prescription: prescription || null, appointment });
+  } catch (err) {
+    console.error('Get prescription error:', err);
+    res.status(500).json({ success: false, error: 'Failed to fetch prescription' });
+  }
+};
+
+export const savePrescription = async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    const doctorId  = req.user._id;
+    const { diagnosis, notes, medicines, followUpDate, fileData, fileType } = req.body;
+
+    const appointment = await Appointment.findOne({
+      _id:    appointmentId,
+      doctor: doctorId,
+      status: { $in: ['confirmed', 'completed'] }
+    }).populate('patient', 'name');
+
+    if (!appointment) {
+      return res.status(404).json({ success: false, error: 'Appointment not found or not eligible' });
+    }
+
+    let fileUrl  = '';
+    let publicId = '';
+
+    if (fileData && fileData.startsWith('data:')) {
+      const resourceType = fileType === 'pdf' ? 'raw' : 'image';
+      const uploaded = await cloudinary.uploader.upload(fileData, {
+        folder:        `healora/prescriptions/${doctorId}`,
+        resource_type: resourceType
+      });
+      fileUrl  = uploaded.secure_url;
+      publicId = uploaded.public_id;
+    }
+
+    const updateData = {
+      doctor:       doctorId,
+      patient:      appointment.patient._id,
+      appointment:  appointmentId,
+      diagnosis:    diagnosis?.trim()    || '',
+      notes:        notes?.trim()        || '',
+      medicines:    medicines?.trim()    || '',
+      followUpDate: followUpDate         || '',
+      ...(fileUrl ? { fileUrl, fileType, publicId } : {})
+    };
+
+    const prescription = await Prescription.findOneAndUpdate(
+      { appointment: appointmentId },
+      updateData,
+      { upsert: true, new: true }
+    );
+
+    await MedicalRecord.findOneAndUpdate(
+      { appointment: appointmentId, type: 'prescription' },
+      {
+        patient:    appointment.patient._id,
+        type:       'prescription',
+        title:      `Prescription — Dr. ${req.user.name}`,
+        notes:      `${diagnosis ? 'Diagnosis: ' + diagnosis + '\n' : ''}${medicines ? 'Medicines: ' + medicines + '\n' : ''}${notes || ''}`.trim(),
+        fileUrl:    fileUrl || '',
+        fileType:   fileUrl ? fileType : '',
+        publicId:   publicId || '',
+        recordDate: appointment.date,
+        appointment: appointmentId,
+        doctor:     doctorId
+      },
+      { upsert: true, new: true }
+    );
+
+    await Notification.create({
+      recipient:     appointment.patient._id,
+      recipientType: 'patient',
+      type:          'appointment_completed',
+      title:         'Prescription Added',
+      message:       `Dr. ${req.user.name} has added a prescription for your appointment`,
+      link:          '/patient/medical-records?tab=prescription',
+      isRead:        false
+    }).catch(() => {});
+
+    res.json({ success: true, message: 'Prescription saved successfully', prescription });
+  } catch (err) {
+    console.error('Save prescription error:', err);
+    res.status(500).json({ success: false, error: 'Failed to save prescription' });
+  }
+};
+
+/* ==================== GET NOTIFICATIONS (Doctor) ==================== */
+export const getDoctorNotifications = async (req, res) => {
+  try {
+    const notifications = await Notification.find({
+      recipient:     req.user._id,
+      recipientType: 'doctor'
+    }).sort({ createdAt: -1 }).limit(20);
+
+    const unreadCount = await Notification.countDocuments({
+      recipient:     req.user._id,
+      recipientType: 'doctor',
+      isRead:        false
+    });
+
+    res.json({ success: true, notifications, unreadCount });
+  } catch (err) {
+    res.status(500).json({ success: false, error: 'Failed to fetch notifications' });
+  }
+};
+
+export const markDoctorNotifRead = async (req, res) => {
+  try {
+    await Notification.findByIdAndUpdate(req.params.id, { isRead: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+};
+
+export const markAllDoctorNotifsRead = async (req, res) => {
+  try {
+    await Notification.updateMany(
+      { recipient: req.user._id, recipientType: 'doctor', isRead: false },
+      { isRead: true }
+    );
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false });
+  }
+};
+
+/* ==================== CHANGE DOCTOR PASSWORD ==================== */
+export const changeDoctorPassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const doctor = await Doctor.findById(req.user._id).select('password');
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      return res.status(400).json({ success: false, error: 'All fields are required.' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters.' });
+    }
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ success: false, error: 'New passwords do not match.' });
+    }
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ success: false, error: 'New password must be different.' });
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, doctor.password);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, error: 'Current password is incorrect.' });
+    }
+
+    doctor.password = await bcrypt.hash(newPassword, 10);
+    await doctor.save();
+
+    res.json({ success: true, message: 'Password changed successfully.' });
+  } catch (err) {
+    console.error('Change doctor password error:', err);
+    res.status(500).json({ success: false, error: 'Failed to change password.' });
+  }
 };
 
 export const updateDoctorProfile = async (req, res) => {
@@ -252,7 +612,6 @@ export const updateAppointmentStatus = async (req, res) => {
       return res.status(400).json({ success: false, error: 'Appointment already cancelled' });
     }
 
-    // ── Cancellation ──────────────────────────────────────────────
     if (status === 'cancelled') {
       if (!reason || !reason.trim()) {
         return res.status(400).json({ success: false, error: 'Cancellation reason is required' });
@@ -262,7 +621,6 @@ export const updateAppointmentStatus = async (req, res) => {
       appointment.cancellationReason = reason.trim();
       appointment.cancelledAt        = new Date();
 
-      // ── Refund logic (same as admin) ──
       const isCash  = appointment.paymentMethod === 'cash';
       const wasPaid = appointment.paymentStatus === 'paid';
 
@@ -331,7 +689,6 @@ if (appointment.paymentMethod === 'razorpay') {
         }
       }
 
-      // ── Fetch available slots same day ──
 let availableSlots = [];
 try {
   const dateStr = typeof appointment.date === 'string'
@@ -344,8 +701,7 @@ try {
   const [dateObj] = [new Date(dateStr + 'T00:00:00')];
   const month = dateObj.getMonth() + 1;
   const year  = dateObj.getFullYear();
-
-  // Priority: DailyException → MonthlyAvailability → WeeklyAvailability
+  
   const exception = await DailyException.findOne({ doctor: doctorId, date: dateStr });
 
   let slots = [];
@@ -375,8 +731,7 @@ try {
 } catch (slotErr) {
   console.error('Slot fetch error:', slotErr);
 }
-      
-      // ── Send email to patient ──
+
       try {
         await sendAppointmentCancelledByDoctorEmail(
           appointment.patient.email,
@@ -405,4 +760,39 @@ try {
     console.error('Doctor updateAppointmentStatus error:', err);
     res.status(500).json({ success: false, error: 'Server error' });
   }
+};
+
+/* ==================== AVAILABILITY (Doctor self) ==================== */
+
+export const getAvailabilityPage = async (req, res) => {
+  res.render('doctor/availability', {
+    title:       'My Availability - Healora',
+    user:         req.user,
+    currentPage: 'availability'
+  });
+};
+
+export const getMyWeekly = async (req, res) => {
+  req.params.doctorId = req.user._id.toString();
+  return _getWeekly(req, res);
+};
+
+export const setMyWeekly = async (req, res) => {
+  req.params.doctorId = req.user._id.toString();
+  return _setWeekly(req, res);
+};
+
+export const getMyExceptions = async (req, res) => {
+  req.params.doctorId = req.user._id.toString();
+  return _getExceptions(req, res);
+};
+
+export const setMyException = async (req, res) => {
+  req.params.doctorId = req.user._id.toString();
+  return _setException(req, res);
+};
+
+export const deleteMyException = async (req, res) => {
+  req.params.doctorId = req.user._id.toString();
+  return _deleteException(req, res);
 };

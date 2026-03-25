@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin/dashboard.css">
+  <style>
+    /* ── Layout ── */
+    .main-content { margin-left:240px; margin-top:65px; padding:30px; min-height:calc(100vh - 65px); background:#f8fafc; }
+
+    /* ── Page header ── */
+    .page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px; }
+    .page-header h1 { font-size:24px; font-weight:800; color:#1a202c; margin:0 0 4px; }
+    .page-header p  { font-size:14px; color:#94a3b8; margin:0; }
+
+    /* ── Stats ── */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card { background:white; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(0,0,0,.05); display:flex; align-items:center; gap:14px; border:1.5px solid #f0f2f5; }
+    .stat-icon { width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .si-total   { background:#eff6ff; color:#2563eb; }
+    .si-booking { background:#f0fdf4; color:#059669; }
+    .si-refund  { background:#fef3c7; color:#d97706; }
+    .si-revenue { background:#f5f3ff; color:#7c3aed; }
+    .stat-val   { font-size:22px; font-weight:800; color:#1a202c; display:block; line-height:1.2; }
+    .stat-label { font-size:12px; color:#94a3b8; font-weight:600; margin-top:2px; }
+
+    /* ── Filter card ── */
+    .filter-card { background:white; border-radius:12px; padding:20px 24px; box-shadow:0 2px 8px rgba(0,0,0,.05); margin-bottom:20px; border:1.5px solid #f0f2f5; }
+    .filter-row  { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+    .fg { display:flex; flex-direction:column; gap:5px; flex:1; min-width:140px; }
+    .fg label { font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; }
+    .fi { padding:9px 12px; border:1.5px solid #e2e8f0; border-radius:8px; font-size:13px; font-family:inherit; color:#374151; outline:none; background:white; transition:border-color .2s; width:100%; }
+    .fi:focus { border-color:#203f6a; }
+    .fb { padding:9px 18px; border-radius:8px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; border:none; transition:all .2s; text-decoration:none; display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+    .fb-apply { background:#203f6a; color:white; }
+    .fb-apply:hover { background:#1a3456; }
+    .fb-reset { background:#f1f5f9; color:#64748b; }
+    .fb-reset:hover { background:#e2e8f0; color:#374151; }
+
+    /* ── Table card ── */
+    .table-card { background:white; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.05); border:1.5px solid #f0f2f5; overflow:hidden; }
+    .table-head { display:flex; align-items:center; justify-content:space-between; padding:16px 24px; border-bottom:1.5px solid #f1f5f9; }
+    .table-title-txt { font-size:15px; font-weight:800; color:#1a202c; display:flex; align-items:center; gap:8px; }
+    .tcount { font-size:12px; color:#94a3b8; font-weight:600; background:#f1f5f9; padding:3px 10px; border-radius:20px; }
+
+    table { width:100%; border-collapse:collapse; }
+    thead tr { background:#f8fafc; }
+    th { padding:12px 16px; font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; text-align:left; border-bottom:1.5px solid #f0f2f5; white-space:nowrap; }
+    td { padding:14px 16px; font-size:13px; color:#374151; border-bottom:1px solid #f8fafc; vertical-align:middle; }
+    tr:last-child td { border-bottom:none; }
+    tr:hover td { background:#fafbfc; }
+
+    /* ── Cells ── */
+    .pcell { display:flex; align-items:center; gap:10px; }
+    .pav   { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:white; flex-shrink:0; }
+    .pname { font-size:13px; font-weight:700; color:#1a202c; }
+    .psub  { font-size:11px; color:#94a3b8; margin-top:1px; }
+
+    .inv-num { font-size:12px; font-weight:700; color:#203f6a; font-family:monospace; }
+    .inv-date { font-size:11px; color:#94a3b8; margin-top:2px; }
+
+    /* Type badge */
+    .tbadge { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+    .tbadge.booking { background:#f0fdf4; color:#059669; }
+    .tbadge.refund  { background:#fef3c7; color:#d97706; }
+
+    /* Amount */
+    .amt { font-size:14px; font-weight:800; color:#1a202c; }
+    .amt.refund { color:#dc2626; }
+
+    /* Actions */
+    .aw { display:flex; gap:6px; }
+    .bv { width:32px; height:32px; border-radius:8px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all .2s; background:#eff6ff; color:#2563eb; text-decoration:none; }
+    .bv:hover { background:#2563eb; color:white; }
+    .bd { width:32px; height:32px; border-radius:8px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:13px; transition:all .2s; background:#f0fdf4; color:#059669; text-decoration:none; }
+    .bd:hover { background:#059669; color:white; }
+
+    /* Empty */
+    .empty-state { text-align:center; padding:60px 20px; }
+    .empty-state i { font-size:48px; color:#e2e8f0; display:block; margin-bottom:14px; }
+    .empty-state p { font-size:14px; color:#94a3b8; margin:0; }
+
+    /* Pagination */
+    .pg-wrap { padding:16px 24px; border-top:1.5px solid #f1f5f9; }
+
+    /* Detail modal */
+    .mo { display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px); z-index:9999; align-items:center; justify-content:center; }
+    .mo.show { display:flex; }
+    .mb-box { background:white; border-radius:16px; width:90%; max-width:520px; max-height:88vh; overflow:auto; box-shadow:0 20px 60px rgba(0,0,0,.2); }
+    .mh { display:flex; align-items:center; justify-content:space-between; padding:20px 24px; border-bottom:1.5px solid #f0f2f5; }
+    .mh h3 { font-size:16px; font-weight:800; color:#1a202c; margin:0; }
+    .mc-btn { background:none; border:none; font-size:18px; color:#94a3b8; cursor:pointer; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:8px; transition:all .2s; }
+    .mc-btn:hover { background:#f1f5f9; color:#374151; }
+    .mbody { padding:24px; }
+
+    .dgrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+    .di { background:#f8fafc; border-radius:10px; padding:12px 14px; }
+    .di label { font-size:10px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.4px; display:block; margin-bottom:4px; }
+    .di span  { font-size:13px; font-weight:700; color:#1a202c; }
+    .mdiv { border:none; border-top:1.5px solid #f0f2f5; margin:16px 0; }
+
+    .btn-dl { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:13px; background:linear-gradient(135deg,#203f6a,#1a7f8e); color:white; border:none; border-radius:10px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; text-decoration:none; transition:all .2s; }
+    .btn-dl:hover { opacity:.9; color:white; }
+
+    @media (max-width:1100px) { .stats-row { grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:768px)  { .main-content { margin-left:0; padding:20px; } .stats-row { grid-template-columns:1fr 1fr; } .dgrid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/admin-sidebar', { currentPage: 'invoice' }) %>
+<%- include('../partials/admin-topbar',  { admin, breadcrumb: 'Invoices' }) %>
+
+<div class="main-content">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1>Invoices</h1>
+      <p>View and manage all patient invoices across the platform</p>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon si-total"><i class="fas fa-file-invoice"></i></div>
+      <div>
+        <span class="stat-val"><%= stats.total %></span>
+        <div class="stat-label">Total Invoices</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-booking"><i class="fas fa-calendar-check"></i></div>
+      <div>
+        <span class="stat-val"><%= stats.totalBooking %></span>
+        <div class="stat-label">Booking Invoices</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-refund"><i class="fas fa-undo"></i></div>
+      <div>
+        <span class="stat-val"><%= stats.totalRefund %></span>
+        <div class="stat-label">Refund Invoices</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-revenue"><i class="fas fa-indian-rupee-sign"></i></div>
+      <div>
+        <span class="stat-val">₹<%= stats.totalRevenue.toLocaleString('en-IN') %></span>
+        <div class="stat-label">Total Revenue</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-card">
+    <form method="GET" action="/admin/invoice" id="filterForm">
+      <div class="filter-row">
+        <div class="fg" style="flex:2;min-width:200px;">
+          <label>Search</label>
+          <input type="text" name="search" class="fi"
+            placeholder="Patient or doctor name..."
+            value="<%= filters.search %>">
+        </div>
+        <div class="fg">
+          <label>Type</label>
+          <select name="type" class="fi">
+            <option value="">All Types</option>
+            <option value="booking" <%= filters.type==='booking'?'selected':'' %>>Booking</option>
+            <option value="refund"  <%= filters.type==='refund' ?'selected':'' %>>Refund</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label>From Date</label>
+          <input type="date" name="dateFrom" class="fi" value="<%= filters.dateFrom %>">
+        </div>
+        <div class="fg">
+          <label>To Date</label>
+          <input type="date" name="dateTo" class="fi" value="<%= filters.dateTo %>">
+        </div>
+        <div style="display:flex;gap:8px;align-items:flex-end;flex-shrink:0;">
+          <button type="submit" class="fb fb-apply">
+            <i class="fas fa-search"></i> Filter
+          </button>
+          <a href="/admin/invoice" class="fb fb-reset">Reset</a>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-head">
+      <div class="table-title-txt">
+        <i class="fas fa-file-invoice" style="color:#203f6a;"></i>
+        Invoice List
+      </div>
+      <span class="tcount"><%= pagination.total %> invoice<%= pagination.total !== 1 ? 's' : '' %></span>
+    </div>
+
+    <% if (invoices.length === 0) { %>
+      <div class="empty-state">
+        <i class="fas fa-file-invoice"></i>
+        <p>No invoices found matching your filters</p>
+      </div>
+    <% } else { %>
+
+      <div style="overflow-x:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Invoice No.</th>
+              <th>Patient</th>
+              <th>Doctor</th>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Amount</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% invoices.forEach((inv, i) => { %>
+              <%
+                const appt   = inv.appointment;
+                const pat    = appt?.patient || inv.patient;
+                const doc    = appt?.doctor;
+                const invDate = new Date(inv.createdAt).toLocaleDateString('en-IN',{
+                  day:'2-digit', month:'short', year:'numeric'
+                });
+                const apptDate = appt ? new Date(appt.date + 'T00:00:00').toLocaleDateString('en-IN',{
+                  day:'2-digit', month:'short', year:'numeric'
+                }) : '—';
+              %>
+              <tr>
+                <td style="color:#94a3b8;font-size:12px;font-weight:600;">
+                  <%= ((pagination.page-1)*pagination.limit)+i+1 %>
+                </td>
+
+                <td>
+                  <div class="inv-num"><%= inv.invoiceNumber %></div>
+                  <div class="inv-date"><%= invDate %></div>
+                </td>
+
+                <td>
+                  <% if (pat) { %>
+                    <div class="pcell">
+                      <div class="pav" style="background:#203f6a;">
+                        <%= (pat.name||'?').charAt(0).toUpperCase() %>
+                      </div>
+                      <div>
+                        <div class="pname"><%= pat.name || '—' %></div>
+                        <div class="psub"><%= pat.email || pat.phone || '—' %></div>
+                      </div>
+                    </div>
+                  <% } else { %>
+                    <span style="color:#94a3b8;font-size:12px;">—</span>
+                  <% } %>
+                </td>
+
+                <td>
+                  <% if (doc) { %>
+                    <div class="pname">Dr. <%= doc.name %></div>
+                    <div class="psub"><%= doc.specialization %> · <%= apptDate %></div>
+                  <% } else { %>
+                    <span style="color:#94a3b8;font-size:12px;">—</span>
+                  <% } %>
+                </td>
+
+                <td style="font-size:13px;color:#374151;font-weight:600;"><%= invDate %></td>
+
+                <td>
+                  <span class="tbadge <%= inv.type %>">
+                    <i class="fas fa-<%= inv.type === 'booking' ? 'calendar-check' : 'undo' %>"></i>
+                    <%= inv.type.charAt(0).toUpperCase() + inv.type.slice(1) %>
+                  </span>
+                </td>
+
+                <td>
+                  <span class="amt <%= inv.type === 'refund' ? 'refund' : '' %>">
+                    <%= inv.type === 'refund' ? '-' : '' %>₹<%= inv.amount.toLocaleString('en-IN') %>
+                  </span>
+                </td>
+
+                <td>
+                  <div class="aw">
+                    <button class="bv" onclick="viewInvoice('<%= inv._id %>')" title="View details">
+                      <i class="fas fa-eye"></i>
+                    </button>
+                    <% if (appt) { %>
+                      <a href="/admin/invoice/<%= appt._id %>/download"
+                         class="bd" title="Download PDF">
+                        <i class="fas fa-download"></i>
+                      </a>
+                    <% } %>
+                  </div>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+
+      <% if (pagination.totalPages > 1) { %>
+        <div class="pg-wrap">
+          <%
+            const q = Object.entries(filters)
+              .filter(([k,v]) => v)
+              .map(([k,v]) => `${k}=${encodeURIComponent(v)}`).join('&');
+          %>
+          <%- include('../partials/pagination', {
+            currentPage:        pagination.page,
+            totalPages:         pagination.totalPages,
+            selectedStatus:     q,
+            searchQuery:        '',
+            selectedDepartment: '',
+            sortBy:             ''
+          }) %>
+        </div>
+      <% } %>
+
+    <% } %>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="mo" id="invModal">
+  <div class="mb-box">
+    <div class="mh">
+      <h3><i class="fas fa-file-invoice" style="color:#203f6a;margin-right:8px;"></i>Invoice Details</h3>
+      <button class="mc-btn" onclick="closeModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="mbody" id="modalBody">
+      <div style="text-align:center;padding:30px;color:#94a3b8;">
+        <i class="fas fa-spinner fa-spin" style="font-size:28px;"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/logout-modal') %>
+<%- include('../partials/loading') %>
+<%- include('../partials/admin-scripts') %>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="/js/alerts.js"></script>
+<script src="/js/loader.js"></script>
+
+<script>
+  <div id="invoice-data"
+  data-invoices='<%- JSON.stringify(invoices.map(inv => ({
+    _id:           inv._id,
+    invoiceNumber: inv.invoiceNumber,
+    type:          inv.type,
+    amount:        inv.amount,
+    createdAt:     inv.createdAt,
+    patient: inv.appointment?.patient ? {
+      name:  inv.appointment.patient.name,
+      email: inv.appointment.patient.email,
+      phone: inv.appointment.patient.phone
+    } : (inv.patient ? { name: inv.patient.name, email: inv.patient.email } : null),
+    doctor: inv.appointment?.doctor ? {
+      name:           inv.appointment.doctor.name,
+      specialization: inv.appointment.doctor.specialization,
+      department:     inv.appointment.doctor.department
+    } : null,
+    appointment: inv.appointment ? {
+      _id:           inv.appointment._id,
+      date:          inv.appointment.date,
+      timeSlot:      inv.appointment.timeSlot,
+      department:    inv.appointment.department,
+      paymentMethod: inv.appointment.paymentMethod,
+      paymentStatus: inv.appointment.paymentStatus
+    } : null
+  }))) %>'
+  style="display:none;">
+</div>
+
+  const INVOICES = JSON.parse(
+  document.getElementById('invoice-data').dataset.invoices
+);
+
+  function viewInvoice(id) {
+    const inv = INVOICES.find(i => i._id === id);
+    if (!inv) return;
+
+    document.getElementById('invModal').classList.add('show');
+
+    const apptDate = inv.appointment?.date
+      ? new Date(inv.appointment.date + 'T00:00:00').toLocaleDateString('en-IN',{
+          weekday:'long', day:'numeric', month:'long', year:'numeric'
+        })
+      : '—';
+
+    const invDate = new Date(inv.createdAt).toLocaleDateString('en-IN',{
+      day:'numeric', month:'long', year:'numeric'
+    });
+
+    const [h, m]  = (inv.appointment?.timeSlot || '00:00').split(':').map(Number);
+    const ampm    = h >= 12 ? 'PM' : 'AM';
+    const timeFmt = `${h % 12 || 12}:${String(m).padStart(2,'0')} ${ampm}`;
+
+    document.getElementById('modalBody').innerHTML = `
+      <div class="dgrid">
+        <div class="di"><label>Invoice No.</label><span style="font-family:monospace;color:#203f6a;">${inv.invoiceNumber}</span></div>
+        <div class="di"><label>Invoice Date</label><span>${invDate}</span></div>
+        <div class="di"><label>Type</label>
+          <span class="tbadge ${inv.type}" style="display:inline-flex;">
+            <i class="fas fa-${inv.type === 'booking' ? 'calendar-check' : 'undo'}"></i>
+            ${inv.type.charAt(0).toUpperCase() + inv.type.slice(1)}
+          </span>
+        </div>
+        <div class="di"><label>Amount</label><span style="font-size:16px;font-weight:800;color:${inv.type==='refund'?'#dc2626':'#203f6a'};">${inv.type==='refund'?'-':''}₹${inv.amount.toLocaleString('en-IN')}</span></div>
+      </div>
+
+      ${inv.patient ? `
+      <div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">Patient</div>
+        <div style="font-size:14px;font-weight:700;color:#1a202c;">${inv.patient.name}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${inv.patient.email || ''} ${inv.patient.phone ? '· ' + inv.patient.phone : ''}</div>
+      </div>` : ''}
+
+      ${inv.doctor ? `
+      <div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:14px;">
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">Doctor</div>
+        <div style="font-size:14px;font-weight:700;color:#1a202c;">Dr. ${inv.doctor.name}</div>
+        <div style="font-size:12px;color:#94a3b8;margin-top:2px;">${inv.doctor.specialization} · ${inv.doctor.department}</div>
+      </div>` : ''}
+
+      ${inv.appointment ? `
+      <div style="background:#f8fafc;border-radius:10px;padding:14px;margin-bottom:20px;">
+        <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">Appointment</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">
+          <div><span style="color:#94a3b8;">Date:</span> <strong>${apptDate}</strong></div>
+          <div><span style="color:#94a3b8;">Time:</span> <strong>${timeFmt}</strong></div>
+          <div><span style="color:#94a3b8;">Payment:</span> <strong style="text-transform:capitalize;">${inv.appointment.paymentMethod}</strong></div>
+          <div><span style="color:#94a3b8;">Status:</span> <strong style="text-transform:capitalize;">${inv.appointment.paymentStatus}</strong></div>
+        </div>
+      </div>` : ''}
+
+      ${inv.appointment ? `
+      <a href="/admin/invoice/${inv.appointment._id}/download" class="btn-dl">
+        <i class="fas fa-download"></i> Download Invoice PDF
+      </a>` : ''}
+    `;
+  }
+
+  function closeModal() {
+    document.getElementById('invModal').classList.remove('show');
+  }
+
+  document.getElementById('invModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Auto-submit on filter change
+  document.querySelector('select[name="type"]').addEventListener('change', () => {
+    document.getElementById('filterForm').submit();
+  });
+</script>
+</body>
+</html>

@@ -1,136 +1,188 @@
 <style>
+  .sidebar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 100vh;
+    width: 240px;
+    background: #203f6a;
+    color: white;
+    padding: 20px 16px;
+    z-index: 1000;
+    overflow-y: auto;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
 
-    /* Sidebar */
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 100vh;
-      width: 240px;
-      background: #203f6a;
-      color: white;
-      padding: 20px 16px;
-      z-index: 1000;
-      overflow-y: auto;
-    }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
 
-    .sidebar .logo {
-      font-size: 22px;
-      font-weight: 700;
-      margin-bottom: 10px;
-      color: white;
-    }
+  .sidebar .logo {
+    font-size: 22px;
+    font-weight: 800;
+    color: white;
+    padding: 4px 2px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+    margin-bottom: 16px;
+    letter-spacing: -.3px;
+  }
 
-    .sidebar hr {
-      border-color: rgba(255, 255, 255, 0.2);
-      margin: 16px 0;
-    }
+  .sidebar-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,.35);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    padding: 0 14px;
+    margin: 18px 0 6px;
+    display: block;
+  }
 
-    .sidebar .nav-item {
-      margin-bottom: 6px;
-    }
+  .sidebar .nav-item { margin-bottom: 2px; }
 
-    .sidebar .nav-link {
-      color: rgba(255, 255, 255, 0.8);
-      padding: 11px 14px;
-      border-radius: 8px;
-      transition: all 0.3s;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-size: 14px;
-      text-decoration: none;
-    }
+  .sidebar .nav-link {
+    color: rgba(255,255,255,.7);
+    padding: 10px 14px;
+    border-radius: 8px;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
 
-    .sidebar .nav-link:hover,
-    .sidebar .nav-link.active {
-      background: rgba(255, 255, 255, 0.15);
-      color: white;
-    }
+  .sidebar .nav-link:hover {
+    background: rgba(255,255,255,.1);
+    color: white;
+    text-decoration: none;
+  }
 
-    .sidebar .nav-link i {
-      width: 20px;
-      text-align: center;
-      font-size: 16px;
-    }
+  .sidebar .nav-link.active {
+    background: rgba(255,255,255,.15);
+    color: white;
+    border-left: 3px solid #1a7f8e;
+    padding-left: 11px;
+  }
 
-  </style>
+  .sidebar .nav-link i {
+    width: 18px;
+    text-align: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
 
+  /* Emergency badge on Leave Requests */
+  .sidebar-badge {
+    margin-left: auto;
+    background: #dc2626;
+    color: white;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 20px;
+    display: none;
+  }
+
+  .sidebar-badge.show { display: inline-block; }
+</style>
 
 <div class="sidebar">
   <div class="logo">Healora</div>
-  <hr>
+
   <ul class="nav flex-column">
+
+    <span class="sidebar-section-label">Main</span>
+
     <li class="nav-item">
-      <a href="/admin/dashboard" class="nav-link <%= currentPage === 'dashboard' ? 'active' : '' %>">
+      <a href="/admin/dashboard"
+         class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">
         <i class="fas fa-home"></i>
         <span>Dashboard</span>
       </a>
     </li>
+
+    <span class="sidebar-section-label">People</span>
+
     <li class="nav-item">
-      <a href="/admin/patients" class="nav-link <%= currentPage === 'patients' ? 'active' : '' %>">
+      <a href="/admin/patients"
+         class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'patients' ? 'active' : '' %>">
         <i class="fas fa-user-injured"></i>
         <span>Patients</span>
       </a>
     </li>
     <li class="nav-item">
-      <a href="/admin/doctors-management" class="nav-link <%= currentPage === 'doctors' ? 'active' : '' %>">
-        <i class="fas fa-user-doctor"></i>
+      <a href="/admin/doctors-management"
+         class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'doctors' ? 'active' : '' %>">
+        <i class="fas fa-user-md"></i>
         <span>Doctors</span>
       </a>
     </li>
-     <li class="nav-item">
-      <a href="/admin/departments" class="nav-link <%= currentPage === 'departments' ? 'active' : '' %>">
+    <li class="nav-item">
+      <a href="/admin/departments"
+         class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'departments' ? 'active' : '' %>">
         <i class="fas fa-building"></i>
         <span>Departments</span>
       </a>
     </li>
+
+    <span class="sidebar-section-label">Operations</span>
+
     <li class="nav-item">
-      <a href="/admin/appointments" class="nav-link <%= currentPage === 'appointments' ? 'active' : '' %>">
+      <a href="/admin/appointments"
+         class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'appointments' ? 'active' : '' %>">
         <i class="fas fa-calendar-check"></i>
         <span>Appointments</span>
       </a>
     </li>
     <li class="nav-item">
-      <a href="/admin/invoice" class="nav-link <%= currentPage === 'invoice' ? 'active' : '' %>">
-        <i class="fas fa-file-invoice"></i>
-        <span>Invoice</span>
+      <a href="/admin/leave-requests"
+         class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'leave-requests' ? 'active' : '' %>">
+        <i class="fas fa-calendar-minus"></i>
+        <span>Leave Requests</span>
+        <span class="sidebar-badge" id="leaveBadge"></span>
       </a>
     </li>
     <li class="nav-item">
-      <a href="/admin/settings" class="nav-link <%= currentPage === 'settings' ? 'active' : '' %>">
+      <a href="/admin/invoice"
+         class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'invoice' ? 'active' : '' %>">
+        <i class="fas fa-file-invoice"></i>
+        <span>Invoices</span>
+      </a>
+    </li>
+
+    <span class="sidebar-section-label">System</span>
+
+    <li class="nav-item">
+      <a href="/admin/settings"
+         class="nav-link <%= typeof currentPage !== 'undefined' && currentPage === 'settings' ? 'active' : '' %>">
         <i class="fas fa-cog"></i>
         <span>Settings</span>
       </a>
     </li>
-    <li class="nav-item">
-        <a href="#" class="nav-link" onclick="showLogoutModal(); return false;">
-          <i class="fas fa-sign-out-alt"></i>
-          <span>Logout</span>
-        </a>
-      </li>
+
   </ul>
 </div>
 
 <script>
-  
-    function showLogoutModal() {
-      document.getElementById('logoutModal').classList.add('show');
-    }
+  // Show pending leave count badge on sidebar
+  (async () => {
+    try {
+      const res  = await fetch('/admin/api/notifications');
+      const data = await res.json();
+      if (!data.success) return;
 
-    function closeLogoutModal() {
-      document.getElementById('logoutModal').classList.remove('show');
-    }
+      // Count unread leave-related notifications
+      const leaveUnread = data.notifications.filter(n =>
+        !n.isRead &&
+        ['leave_emergency', 'leave_request'].includes(n.type)
+      ).length;
 
-    function confirmLogout() {
-      fetch('/patient/logout', { method: 'POST' })
-        .then(() => window.location.href = '/patient/login')
-        .catch(() => window.location.href = '/patient/login');
-    }
-
-    document.getElementById('logoutModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeLogoutModal();
+      const badge = document.getElementById('leaveBadge');
+      if (badge && leaveUnread > 0) {
+        badge.textContent = leaveUnread > 9 ? '9+' : leaveUnread;
+        badge.classList.add('show');
       }
-    });
-  </script>
+    } catch {}
+  })();
+</script>

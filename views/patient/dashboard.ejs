@@ -5,147 +5,464 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <%- include('../partials/cache-control') %>
   <title><%= title %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/css/patient/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
+    .main-content { margin-left:230px; padding:30px; min-height:100vh; }
+
+    /* ── Banner ── */
+    .setup-banner { display:flex; align-items:center; gap:12px; background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:14px 18px; margin-bottom:24px; font-size:14px; color:#1d4ed8; font-weight:600; }
+    .setup-banner a { color:#1d4ed8; text-decoration:underline; margin-left:4px; }
+
+    /* ── Hero ── */
+    .hero { border-radius:20px; padding:30px 32px; margin-bottom:28px; background:linear-gradient(135deg,#203f6a 0%,#1a7f8e 100%); display:flex; align-items:center; justify-content:space-between; gap:24px; position:relative; overflow:hidden; }
+    .hero::before { content:''; position:absolute; width:260px; height:260px; background:rgba(255,255,255,.05); border-radius:50%; top:-80px; right:-60px; }
+    .hero::after  { content:''; position:absolute; width:160px; height:160px; background:rgba(255,255,255,.04); border-radius:50%; bottom:-60px; right:180px; }
+    .hero-left { position:relative; z-index:1; }
+    .hero-greeting { font-size:13px; color:rgba(255,255,255,.65); font-weight:500; margin-bottom:8px; letter-spacing:.3px; }
+    .hero-name    { font-size:28px; font-weight:800; color:white; margin-bottom:6px; line-height:1.2; }
+    .hero-sub     { font-size:14px; color:rgba(255,255,255,.6); }
+    .hero-right   { display:flex; gap:10px; position:relative; z-index:1; flex-wrap:wrap; }
+    .hero-btn { padding:11px 22px; border-radius:12px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all .2s; border:none; }
+    .hero-btn.solid   { background:white; color:#203f6a; }
+    .hero-btn.solid:hover { background:#f1f5f9; transform:translateY(-1px); }
+    .hero-btn.ghost   { background:rgba(255,255,255,.12); color:white; border:1.5px solid rgba(255,255,255,.25); }
+    .hero-btn.ghost:hover { background:rgba(255,255,255,.2); transform:translateY(-1px); }
+
+    /* ── Stat cards ── */
+    .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+    .scard { background:white; border-radius:16px; padding:20px 22px; box-shadow:0 2px 10px rgba(0,0,0,.05); display:flex; align-items:center; gap:16px; text-decoration:none; color:inherit; border:1.5px solid #f0f2f5; transition:all .25s; }
+    .scard:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,0,0,.1); border-color:#e2e8f0; color:inherit; text-decoration:none; }
+    .scard-icon { width:50px; height:50px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+    .scard-icon.blue   { background:#eff6ff; color:#2563eb; }
+    .scard-icon.green  { background:#f0fdf4; color:#059669; }
+    .scard-icon.amber  { background:#fffbeb; color:#d97706; }
+    .scard-icon.purple { background:#f5f3ff; color:#7c3aed; }
+    .scard-val   { font-size:26px; font-weight:800; color:#1a202c; line-height:1; margin-bottom:4px; }
+    .scard-label { font-size:12px; color:#94a3b8; font-weight:600; }
+    .scard-trend { font-size:11px; font-weight:700; margin-top:4px; }
+    .scard-trend.up   { color:#059669; }
+    .scard-trend.down { color:#dc2626; }
+
+    /* ── Layout ── */
+    .dash-grid   { display:grid; grid-template-columns:1fr 340px; gap:20px; margin-bottom:20px; }
+    .dash-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+    /* ── Card base ── */
+    .card { background:white; border-radius:16px; padding:24px; box-shadow:0 2px 12px rgba(0,0,0,.06); }
+    .card-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; }
+    .card-title { font-size:15px; font-weight:800; color:#1a202c; display:flex; align-items:center; gap:8px; }
+    .card-title i { color:#203f6a; }
+    .card-link { font-size:12px; font-weight:700; color:#203f6a; text-decoration:none; display:flex; align-items:center; gap:4px; }
+    .card-link:hover { text-decoration:underline; }
+
+    /* ── Appointment items ── */
+    .appt-row { display:flex; align-items:center; gap:14px; padding:13px 0; border-bottom:1px solid #f0f2f5; }
+    .appt-row:last-child { border-bottom:none; padding-bottom:0; }
+    .appt-avatar { width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,#203f6a,#1a7f8e); color:white; font-size:14px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; }
+    .appt-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+    .appt-info { flex:1; min-width:0; }
+    .appt-doc  { font-size:14px; font-weight:700; color:#1a202c; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .appt-spec { font-size:12px; color:#94a3b8; margin-top:1px; }
+    .appt-right { text-align:right; flex-shrink:0; }
+    .appt-date { font-size:12px; font-weight:600; color:#64748b; }
+    .appt-status { display:inline-block; margin-top:4px; font-size:10px; font-weight:700; padding:2px 8px; border-radius:20px; text-transform:capitalize; }
+    .appt-status.pending   { background:#fffbeb; color:#d97706; }
+    .appt-status.confirmed { background:#f0fdf4; color:#059669; }
+    .appt-status.completed { background:#eff6ff; color:#2563eb; }
+    .appt-status.cancelled { background:#fef2f2; color:#dc2626; }
+
+    /* ── Wallet card ── */
+    .wallet-hero { background:linear-gradient(135deg,#203f6a,#1a7f8e); border-radius:14px; padding:22px; margin-bottom:16px; position:relative; overflow:hidden; }
+    .wallet-hero::before { content:''; position:absolute; width:120px; height:120px; background:rgba(255,255,255,.06); border-radius:50%; top:-30px; right:-20px; }
+    .wallet-chip  { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.15); border-radius:20px; padding:4px 12px; font-size:11px; font-weight:700; color:rgba(255,255,255,.9); margin-bottom:12px; }
+    .wallet-bal   { font-size:32px; font-weight:800; color:white; margin-bottom:4px; }
+    .wallet-sub   { font-size:12px; color:rgba(255,255,255,.6); }
+    .btn-topup { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:12px; background:#203f6a; color:white; border:none; border-radius:12px; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; text-decoration:none; transition:all .2s; }
+    .btn-topup:hover { background:#1a3456; color:white; transform:translateY(-1px); box-shadow:0 4px 16px rgba(32,63,106,.3); }
+
+    /* ── Quick links ── */
+    .quick-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .ql { display:flex; align-items:center; gap:10px; padding:12px 14px; background:#f8fafc; border-radius:10px; text-decoration:none; color:#374151; font-size:13px; font-weight:700; transition:all .2s; border:1.5px solid transparent; }
+    .ql:hover { background:#eff6ff; border-color:#bfdbfe; color:#1d4ed8; text-decoration:none; }
+    .ql i { color:#203f6a; width:16px; text-align:center; flex-shrink:0; }
+
+    /* ── Charts ── */
+    .chart-wrap { position:relative; height:220px; }
+
+    /* ── Empty state ── */
+    .empty { text-align:center; padding:32px 16px; }
+    .empty i { font-size:36px; color:#e2e8f0; margin-bottom:12px; display:block; }
+    .empty p { font-size:13px; color:#94a3b8; margin-bottom:14px; }
+    .empty a { font-size:13px; font-weight:700; color:#203f6a; text-decoration:none; display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#eff6ff; border-radius:8px; }
+    .empty a:hover { background:#dbeafe; }
+
+    /* ── Skeleton ── */
+    .skeleton { background:linear-gradient(90deg,#f0f2f5 25%,#e2e8f0 50%,#f0f2f5 75%); background-size:200% 100%; animation:shimmer 1.5s infinite; border-radius:8px; }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .sk-line { height:14px; margin-bottom:8px; }
+    .sk-line.short { width:60%; }
+    .sk-line.med   { width:80%; }
+
+    @media (max-width:1100px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .dash-grid { grid-template-columns:1fr; } .dash-grid-2 { grid-template-columns:1fr; } }
+    @media (max-width:768px)  { .main-content { margin-left:70px; padding:20px; } .hero { flex-direction:column; align-items:flex-start; } }
+  </style>
 </head>
 <body>
 
-  <%- include('../partials/patient-sidebar', { currentPage: 'dashboard' }) %>
+<%- include('../partials/patient-sidebar', { currentPage: 'dashboard' }) %>
 
-  <div class="main-content">
-    <div class="top-bar">
-      <h1 class="page-title"><%= user.name.split(' ')[0] %>'s Dashboard</h1>
+<div class="main-content">
 
-      <button class="user-profile-btn">
-        <div class="user-avatar-small">
-          <% if (user.profileImage) { %>
-            <img src="<%= user.profileImage %>" alt="<%= user.name %>"
-                 style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-          <% } else { %>
-            <%= user.name.charAt(0).toUpperCase() %>
-          <% } %>
-        </div>
-        <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
-      </button>
+  <%- include('../partials/patient-topbar', {
+    pageTitle:    user.name.split(' ')[0] + "'s Dashboard",
+    pageSubtitle: 'Your health at a glance',
+    backUrl:      null,
+    backLabel:    null
+  }) %>
+
+  <% if (showPasswordSetupBanner) { %>
+    <div class="setup-banner">
+      <i class="fas fa-info-circle"></i>
+      You signed in with Google.
+      <a href="/patient/setup-password">Set up a password</a>
+      to also log in with email.
     </div>
+  <% } %>
 
-    <% if (showPasswordSetupBanner) { %>
-      <div class="alert alert-info" style="margin: 20px; background: #e3f2fd; border-left: 4px solid #2196f3;">
-        <i class="fas fa-info-circle"></i>
-        You signed up with Google.
-        <a href="/patient/setup-password" style="color: #1976d2; font-weight: 600;">Set up a password</a>
-        for email login.
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-left">
+      <div class="hero-greeting">
+        <%
+          const hr = new Date().getHours();
+          const greet = hr < 12 ? 'Good Morning' : hr < 17 ? 'Good Afternoon' : 'Good Evening';
+        %>
+        <%= greet %> 👋
       </div>
-    <% } %>
-
-    <div class="content-grid">
-
-      <div class="profile-card">
-        <div class="profile-header">
-
-          <div class="profile-avatar <%= user.profileImage ? 'has-image' : '' %>">
-            <% if (user.profileImage) { %>
-              <img src="<%= user.profileImage %>" alt="<%= user.name %>" class="profile-avatar-img">
-            <% } else { %>
-              <%= user.name.split(' ')[0].substring(0, 2).toUpperCase() %>
-            <% } %>
-          </div>
-
-          <div class="profile-info">
-            <h2>
-              <% const firstName = user.name ? user.name.split(' ')[0] : 'User'; %>
-              <% if (user.gender === 'Female') { %>
-                Ms <%= firstName %>
-              <% } else if (user.gender === 'Male') { %>
-                Mr <%= firstName %>
-              <% } else { %>
-                <%= firstName %>
-              <% } %>
-            </h2>
-            <p class="profile-subtitle"><%= user.gender || '-' %></p>
-            <p class="profile-email"><%= user.email %></p>
-          </div>
-        </div>
-
-        <div class="profile-details">
-          <div class="detail-box">
-            <div class="detail-label">Date of Birth</div>
-            <div class="detail-value">
-              <%= user.dateOfBirth
-                ? new Date(user.dateOfBirth).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-                : '-' %>
-            </div>
-          </div>
-          <div class="detail-box">
-            <div class="detail-label">Phone</div>
-            <div class="detail-value"><%= user.phone || '-' %></div>
-          </div>
-          <div class="detail-box">
-            <div class="detail-label">Member Since</div>
-            <div class="detail-value">
-              <%= new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) %>
-            </div>
-          </div>
-          <div class="detail-box">
-            <div class="detail-label">Member ID</div>
-            <div class="detail-value"><%= String(user._id).substring(0, 8).toUpperCase() %></div>
-          </div>
-        </div>
+      <div class="hero-name">
+        <% if (user.gender === 'Female') { %>Ms
+        <% } else if (user.gender === 'Male') { %>Mr
+        <% } %> <%= user.name.split(' ')[0] %>
       </div>
-
-      <div class="medications-card">
-        <h3>Medications</h3>
-        <div id="medicationsList">
-          <div class="empty-state">
-            <i class="fas fa-pills"></i>
-            <p>No medications prescribed</p>
-          </div>
-        </div>
-      </div>
+      <div class="hero-sub">Stay on top of your health — book, track and manage.</div>
     </div>
-
-    <div class="content-grid">
-      <div class="wallet-card">
-        <div class="wallet-header">
-          <div class="wallet-title">
-            <i class="fas fa-wallet"></i>
-            <span>My Wallet</span>
-          </div>
-          <button class="add-money-btn">Add Money</button>
-        </div>
-
-        <div class="balance-display">
-          <div class="balance-label">Balance</div>
-          <div class="balance-amount">₹ 0</div>
-        </div>
-
-        <div class="payment-methods">
-          <div class="payment-icon">VISA</div>
-          <div class="payment-icon">MC</div>
-          <div class="payment-icon">UPI</div>
-        </div>
-
-        <div class="transaction-link">
-          <a href="/patient/transactions">Show transaction history</a>
-        </div>
-      </div>
-
-      <div class="consultation-card">
-        <h3>Consultation History</h3>
-        <div id="consultationList">
-          <div class="empty-state" style="color: #a0aec0;">
-            <i class="fas fa-history"></i>
-            <p>No consultation history</p>
-          </div>
-        </div>
-        <div class="view-more">
-          <a href="/patient/consultations">View more</a>
-        </div>
-      </div>
+    <div class="hero-right">
+      <a href="/patient/doctors" class="hero-btn solid">
+        <i class="fas fa-calendar-plus"></i> Book Appointment
+      </a>
+      <a href="/patient/appointments" class="hero-btn ghost">
+        <i class="fas fa-list-ul"></i> My Appointments
+      </a>
     </div>
   </div>
 
+  <!-- Stats -->
+  <div class="stats-grid">
+    <a href="/patient/appointments?status=confirmed" class="scard">
+      <div class="scard-icon blue"><i class="fas fa-calendar-check"></i></div>
+      <div>
+        <div class="scard-val" id="s-upcoming">—</div>
+        <div class="scard-label">Upcoming</div>
+      </div>
+    </a>
+    <a href="/patient/appointments?status=completed" class="scard">
+      <div class="scard-icon green"><i class="fas fa-check-circle"></i></div>
+      <div>
+        <div class="scard-val" id="s-completed">—</div>
+        <div class="scard-label">Completed</div>
+      </div>
+    </a>
+    <a href="/patient/wallet" class="scard">
+      <div class="scard-icon purple"><i class="fas fa-wallet"></i></div>
+      <div>
+        <div class="scard-val" id="s-wallet">—</div>
+        <div class="scard-label">Wallet</div>
+      </div>
+    </a>
+    <a href="/patient/medical-records" class="scard">
+      <div class="scard-icon amber"><i class="fas fa-file-medical"></i></div>
+      <div>
+        <div class="scard-val" id="s-records">—</div>
+        <div class="scard-label">Records</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- Row 1: Appointments + Wallet/Quick -->
+  <div class="dash-grid" style="margin-bottom:20px;">
+
+    <!-- Recent appointments -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-calendar-alt"></i> Recent Appointments</div>
+        <a href="/patient/appointments" class="card-link">View All <i class="fas fa-arrow-right"></i></a>
+      </div>
+      <div id="appt-list">
+        <div class="sk-line skeleton med"></div>
+        <div class="sk-line skeleton short" style="margin-bottom:20px;"></div>
+        <div class="sk-line skeleton med"></div>
+        <div class="sk-line skeleton short"></div>
+      </div>
+    </div>
+
+    <!-- Wallet + Quick links -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><i class="fas fa-wallet"></i> My Wallet</div>
+          <a href="/patient/wallet" class="card-link">History</a>
+        </div>
+        <div class="wallet-hero">
+          <div class="wallet-chip"><i class="fas fa-shield-alt"></i> Healora Wallet</div>
+          <div class="wallet-bal" id="w-balance">₹—</div>
+          <div class="wallet-sub">Available balance</div>
+        </div>
+        <a href="/patient/wallet" class="btn-topup">
+          <i class="fas fa-plus-circle"></i> Add Money
+        </a>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title"><i class="fas fa-bolt"></i> Quick Access</div>
+        </div>
+        <div class="quick-grid">
+          <a href="/patient/doctors"        class="ql"><i class="fas fa-user-md"></i> Find Doctors</a>
+          <a href="/patient/invoices"        class="ql"><i class="fas fa-file-invoice"></i> Invoices</a>
+          <a href="/patient/medical-records" class="ql"><i class="fas fa-file-medical"></i> Records</a>
+          <a href="/patient/profile"         class="ql"><i class="fas fa-user-edit"></i> Profile</a>
+          <a href="/patient/help"            class="ql"><i class="fas fa-question-circle"></i> Help</a>
+          <a href="/patient/settings"        class="ql"><i class="fas fa-cog"></i> Settings</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Row 2: Charts -->
+  <div class="dash-grid-2">
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-chart-bar"></i> Appointment Activity</div>
+        <span style="font-size:11px;color:#94a3b8;font-weight:600;">Last 6 months</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="apptChart"></canvas>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-chart-line"></i> Spending Trend</div>
+        <span style="font-size:11px;color:#94a3b8;font-weight:600;">Last 6 months</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="spendChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  /* ── Helpers ────────────────────────────────────── */
+  function formatSlot(slot) {
+    const [h, m] = slot.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${ampm}`;
+  }
+
+  function initials(name) {
+    return name.replace('Dr. ','').split(' ').map(n=>n[0]).join('').substring(0,2).toUpperCase();
+  }
+
+  /* ── Chart defaults ─────────────────────────────── */
+  Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+  Chart.defaults.font.size   = 12;
+  Chart.defaults.color       = '#94a3b8';
+
+  let apptChartInstance  = null;
+  let spendChartInstance = null;
+
+  function buildApptChart(labels, data) {
+    if (apptChartInstance) apptChartInstance.destroy();
+    apptChartInstance = new Chart(document.getElementById('apptChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label:           'Appointments',
+          data,
+          backgroundColor: 'rgba(32,63,106,.15)',
+          borderColor:     '#203f6a',
+          borderWidth:     2,
+          borderRadius:    8,
+          borderSkipped:   false
+        }]
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a202c',
+            titleColor:      '#fff',
+            bodyColor:       'rgba(255,255,255,.7)',
+            padding:         10,
+            cornerRadius:    8,
+            callbacks: {
+              label: ctx => ` ${ctx.parsed.y} appointment${ctx.parsed.y !== 1 ? 's' : ''}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, border: { display: false } },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#f0f2f5', drawBorder: false },
+            border: { display: false },
+            ticks: { stepSize: 1, precision: 0 }
+          }
+        }
+      }
+    });
+  }
+
+  function buildSpendChart(labels, data) {
+    if (spendChartInstance) spendChartInstance.destroy();
+    spendChartInstance = new Chart(document.getElementById('spendChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label:           'Spending (₹)',
+          data,
+          borderColor:     '#1a7f8e',
+          backgroundColor: (ctx) => {
+            const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 220);
+            gradient.addColorStop(0,   'rgba(26,127,142,.2)');
+            gradient.addColorStop(1,   'rgba(26,127,142,0)');
+            return gradient;
+          },
+          borderWidth:  2.5,
+          pointRadius:  4,
+          pointHoverRadius: 6,
+          pointBackgroundColor: '#1a7f8e',
+          tension:      0.4,
+          fill:         true
+        }]
+      },
+      options: {
+        responsive:          true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1a202c',
+            titleColor:      '#fff',
+            bodyColor:       'rgba(255,255,255,.7)',
+            padding:         10,
+            cornerRadius:    8,
+            callbacks: {
+              label: ctx => ` ₹${ctx.parsed.y.toLocaleString('en-IN')}`
+            }
+          }
+        },
+        scales: {
+          x: { grid: { display: false }, border: { display: false } },
+          y: {
+            beginAtZero: true,
+            grid: { color: '#f0f2f5', drawBorder: false },
+            border: { display: false },
+            ticks: {
+              callback: v => v === 0 ? '₹0' : `₹${(v/1000).toFixed(0)}k`
+            }
+          }
+        }
+      }
+    });
+  }
+
+  /* ── Load everything ────────────────────────────── */
+  (async () => {
+    try {
+      const res  = await fetch('/patient/dashboard/stats');
+      const data = await res.json();
+      if (!data.success) return;
+
+      const { stats, recentAppointments, apptChart, spendChart } = data;
+
+      // Stat cards
+      document.getElementById('s-upcoming').textContent  = stats.upcoming;
+      document.getElementById('s-completed').textContent = stats.completed;
+      document.getElementById('s-wallet').textContent    = `₹${stats.walletBalance.toLocaleString('en-IN')}`;
+      document.getElementById('s-records').textContent   = stats.recordsCount;
+
+      // Wallet balance
+      document.getElementById('w-balance').textContent   = `₹${stats.walletBalance.toLocaleString('en-IN')}`;
+
+      // Recent appointments
+      const apptList = document.getElementById('appt-list');
+      if (!recentAppointments.length) {
+        apptList.innerHTML = `
+          <div class="empty">
+            <i class="fas fa-calendar-times"></i>
+            <p>No appointments yet</p>
+            <a href="/patient/doctors"><i class="fas fa-plus"></i> Book your first</a>
+          </div>`;
+      } else {
+        apptList.innerHTML = recentAppointments.map(appt => {
+          const doc    = appt.doctor;
+          const name   = doc ? `Dr. ${doc.name}` : 'Unknown Doctor';
+          const spec   = doc?.specialization || appt.department || '';
+          const avatar = doc?.profileImage
+            ? `<img src="${doc.profileImage}" alt="">`
+            : initials(name);
+          const dateStr = new Date(appt.date + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+          const timeStr = formatSlot(appt.timeSlot);
+          return `
+            <div class="appt-row">
+              <div class="appt-avatar">${avatar}</div>
+              <div class="appt-info">
+                <div class="appt-doc">${name}</div>
+                <div class="appt-spec">${spec}</div>
+              </div>
+              <div class="appt-right">
+                <div class="appt-date">${dateStr} · ${timeStr}</div>
+                <span class="appt-status ${appt.status}">${appt.status}</span>
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      // Charts
+      buildApptChart(
+        apptChart.map(d => d.label),
+        apptChart.map(d => d.count)
+      );
+      buildSpendChart(
+        spendChart.map(d => d.label),
+        spendChart.map(d => d.total)
+      );
+
+    } catch (err) {
+      console.error('Dashboard error:', err);
+      document.getElementById('appt-list').innerHTML = `
+        <div class="empty">
+          <i class="fas fa-exclamation-circle"></i>
+          <p>Failed to load data. Please refresh.</p>
+        </div>`;
+    }
+  })();
+</script>
 </body>
 </html>
