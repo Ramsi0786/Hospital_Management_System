@@ -3,202 +3,159 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Our Departments | Healora</title>
-  <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <%- include('partials/cache-control') %>
+  <title><%= title %> | Healora</title>
+  <link href="/images/Logo-browser.jpg" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="/css/style.css">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+    .page-hero { background: linear-gradient(135deg, #0D3D8F 0%, #1A6FD4 100%); padding: 56px 0 40px; color: white; text-align: center; }
+    .page-hero h1 { font-size: 36px; font-weight: 800; margin-bottom: 10px; }
+    .page-hero p  { font-size: 15px; color: rgba(255,255,255,.75); }
+    .breadcrumb-hero { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,.6); margin-top: 12px; }
+    .breadcrumb-hero a { color: rgba(255,255,255,.75); text-decoration: none; }
+
+    .depts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px; padding: 40px 0;
+    }
+    .dept-card {
+      background: white; border-radius: 16px;
+      border: 1.5px solid #e4eaf3;
+      box-shadow: 0 1px 6px rgba(20,89,200,.07);
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .dept-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(20,89,200,.12); }
+
+    .dept-card-head {
+      background: linear-gradient(135deg, #0D3D8F, #1A6FD4);
+      padding: 20px; color: white;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .dept-icon {
+      width: 46px; height: 46px; border-radius: 12px;
+      background: rgba(255,255,255,.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .dept-name  { font-size: 16px; font-weight: 800; }
+    .dept-count { font-size: 12px; color: rgba(255,255,255,.7); margin-top: 2px; }
+
+    .dept-card-body { padding: 16px; }
+    .dept-doctors { display: flex; flex-direction: column; gap: 10px; }
+
+    .dept-doctor-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 10px;
+      background: #f8fafc; transition: background .15s;
+    }
+    .dept-doctor-row:hover { background: #E8F0FD; }
+
+    .dept-doc-avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: linear-gradient(135deg, #1459C8, #0D3D8F);
+      color: white; font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .dept-doc-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .dept-doc-name { font-size: 12px; font-weight: 700; color: #0B1120; }
+    .dept-doc-spec { font-size: 11px; color: #94a3b8; }
+
+    .dept-more {
+      font-size: 12px; font-weight: 600; color: #1459C8;
+      padding: 6px 10px; text-align: center; margin-top: 4px;
+    }
+
+    .dept-card-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .btn-view-dept {
+      display: block; width: 100%; padding: 9px;
+      background: #E8F0FD; color: #1459C8;
+      border: none; border-radius: 8px;
+      font-size: 12px; font-weight: 700;
+      text-align: center; text-decoration: none;
+      font-family: inherit; cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-view-dept:hover { background: #1459C8; color: white; }
+
+    .empty-state { text-align: center; padding: 60px 20px; color: #94a3b8; }
+    .empty-state i { font-size: 40px; color: #e2e8f0; display: block; margin-bottom: 12px; }
+  </style>
 </head>
 <body>
-  <%- include('partials/navbar') %>
 
-  <!-- Page Header -->
-  <section class="page-header">
-    <div class="container text-center py-5">
-      <h1 class="display-4 fw-bold text-white mb-3">Our Departments</h1>
-      <p class="text-white-50 fs-5">Comprehensive medical care across specialized departments</p>
+<%- include('partials/navbar') %>
+
+<div class="page-hero">
+  <h1>Our Departments</h1>
+  <p>Specialized care across every medical discipline</p>
+  <div class="breadcrumb-hero">
+    <a href="/">Home</a>
+    <i class="fas fa-chevron-right" style="font-size:10px;"></i>
+    <span>Departments</span>
+  </div>
+</div>
+
+<div class="container">
+  <% if (departments.length === 0) { %>
+    <div class="empty-state">
+      <i class="fas fa-building"></i>
+      <p>No departments available yet.</p>
     </div>
-  </section>
-
-  <!-- Departments Grid -->
-  <section class="departments-section py-5">
-    <div class="container">
-      <div class="row g-4">
-
-        <div class="col-lg-4 col-md-6">
-          <div class="department-card">
-            <div class="dept-icon">
-              <i class="fas fa-heartbeat"></i>
+  <% } else { %>
+    <div class="depts-grid">
+      <% departments.forEach(dept => { %>
+        <div class="dept-card">
+          <div class="dept-card-head">
+            <div class="dept-icon"><i class="fas fa-stethoscope"></i></div>
+            <div>
+              <div class="dept-name"><%= dept._id %></div>
+              <div class="dept-count"><%= dept.count %> Doctor<%= dept.count !== 1 ? 's' : '' %></div>
             </div>
-            <h4>Cardiology</h4>
-            <p>Expert care for heart conditions, including diagnosis, treatment, and prevention of cardiovascular diseases.</p>
-            <ul class="dept-services">
-              <li><i class="fas fa-check"></i> Heart Disease Treatment</li>
-              <li><i class="fas fa-check"></i> ECG & Stress Tests</li>
-              <li><i class="fas fa-check"></i> Cardiac Surgery</li>
-            </ul>
-            <a href="/doctors?department=Cardiology" class="btn btn-primary btn-sm">View Doctors</a>
+          </div>
+          <div class="dept-card-body">
+            <div class="dept-doctors">
+              <% dept.doctors.slice(0, 3).forEach(doc => { %>
+                <div class="dept-doctor-row">
+                  <div class="dept-doc-avatar">
+                    <% if (doc.profileImage) { %>
+                      <img src="<%= doc.profileImage %>" alt="">
+                    <% } else { %>
+                      <%= doc.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) %>
+                    <% } %>
+                  </div>
+                  <div>
+                    <div class="dept-doc-name">Dr. <%= doc.name %></div>
+                    <div class="dept-doc-spec"><%= doc.specialization %></div>
+                  </div>
+                </div>
+              <% }) %>
+              <% if (dept.count > 3) { %>
+                <div class="dept-more">+<%= dept.count - 3 %> more doctor<%= dept.count - 3 !== 1 ? 's' : '' %></div>
+              <% } %>
+            </div>
+          </div>
+          <div class="dept-card-footer">
+            <a href="/doctors?department=<%= encodeURIComponent(dept._id) %>" class="btn-view-dept">
+              View All Doctors <i class="fas fa-arrow-right ms-1"></i>
+            </a>
           </div>
         </div>
-
-        <div class="col-lg-4 col-md-6">
-          <div class="department-card">
-            <div class="dept-icon">
-              <i class="fas fa-baby"></i>
-            </div>
-            <h4>Pediatrics</h4>
-            <p>Specialized medical care for infants, children, and adolescents with compassion and expertise.</p>
-            <ul class="dept-services">
-              <li><i class="fas fa-check"></i> Child Health Check-ups</li>
-              <li><i class="fas fa-check"></i> Vaccinations</li>
-              <li><i class="fas fa-check"></i> Growth Monitoring</li>
-            </ul>
-            <a href="/doctors?department=Pediatrics" class="btn btn-primary btn-sm">View Doctors</a>
-          </div>
-        </div>
-
-        <div class="col-lg-4 col-md-6">
-          <div class="department-card">
-            <div class="dept-icon">
-              <i class="fas fa-spa"></i>
-            </div>
-            <h4>Dermatology</h4>
-            <p>Advanced treatment for skin, hair, and nail conditions with modern dermatological solutions.</p>
-            <ul class="dept-services">
-              <li><i class="fas fa-check"></i> Skin Disease Treatment</li>
-              <li><i class="fas fa-check"></i> Cosmetic Dermatology</li>
-              <li><i class="fas fa-check"></i> Hair Loss Treatment</li>
-            </ul>
-            <a href="/doctors?department=Dermatology" class="btn btn-primary btn-sm">View Doctors</a>
-          </div>
-        </div>
-
-        <div class="col-lg-4 col-md-6">
-          <div class="department-card">
-            <div class="dept-icon">
-              <i class="fas fa-brain"></i>
-            </div>
-            <h4>Neurology</h4>
-            <p>Comprehensive care for brain, spine, and nervous system disorders with cutting-edge treatment.</p>
-            <ul class="dept-services">
-              <li><i class="fas fa-check"></i> Neurological Disorders</li>
-              <li><i class="fas fa-check"></i> Stroke Treatment</li>
-              <li><i class="fas fa-check"></i> Epilepsy Care</li>
-            </ul>
-            <a href="/doctors?department=Neurology" class="btn btn-primary btn-sm">View Doctors</a>
-          </div>
-        </div>
-
-        <div class="col-lg-4 col-md-6">
-          <div class="department-card">
-            <div class="dept-icon">
-              <i class="fas fa-bone"></i>
-            </div>
-            <h4>Orthopedics</h4>
-            <p>Treatment for bone, joint, and muscle problems including sports injuries and fractures.</p>
-            <ul class="dept-services">
-              <li><i class="fas fa-check"></i> Joint Replacement</li>
-              <li><i class="fas fa-check"></i> Sports Medicine</li>
-              <li><i class="fas fa-check"></i> Fracture Treatment</li>
-            </ul>
-            <a href="/doctors?department=Orthopedics" class="btn btn-primary btn-sm">View Doctors</a>
-          </div>
-        </div>
-
-        <div class="col-lg-4 col-md-6">
-          <div class="department-card">
-            <div class="dept-icon">
-              <i class="fas fa-user-md"></i>
-            </div>
-            <h4>General Surgery</h4>
-            <p>Comprehensive surgical care with state-of-the-art facilities and experienced surgeons.</p>
-            <ul class="dept-services">
-              <li><i class="fas fa-check"></i> Laparoscopic Surgery</li>
-              <li><i class="fas fa-check"></i> Emergency Surgery</li>
-              <li><i class="fas fa-check"></i> Minimally Invasive Procedures</li>
-            </ul>
-            <a href="/doctors?department=Surgery" class="btn btn-primary btn-sm">View Doctors</a>
-          </div>
-        </div>
-
-      </div>
+      <% }) %>
     </div>
-  </section>
+  <% } %>
+</div>
 
-  <%- include('partials/footer') %>
-
-  <style>
-    .page-header {
-      background: linear-gradient(135deg, #1a2f4d 0%, #1B365D 100%);
-      padding: 80px 0;
-    }
-
-    .departments-section {
-      background: #f8f9fa;
-    }
-
-    .department-card {
-      background: white;
-      border-radius: 15px;
-      padding: 30px;
-      height: 100%;
-      transition: all 0.3s ease;
-      border: 1px solid #e8ecef;
-    }
-
-    .department-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 10px 30px rgba(27, 54, 93, 0.15);
-      border-color: transparent;
-    }
-
-    .dept-icon {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #00A3E0, #1B365D);
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      margin-bottom: 20px;
-    }
-
-    .department-card h4 {
-      color: #1B365D;
-      font-weight: 700;
-      margin-bottom: 15px;
-    }
-
-    .department-card p {
-      color: #64748b;
-      font-size: 14px;
-      line-height: 1.7;
-      margin-bottom: 20px;
-    }
-
-    .dept-services {
-      list-style: none;
-      padding: 0;
-      margin: 0 0 25px 0;
-    }
-
-    .dept-services li {
-      color: #64748b;
-      font-size: 14px;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .dept-services i {
-      color: #00A3E0;
-      font-size: 12px;
-    }
-  </style>
-
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<%- include('partials/footer') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
