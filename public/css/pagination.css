@@ -89,3 +89,10 @@
     font-size: 13px;
   }
 }
+
+.pagination-btn.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #f8fafc;
+}

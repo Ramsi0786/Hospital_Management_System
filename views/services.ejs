@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('partials/cache-control') %>
+  <title><%= title %> | Healora</title>
+  <link href="/images/Logo-browser.jpg" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --blue:     #1250b0;
+      --blue-mid: #1a6fd4;
+      --sky:      #0ea5d4;
+      --navy:     #071730;
+      --ink:      #0f1f3d;
+      --slate:    #475569;
+      --muted:    #94a3b8;
+      --border:   #e2e8f0;
+      --surface:  #f8fafd;
+      --white:    #ffffff;
+      --accent:   #05c8a4;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--surface);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* ── HERO ── */
+    .page-hero {
+      position: relative;
+      background: var(--navy);
+      padding: 110px 0 72px;
+      overflow: hidden;
+    }
+
+    .page-hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.025) 1px, transparent 1px);
+      background-size: 56px 56px;
+    }
+
+    .page-hero::after {
+      content: '';
+      position: absolute;
+      width: 520px; height: 520px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(26,111,212,.28) 0%, transparent 70%);
+      top: -180px; right: -100px;
+      pointer-events: none;
+    }
+
+    .hero-inner {
+      position: relative; z-index: 2;
+      display: flex; flex-direction: column; align-items: flex-start;
+    }
+
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.13);
+      color: var(--accent);
+      padding: 6px 16px; border-radius: 40px;
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.2px;
+      margin-bottom: 22px;
+    }
+
+    .hero-title {
+      font-family: 'Lora', serif;
+      font-size: clamp(2.1rem, 4.5vw, 3.4rem);
+      font-weight: 500; color: var(--white);
+      line-height: 1.15; margin-bottom: 14px;
+    }
+
+    .hero-title em { font-style: italic; color: var(--sky); }
+
+    .hero-sub {
+      font-size: 14.5px; color: rgba(255,255,255,.55);
+      line-height: 1.8; font-weight: 300;
+      max-width: 480px; margin-bottom: 28px;
+    }
+
+    .hero-breadcrumb {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: rgba(255,255,255,.38);
+    }
+    .hero-breadcrumb a { color: rgba(255,255,255,.55); text-decoration: none; transition: color .2s; }
+    .hero-breadcrumb a:hover { color: var(--white); }
+    .hero-breadcrumb i { font-size: 8px; opacity: .7; }
+
+    /* ── SERVICES SECTION ── */
+    .services-section { padding: 72px 0 90px; }
+
+    .section-header {
+      display: flex; align-items: flex-end;
+      justify-content: space-between; gap: 20px;
+      margin-bottom: 44px; flex-wrap: wrap;
+    }
+
+    .sec-tag {
+      display: inline-block;
+      font-size: 10.5px; font-weight: 700;
+      color: var(--blue-mid); text-transform: uppercase;
+      letter-spacing: 1.2px; background: #e8f1fb;
+      padding: 5px 14px; border-radius: 30px;
+      margin-bottom: 12px;
+    }
+
+    .sec-title {
+      font-family: 'Lora', serif;
+      font-size: clamp(1.7rem, 3vw, 2.2rem);
+      font-weight: 500; color: var(--ink);
+      line-height: 1.2; margin: 0;
+    }
+
+    .sec-title em { font-style: italic; color: var(--blue-mid); }
+
+    .sec-sub {
+      font-size: 14px; color: var(--muted);
+      font-weight: 300; max-width: 340px;
+      line-height: 1.7; text-align: right;
+    }
+
+    /* ── SERVICE GRID ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    /* ── SERVICE CARD ── */
+    .service-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex; flex-direction: column;
+      transition: border-color .22s, box-shadow .22s, transform .22s;
+    }
+
+    .service-card:hover {
+      border-color: var(--blue-mid);
+      box-shadow: 0 14px 40px rgba(18,80,176,.1);
+      transform: translateY(-5px);
+    }
+
+    /* Image */
+    .service-img-wrap {
+      position: relative; overflow: hidden;
+      height: 190px;
+    }
+
+    .service-img-wrap img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transition: transform .4s ease;
+    }
+
+    .service-card:hover .service-img-wrap img {
+      transform: scale(1.04);
+    }
+
+    /* Subtle gradient overlay on image */
+    .service-img-wrap::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(to bottom, transparent 50%, rgba(7,23,48,.3) 100%);
+    }
+
+    /* Body */
+    .service-body {
+      padding: 22px 22px 20px;
+      flex: 1; display: flex; flex-direction: column;
+    }
+
+    .service-icon {
+      width: 44px; height: 44px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; margin-bottom: 14px; flex-shrink: 0;
+    }
+
+    .si-blue   { background: #e8f1fb; color: var(--blue-mid); }
+    .si-red    { background: rgba(239,68,68,.1); color: #dc2626; }
+    .si-green  { background: rgba(5,200,164,.1); color: #059669; }
+    .si-purple { background: rgba(139,92,246,.1); color: #7c3aed; }
+    .si-amber  { background: rgba(245,158,11,.1); color: #b45309; }
+    .si-sky    { background: rgba(14,165,212,.1); color: #0284c7; }
+
+    .service-title {
+      font-size: 15.5px; font-weight: 700;
+      color: var(--ink); margin-bottom: 8px;
+      line-height: 1.3;
+    }
+
+    .service-desc {
+      font-size: 13px; color: var(--slate);
+      line-height: 1.8; font-weight: 300;
+      margin: 0; flex: 1;
+    }
+
+    /* Footer link */
+    .service-footer {
+      padding: 0 22px 20px;
+    }
+
+    .service-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12.5px; font-weight: 700;
+      color: var(--blue-mid); text-decoration: none;
+      transition: gap .2s, color .2s;
+    }
+
+    .service-link:hover { gap: 10px; color: var(--blue); }
+    .service-link i { font-size: 11px; }
+
+    /* ── CTA STRIP ── */
+    .cta-section { background: var(--white); padding: 0 0 90px; }
+
+    .cta-inner {
+      background: linear-gradient(135deg, var(--navy) 0%, #0d3878 50%, #0d5a82 100%);
+      border-radius: 24px;
+      padding: 64px 60px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 40px;
+      position: relative; overflow: hidden;
+    }
+
+    .cta-inner::before {
+      content: '';
+      position: absolute;
+      width: 360px; height: 360px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(14,165,212,.2) 0%, transparent 70%);
+      right: -80px; top: -100px;
+      pointer-events: none;
+    }
+
+    .cta-inner::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .cta-text { position: relative; z-index: 1; }
+
+    .cta-title {
+      font-family: 'Lora', serif;
+      font-size: clamp(1.6rem, 3vw, 2.1rem);
+      font-weight: 500; color: var(--white);
+      margin-bottom: 10px; line-height: 1.25;
+    }
+
+    .cta-sub {
+      font-size: 14px; color: rgba(255,255,255,.6);
+      line-height: 1.75; font-weight: 300;
+      max-width: 420px;
+    }
+
+    .cta-actions {
+      display: flex; flex-direction: column;
+      gap: 12px; flex-shrink: 0;
+      position: relative; z-index: 1;
+    }
+
+    .btn-cta-solid {
+      display: inline-flex; align-items: center;
+      justify-content: center; gap: 8px;
+      padding: 13px 26px;
+      background: var(--white); color: var(--blue);
+      border-radius: 10px; font-size: 13.5px;
+      font-weight: 700; font-family: 'Sora', sans-serif;
+      text-decoration: none; white-space: nowrap;
+      transition: all .2s;
+    }
+
+    .btn-cta-solid:hover {
+      background: #f0f6ff; color: var(--blue);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,.2);
+    }
+
+    .btn-cta-ghost {
+      display: inline-flex; align-items: center;
+      justify-content: center; gap: 8px;
+      padding: 12px 26px;
+      background: transparent; color: rgba(255,255,255,.8);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 10px; font-size: 13.5px;
+      font-weight: 600; font-family: 'Sora', sans-serif;
+      text-decoration: none; white-space: nowrap;
+      transition: all .2s;
+    }
+
+    .btn-cta-ghost:hover {
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.5);
+      color: var(--white);
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .services-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 767px) {
+      .page-hero { padding: 90px 0 56px; }
+      .section-header { flex-direction: column; align-items: flex-start; }
+      .sec-sub { text-align: left; max-width: 100%; }
+      .services-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+      .cta-inner { grid-template-columns: 1fr; padding: 40px 28px; }
+      .cta-actions { flex-direction: row; flex-wrap: wrap; }
+    }
+
+    @media (max-width: 520px) {
+      .services-grid { grid-template-columns: 1fr; }
+      .service-img-wrap { height: 160px; }
+      .cta-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<%- include('partials/navbar') %>
+
+<!-- ── Hero ── -->
+<section class="page-hero">
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-pill">
+        <i class="fas fa-heart-pulse"></i> Our Services
+      </div>
+      <h1 class="hero-title">
+        Comprehensive care for<br><em>every need</em>
+      </h1>
+      <p class="hero-sub">
+        Advanced healthcare services backed by expert specialists,
+        modern technology, and a commitment to your wellbeing.
+      </p>
+      <div class="hero-breadcrumb">
+        <a href="/"><i class="fas fa-home"></i> Home</a>
+        <i class="fas fa-chevron-right"></i>
+        <span>Services</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Services ── -->
+<section class="services-section">
+  <div class="container">
+
+    <div class="section-header">
+      <div>
+        <div class="sec-tag">What We Offer</div>
+        <h2 class="sec-title">Built around<br><em>your health</em></h2>
+      </div>
+      <p class="sec-sub">From routine check-ups to complex procedures — all under one roof.</p>
+    </div>
+
+    <div class="services-grid">
+
+      <!-- General Consultation -->
+      <div class="service-card">
+        <div class="service-img-wrap">
+          <img src="/images/service1.jpg" alt="General Consultation">
+        </div>
+        <div class="service-body">
+          <div class="service-icon si-blue"><i class="fas fa-stethoscope"></i></div>
+          <div class="service-title">General Consultation</div>
+          <p class="service-desc">Experienced doctors providing accurate diagnosis and personalized treatment for every patient with care and precision.</p>
+        </div>
+        <div class="service-footer">
+          <a href="/doctors" class="service-link">Find a Doctor <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <!-- Diagnostics -->
+      <div class="service-card">
+        <div class="service-img-wrap">
+          <img src="/images/service2.jpg" alt="Diagnostics">
+        </div>
+        <div class="service-body">
+          <div class="service-icon si-sky"><i class="fas fa-microscope"></i></div>
+          <div class="service-title">Diagnostics &amp; Scans</div>
+          <p class="service-desc">Advanced imaging and testing facilities ensuring quick and reliable results with utmost precision and accuracy.</p>
+        </div>
+        <div class="service-footer">
+          <a href="/doctors" class="service-link">Book a Test <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <!-- Emergency -->
+      <div class="service-card">
+        <div class="service-img-wrap">
+          <img src="/images/service3.jpg" alt="Emergency Care">
+        </div>
+        <div class="service-body">
+          <div class="service-icon si-red"><i class="fas fa-ambulance"></i></div>
+          <div class="service-title">Emergency Care</div>
+          <p class="service-desc">Round-the-clock emergency unit equipped with modern facilities and expert medical staff ready 24/7.</p>
+        </div>
+        <div class="service-footer">
+          <a href="/contact" class="service-link">Emergency Contact <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <!-- Pharmacy -->
+      <div class="service-card">
+        <div class="service-img-wrap">
+          <img src="/images/service4.jpg" alt="Pharmacy">
+        </div>
+        <div class="service-body">
+          <div class="service-icon si-green"><i class="fas fa-pills"></i></div>
+          <div class="service-title">Pharmacy &amp; Medicine</div>
+          <p class="service-desc">On-site pharmacy offering genuine and prescribed medicines with professional guidance and quick dispensing.</p>
+        </div>
+        <div class="service-footer">
+          <a href="/contact" class="service-link">Learn More <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <!-- Surgery -->
+      <div class="service-card">
+        <div class="service-img-wrap">
+          <img src="/images/service5.jpg" alt="Surgery">
+        </div>
+        <div class="service-body">
+          <div class="service-icon si-purple"><i class="fas fa-scalpel"></i></div>
+          <div class="service-title">Surgery &amp; Operation</div>
+          <p class="service-desc">State-of-the-art operation theatres ensuring patient safety and top surgical standards at every procedure.</p>
+        </div>
+        <div class="service-footer">
+          <a href="/doctors" class="service-link">Meet Surgeons <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+      <!-- Physiotherapy -->
+      <div class="service-card">
+        <div class="service-img-wrap">
+          <img src="/images/service6.jpg" alt="Physiotherapy">
+        </div>
+        <div class="service-body">
+          <div class="service-icon si-amber"><i class="fas fa-person-walking"></i></div>
+          <div class="service-title">Physiotherapy &amp; Rehab</div>
+          <p class="service-desc">Expert-led therapy sessions helping patients recover faster and regain strength efficiently and comfortably.</p>
+        </div>
+        <div class="service-footer">
+          <a href="/doctors" class="service-link">Book a Session <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <div class="container">
+    <div class="cta-inner">
+      <div class="cta-text">
+        <h2 class="cta-title">Ready to take the first step?</h2>
+        <p class="cta-sub">Book an appointment with one of our expert doctors today and experience care that truly puts you first.</p>
+      </div>
+      <div class="cta-actions">
+        <a href="/doctors" class="btn-cta-solid">
+          <i class="fas fa-calendar-plus"></i> Book Appointment
+        </a>
+        <a href="/contact" class="btn-cta-ghost">
+          <i class="fas fa-phone"></i> Contact Us
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

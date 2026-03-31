@@ -5,170 +5,730 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <%- include('../partials/cache-control') %>
   <title><%= title %></title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/css/doctor/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --blue:       #1459C8;
+      --blue-dark:  #0D3D8F;
+      --blue-mid:   #1A6FD4;
+      --blue-light: #E8F0FD;
+      --ink:        #0B1120;
+      --ink-2:      #1E2D45;
+      --muted:      #6B7E99;
+      --border:     #E4EAF3;
+      --surface:    #F4F7FC;
+      --white:      #FFFFFF;
+      --green:      #0DBF7E;
+      --amber:      #F5A623;
+      --red:        #E8354A;
+      --purple:     #7C5CFC;
+      --r-lg:       16px;
+      --r-md:       12px;
+      --r-sm:       8px;
+      --sh-sm:      0 1px 6px rgba(20,89,200,.07);
+      --sh-md:      0 4px 20px rgba(20,89,200,.10);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--surface);
+      color: var(--ink);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    .main-content {
+  margin-left: 230px;
+  padding: 30px 28px 40px;
+  min-height: 100vh;
+}
+
+
+    /* ── Page header ── */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+    .page-date {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: .6px;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .page-greeting {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .page-greeting span { color: var(--blue); }
+    .page-sub {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 3px;
+    }
+
+    /* Next appointment pill */
+    .next-pill {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-radius: 50px;
+      padding: 8px 16px 8px 10px;
+      box-shadow: var(--sh-sm);
+    }
+    .next-pill-icon {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--blue-light);
+      color: var(--blue);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; flex-shrink: 0;
+    }
+    .next-pill-lbl { font-size: 10px; font-weight: 600; color: var(--muted); }
+    .next-pill-val { font-size: 12px; font-weight: 700; color: var(--ink); margin-top: 1px; }
+
+    /* ── Stats row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .stat-card {
+      background: var(--white);
+      border-radius: var(--r-md);
+      padding: 16px 16px 13px;
+      border: 1.5px solid var(--border);
+      box-shadow: var(--sh-sm);
+      position: relative;
+      overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--sh-md); }
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .c-blue::after   { background: var(--blue); }
+    .c-green::after  { background: var(--green); }
+    .c-amber::after  { background: var(--amber); }
+    .c-purple::after { background: var(--purple); }
+
+    .stat-top {
+      display: flex; align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .stat-icon {
+      width: 34px; height: 34px;
+      border-radius: var(--r-sm);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .si-blue   { background: var(--blue-light);       color: var(--blue); }
+    .si-green  { background: rgba(13,191,126,.12);    color: var(--green); }
+    .si-amber  { background: rgba(245,166,35,.12);    color: var(--amber); }
+    .si-purple { background: rgba(124,92,252,.12);    color: var(--purple); }
+
+    .stat-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .sb-blue   { background: var(--blue-light);       color: var(--blue); }
+    .sb-green  { background: rgba(13,191,126,.12);    color: var(--green); }
+    .sb-amber  { background: rgba(245,166,35,.12);    color: var(--amber); }
+    .sb-purple { background: rgba(124,92,252,.12);    color: var(--purple); }
+
+    .stat-val {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    /* ── Layout grids ── */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--white);
+      border-radius: var(--r-lg);
+      border: 1.5px solid var(--border);
+      box-shadow: var(--sh-sm);
+      overflow: hidden;
+    }
+    .card-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 15px 18px;
+      border-bottom: 1.5px solid var(--border);
+    }
+    .card-title {
+      font-size: 13px; font-weight: 700;
+      color: var(--ink);
+      display: flex; align-items: center; gap: 7px;
+    }
+    .card-title i { color: var(--blue); font-size: 13px; }
+    .card-body { padding: 16px 18px; }
+
+    .badge-count {
+      font-size: 11px; font-weight: 700;
+      padding: 2px 9px; border-radius: 20px;
+      background: var(--blue-light); color: var(--blue);
+    }
+
+    /* Chart tabs */
+    .tab-row { display: flex; gap: 4px; }
+    .tab-btn {
+      padding: 4px 11px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: transparent;
+      font-size: 11px; font-weight: 700;
+      color: var(--muted);
+      cursor: pointer;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      transition: all .15s;
+    }
+    .tab-btn.active { background: var(--blue); border-color: var(--blue); color: white; }
+    .tab-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
+
+    /* ── Schedule list ── */
+    .sch-list { padding: 0 18px; }
+    .sch-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .sch-item:last-child { border-bottom: none; }
+    .sch-time {
+      font-size: 11px; font-weight: 700;
+      color: var(--blue); min-width: 56px; flex-shrink: 0;
+    }
+    .sch-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--blue-mid));
+      color: white; font-size: 12px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; overflow: hidden;
+    }
+    .sch-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .sch-info { flex: 1; min-width: 0; }
+    .sch-name { font-size: 12px; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sch-meta { font-size: 10px; color: var(--muted); margin-top: 1px; }
+    .sch-badge {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px;
+      flex-shrink: 0; text-transform: capitalize;
+    }
+    .sch-badge.pending   { background: rgba(245,166,35,.12); color: var(--amber); }
+    .sch-badge.confirmed { background: rgba(13,191,126,.12); color: var(--green); }
+    .sch-badge.completed { background: var(--blue-light);    color: var(--blue);  }
+    .sch-badge.cancelled { background: rgba(232,53,74,.10);  color: var(--red);   }
+
+    .view-link {
+      font-size: 11px; font-weight: 700;
+      color: var(--blue); text-decoration: none;
+      display: flex; align-items: center; gap: 3px;
+    }
+    .view-link:hover { color: var(--blue-dark); }
+
+    .empty-state {
+      text-align: center; padding: 32px 20px; color: var(--muted);
+    }
+    .empty-state i { font-size: 26px; color: var(--border); display: block; margin-bottom: 8px; }
+    .empty-state p { font-size: 12px; font-weight: 600; }
+
+    /* ── Profile card ── */
+    .profile-hero {
+      background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-mid) 100%);
+      padding: 18px;
+      display: flex; align-items: center; gap: 12px;
+      position: relative; overflow: hidden;
+    }
+    .profile-hero::before {
+      content: '';
+      position: absolute; width: 110px; height: 110px;
+      border-radius: 50%; background: rgba(255,255,255,.06);
+      top: -35px; right: -15px;
+    }
+    .profile-avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.3);
+      background: rgba(255,255,255,.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 800; color: white;
+      overflow: hidden; flex-shrink: 0; position: relative; z-index: 1;
+    }
+    .profile-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .profile-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+    .profile-name { font-size: 13px; font-weight: 800; color: white; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profile-spec { font-size: 11px; color: rgba(255,255,255,.65); margin-top: 2px; }
+    .profile-edit {
+      flex-shrink: 0; position: relative; z-index: 1;
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.25);
+      color: white; font-size: 10px; font-weight: 700;
+      padding: 4px 11px; border-radius: 20px;
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .profile-edit:hover { background: rgba(255,255,255,.25); color: white; }
+
+    .profile-rows { padding: 0 18px; }
+    .profile-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+    }
+    .profile-row:last-child { border-bottom: none; }
+    .pr-lbl { font-size: 11px; font-weight: 600; color: var(--muted); }
+    .pr-val { font-weight: 700; color: var(--ink); font-size: 12px; }
+    .star-badge { display: inline-flex; align-items: center; gap: 3px; }
+    .star-badge i { color: var(--amber); font-size: 11px; }
+
+    /* ── Donut ── */
+    .donut-wrap {
+      position: relative; width: 120px; height: 120px;
+      margin: 4px auto 14px;
+    }
+    .donut-center {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center; pointer-events: none;
+    }
+    .donut-val { font-size: 20px; font-weight: 800; color: var(--ink); line-height: 1; }
+    .donut-lbl { font-size: 10px; font-weight: 600; color: var(--muted); }
+
+    .legend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ink-2); }
+    .legend-dot  { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Quick Actions ── */
+    .qa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding: 16px 18px; }
+    .qa-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 10px 12px;
+      border-radius: var(--r-sm);
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      text-decoration: none;
+      transition: all .15s;
+    }
+    .qa-item:hover {
+      background: var(--blue-light);
+      border-color: var(--blue);
+      transform: translateY(-1px);
+    }
+    .qa-item i { font-size: 13px; color: var(--blue); flex-shrink: 0; }
+    .qa-lbl { font-size: 12px; font-weight: 700; color: var(--ink); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp .4s ease both; }
+    .d1 { animation-delay: .05s; } .d2 { animation-delay: .10s; }
+    .d3 { animation-delay: .15s; } .d4 { animation-delay: .20s; }
+    .d5 { animation-delay: .25s; } .d6 { animation-delay: .30s; }
+
+    /* ── Responsive ── */
+    @media (max-width: 1280px) {
+      .stats-row   { grid-template-columns: repeat(3,1fr); }
+      .bottom-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 1024px) {
+      .main-grid   { grid-template-columns: 1fr; }
+      .bottom-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      .main-content { margin-left: 0; padding: 16px; padding-top: 76px; }
+      .stats-row    { grid-template-columns: repeat(2,1fr); }
+      .page-header  { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  </style>
 </head>
 <body>
 
-  <%- include('../partials/doctor-sidebar') %>
-  
-  <div class="main-content">
+<%- include('../partials/doctor-sidebar', { currentPage: 'dashboard' }) %>
 
-    <div class="top-bar">
-      <h1 class="page-title"><%= user.name %>'s Dashboard</h1>
-      <div class="user-profile">
-        <div class="user-avatar">
-  <% if (user.profileImage) { %>
-    <img src="<%= user.profileImage %>" alt="<%= user.name %>" 
-         style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-  <% } else { %>
-    <%= user.name.charAt(0).toUpperCase() %>
-  <% } %>
-</div>
-        <div class="user-info">
-          <span>Hello <%= user.name.split(' ')[0] %></span>
+<div class="main-content">
+  <%- include('../partials/doctor-topbar', {
+    pageTitle:    'Dashboard',
+    pageSubtitle: null,
+    backUrl:      null,
+    backLabel:    null
+  }) %>
+
+  <%
+    const hour      = new Date().getHours();
+    const greeting  = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+    const todayLabel = new Date().toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  %>
+
+  <!-- Page Header -->
+  <div class="page-header fade-up">
+    <div>
+      <div class="page-date"><%= todayLabel %></div>
+      <div class="page-greeting"><%= greeting %>, <span>Dr. <%= user.name.split(' ')[0] %></span> 👋</div>
+      <div class="page-sub"><%= user.specialization || 'Specialist' %> &middot; <%= user.department || 'General' %> Department</div>
+    </div>
+    <% if (nextAppointment) { %>
+      <%
+        const [nh,nm] = nextAppointment.timeSlot.split(':').map(Number);
+        const nfmt    = `${nh%12||12}:${String(nm).padStart(2,'0')} ${nh>=12?'PM':'AM'}`;
+        const ndate   = new Date(nextAppointment.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      %>
+      <div class="next-pill">
+        <div class="next-pill-icon"><i class="fas fa-calendar-check"></i></div>
+        <div>
+          <div class="next-pill-lbl">Next Appointment</div>
+          <div class="next-pill-val"><%= nextAppointment.patient?.name || 'Patient' %> &middot; <%= ndate %> at <%= nfmt %></div>
         </div>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card c-blue fade-up d1">
+      <div class="stat-top">
+        <div class="stat-icon si-blue"><i class="fas fa-calendar-alt"></i></div>
+        <span class="stat-badge sb-blue">Total</span>
+      </div>
+      <div class="stat-val"><%= stats.total %></div>
+      <div class="stat-lbl">All Appointments</div>
+    </div>
+    <div class="stat-card c-green fade-up d2">
+      <div class="stat-top">
+        <div class="stat-icon si-green"><i class="fas fa-calendar-day"></i></div>
+        <span class="stat-badge sb-green">Today</span>
+      </div>
+      <div class="stat-val"><%= todayAppointments.length %></div>
+      <div class="stat-lbl">Today's Schedule</div>
+    </div>
+    <div class="stat-card c-amber fade-up d3">
+      <div class="stat-top">
+        <div class="stat-icon si-amber"><i class="fas fa-hourglass-half"></i></div>
+        <span class="stat-badge sb-amber">Active</span>
+      </div>
+      <div class="stat-val"><%= stats.pending + stats.confirmed %></div>
+      <div class="stat-lbl">Upcoming</div>
+    </div>
+    <div class="stat-card c-purple fade-up d4">
+      <div class="stat-top">
+        <div class="stat-icon si-purple"><i class="fas fa-check-double"></i></div>
+        <span class="stat-badge sb-purple">Done</span>
+      </div>
+      <div class="stat-val"><%= stats.completed %></div>
+      <div class="stat-lbl">Completed</div>
+    </div>
+    <div class="stat-card c-green fade-up d5">
+      <div class="stat-top">
+        <div class="stat-icon si-green"><i class="fas fa-indian-rupee-sign"></i></div>
+        <span class="stat-badge sb-green">Earned</span>
+      </div>
+      <div class="stat-val">₹<%= totalEarnings >= 1000 ? (totalEarnings/1000).toFixed(1)+'k' : totalEarnings %></div>
+      <div class="stat-lbl">Total Earnings</div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Chart + Schedule -->
+  <div class="main-grid fade-up d2">
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-chart-line"></i> Analytics</div>
+        <div class="tab-row">
+          <button class="tab-btn active" onclick="switchChart('appointments',this)">Appointments</button>
+          <button class="tab-btn" onclick="switchChart('revenue',this)">Revenue</button>
+          <button class="tab-btn" onclick="switchChart('monthly',this)">Monthly</button>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="dashChart" height="115"></canvas>
       </div>
     </div>
 
-    <div class="content-grid">
-
-      <div class="profile-card">
-        <div class="doctor-profile">
-          <div class="doctor-avatar <%= user.profileImage ? 'has-image' : 'has-initials' %>">
-  <% if (user.profileImage) { %>
-    <img src="<%= user.profileImage %>" alt="<%= user.name %>" class="doctor-avatar-img">
-  <% } else { %>
-    <%= user.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
-  <% } %>
-</div>
-          <div class="doctor-info">
-            <h2>Dr. <%= user.name %></h2>
-            <div class="doctor-meta">
-              <span class="meta-badge"><%= user.specialization || 'Specialist' %></span>
-              <span class="meta-badge"><%= user.department || 'General' %></span>
-            </div>
-            <p class="doctor-email"><%= user.email %></p>
-          </div>
-        </div>
-
-        <div class="profile-details">
-          <div class="detail-item">
-            <div class="detail-label">ID</div>
-            <div class="detail-value"><%= user._id.toString().substring(0, 8).toUpperCase() %></div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Phone</div>
-            <div class="detail-value"><%= user.phone || 'Not provided' %></div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Department</div>
-            <div class="detail-value"><%= user.department || 'General Medicine' %></div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Joined Since</div>
-            <div class="detail-value"><%= new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) %></div>
-          </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-list-check"></i> Today's Schedule</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="badge-count"><%= todayAppointments.length %></span>
+          <a href="/doctor/appointments" class="view-link">All <i class="fas fa-arrow-right"></i></a>
         </div>
       </div>
-
-      <div class="appointments-card">
-        <h3>Today's Appointments</h3>
-        <div class="appointments-header">
-          <div>Patient</div>
-          <div>Time</div>
-          <div>Status</div>
-        </div>
-        <div id="appointmentsList">
+      <div class="sch-list">
+        <% if (todayAppointments.length === 0) { %>
           <div class="empty-state">
-            <i class="fas fa-calendar"></i>
-            <p>No appointments scheduled for today</p>
+            <i class="fas fa-calendar-check"></i>
+            <p>No appointments today</p>
+          </div>
+        <% } else { %>
+          <% todayAppointments.forEach(appt => { %>
+            <%
+              const [ah,am] = appt.timeSlot.split(':').map(Number);
+              const afmt    = `${ah%12||12}:${String(am).padStart(2,'0')} ${ah>=12?'PM':'AM'}`;
+            %>
+            <div class="sch-item">
+              <span class="sch-time"><%= afmt %></span>
+              <div class="sch-avatar">
+                <% if (appt.patient?.profileImage) { %>
+                  <img src="<%= appt.patient.profileImage %>" alt="">
+                <% } else { %>
+                  <%= appt.patient?.name?.charAt(0)?.toUpperCase() || 'P' %>
+                <% } %>
+              </div>
+              <div class="sch-info">
+                <div class="sch-name"><%= appt.patient?.name || 'Patient' %></div>
+                <div class="sch-meta"><%= appt.department || user.department %><% if (appt.patient?.age) { %> &middot; <%= appt.patient.age %> yrs<% } %></div>
+              </div>
+              <span class="sch-badge <%= appt.status %>"><%= appt.status %></span>
+            </div>
+          <% }) %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Grid -->
+  <div class="bottom-grid fade-up d3">
+
+    <!-- Doctor Profile -->
+    <div class="card">
+      <div class="profile-hero">
+        <div class="profile-avatar">
+          <% if (user.profileImage) { %>
+            <img src="<%= user.profileImage %>" alt="">
+          <% } else { %>
+            <%= user.name.split(' ').map(n=>n[0]).join('').toUpperCase().substring(0,2) %>
+          <% } %>
+        </div>
+        <div class="profile-info">
+          <div class="profile-name">Dr. <%= user.name %></div>
+          <div class="profile-spec"><%= user.specialization %> &middot; <%= user.department %></div>
+        </div>
+        <a href="/doctor/profile" class="profile-edit">Edit</a>
+      </div>
+      <div class="profile-rows">
+        <div class="profile-row">
+          <span class="pr-lbl">Consultation Fee</span>
+          <span class="pr-val"><% if (user.consultationFee > 0) { %>₹<%= user.consultationFee %><% } else { %>Not set<% } %></span>
+        </div>
+        <div class="profile-row">
+          <span class="pr-lbl">Experience</span>
+          <span class="pr-val"><%= user.experience || 0 %>+ years</span>
+        </div>
+        <div class="profile-row">
+          <span class="pr-lbl">Rating</span>
+          <span class="pr-val">
+            <% if (user.rating && user.rating > 0) { %>
+              <span class="star-badge"><i class="fas fa-star"></i> <%= Number(user.rating).toFixed(1) %><% if(user.ratingCount){ %> <span style="color:var(--muted);font-weight:500;font-size:11px;">(<%= user.ratingCount %>)</span><% } %></span>
+            <% } else { %>
+              <span style="color:var(--muted);">New</span>
+            <% } %>
+          </span>
+        </div>
+        <div class="profile-row">
+          <span class="pr-lbl">Phone</span>
+          <span class="pr-val"><%= user.phone || '—' %></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Donut -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-chart-pie"></i> Appointment Summary</div>
+      </div>
+      <div class="card-body">
+        <div class="donut-wrap">
+          <canvas id="pieChart"></canvas>
+          <div class="donut-center">
+            <div class="donut-val"><%= stats.total %></div>
+            <div class="donut-lbl">Total</div>
           </div>
         </div>
-        <div class="view-more">
-          <a href="/doctor/appointments">View more</a>
+        <div class="legend-grid">
+          <div class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Confirmed &nbsp;<b><%= stats.confirmed %></b></div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>Pending &nbsp;<b><%= stats.pending %></b></div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--blue)"></span>Completed &nbsp;<b><%= stats.completed %></b></div>
+          <div class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Cancelled &nbsp;<b><%= stats.cancelled %></b></div>
         </div>
       </div>
     </div>
 
-    <h3 style="color: white; font-size: 20px; font-weight: 600; margin-bottom: 20px;">Service Overview</h3>
-    
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-calendar-check"></i>
-        </div>
-        <div class="stat-title">Total Appointments</div>
-        <div class="stat-value">0</div>
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title"><i class="fas fa-bolt"></i> Quick Actions</div>
       </div>
+      <div class="qa-grid">
+        <a href="/doctor/appointments" class="qa-item"><i class="fas fa-calendar-alt"></i><span class="qa-lbl">Appointments</span></a>
+        <a href="/doctor/patients"     class="qa-item"><i class="fas fa-users"></i><span class="qa-lbl">My Patients</span></a>
+        <a href="/doctor/availability" class="qa-item"><i class="fas fa-clock"></i><span class="qa-lbl">Availability</span></a>
+        <a href="/doctor/profile"      class="qa-item"><i class="fas fa-user-edit"></i><span class="qa-lbl">Edit Profile</span></a>
+        <a href="/doctor/settings" class="qa-item"><i class="fas fa-cog"></i><span class="qa-lbl">Settings</span></a>
 
-      <div class="stat-card">
-        <div class="stat-icon">
-          <i class="fas fa-user-friends"></i>
-        </div>
-        <div class="stat-title">Patients Attended</div>
-        <div class="stat-value">0</div>
-      </div>
-
-      <div class="wallet-card" style="grid-column: 1 / -1;">
-        <div class="wallet-header">
-          <i class="fas fa-wallet"></i>
-          <h3>My Wallet</h3>
-        </div>
-        <div class="wallet-item">
-          <span class="wallet-label">Wallet Balance</span>
-          <span class="wallet-value">₹ 0.00</span>
-        </div>
-        <div class="wallet-item">
-          <span class="wallet-label">Consultation Fee</span>
-          <span class="wallet-value">₹ 0.00</span>
-        </div>
-        <div class="wallet-item">
-          <span class="wallet-label">Compensations</span>
-          <span class="wallet-value">₹ 0.00</span>
-        </div>
-        <button class="withdraw-btn">Withdraw Now</button>
       </div>
     </div>
+
   </div>
+</div>
 
-  <div class="modal-overlay" id="logoutModal">
-    <div class="modal-content-custom">
-      <div class="modal-icon">
-        <i class="fas fa-sign-out-alt"></i>
-      </div>
-      <h3>Confirm Logout</h3>
-      <p>Are you sure you want to logout from your doctor account?</p>
-      <div class="modal-buttons">
-        <button class="modal-btn cancel" onclick="closeLogoutModal()">Cancel</button>
-        <button class="modal-btn confirm" onclick="confirmLogout()">Logout</button>
-      </div>
-    </div>
-  </div>
+<script>
+  const WEEKLY  = JSON.parse(`<%- JSON.stringify(weeklyData) %>`);
+  const MONTHLY = JSON.parse(`<%- JSON.stringify(monthlyEarnings) %>`);
 
-  <script>
-
-    function showLogoutModal() {
-      document.getElementById('logoutModal').classList.add('show');
+  const BASE = {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        backgroundColor: '#0B1120',
+        titleFont: { family: 'Plus Jakarta Sans', weight: '700', size: 12 },
+        bodyFont:  { family: 'Plus Jakarta Sans', size: 12 },
+        padding: 10, cornerRadius: 8, displayColors: false
+      }
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#6B7E99' },
+        border: { display: false }
+      },
+      y: {
+        grid: { color: '#E4EAF3' },
+        ticks: { font: { family: 'Plus Jakarta Sans', size: 11, weight: '600' }, color: '#6B7E99' },
+        border: { display: false },
+        beginAtZero: true
+      }
     }
+  };
 
-    function closeLogoutModal() {
-      document.getElementById('logoutModal').classList.remove('show');
+  let dashChart = null;
+
+  function buildChart(type) {
+    const ctx = document.getElementById('dashChart').getContext('2d');
+    if (dashChart) dashChart.destroy();
+    let labels, data, label, color, prefix = '';
+    if (type === 'appointments') {
+      labels = WEEKLY.map(d => d.label); data = WEEKLY.map(d => d.appointments);
+      label = 'Appointments'; color = '#1459C8';
+    } else if (type === 'revenue') {
+      labels = WEEKLY.map(d => d.label); data = WEEKLY.map(d => d.revenue);
+      label = 'Revenue'; color = '#0DBF7E'; prefix = '₹';
+    } else {
+      labels = MONTHLY.map(d => d.label); data = MONTHLY.map(d => d.earnings);
+      label = 'Earnings'; color = '#7C5CFC'; prefix = '₹';
     }
-
-    function confirmLogout() {
-      fetch('/doctor/logout', { method: 'POST' })
-        .then(() => window.location.href = '/doctor/login')
-        .catch(() => window.location.href = '/doctor/login');
-    }
-
-    document.getElementById('logoutModal').addEventListener('click', function(e) {
-      if (e.target === this) {
-        closeLogoutModal();
+    const grad = ctx.createLinearGradient(0, 0, 0, 200);
+    grad.addColorStop(0, color + '28');
+    grad.addColorStop(1, color + '00');
+    dashChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label, data,
+          backgroundColor: grad,
+          borderColor: color,
+          borderWidth: 2,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        ...BASE,
+        plugins: {
+          ...BASE.plugins,
+          tooltip: {
+            ...BASE.plugins.tooltip,
+            callbacks: { label: c => ` ${prefix}${c.parsed.y.toLocaleString('en-IN')}` }
+          }
+        }
       }
     });
-  </script>
+  }
+
+  function switchChart(type, btn) {
+    document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    buildChart(type);
+  }
+
+  const pieData = [
+    parseInt(`<%- stats.confirmed %>`),
+    parseInt(`<%- stats.pending %>`),
+    parseInt(`<%- stats.completed %>`),
+    parseInt(`<%- stats.cancelled %>`)
+  ];
+  const hasData = pieData.some(v => v > 0);
+  if (hasData) {
+    new Chart(document.getElementById('pieChart').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Confirmed','Pending','Completed','Cancelled'],
+        datasets: [{
+          data: pieData,
+          backgroundColor: ['#0DBF7E','#F5A623','#1459C8','#E8354A'],
+          borderWidth: 0, hoverOffset: 6
+        }]
+      },
+      options: {
+        responsive: true, cutout: '72%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0B1120',
+            titleFont: { family: 'Plus Jakarta Sans', weight: '700' },
+            bodyFont:  { family: 'Plus Jakarta Sans' },
+            padding: 10, cornerRadius: 8
+          }
+        }
+      }
+    });
+  } else {
+    document.getElementById('pieChart').style.display = 'none';
+    document.getElementById('pieChart').insertAdjacentHTML('afterend',
+      `<div style="text-align:center;padding:28px;color:#6B7E99;">
+        <i class="fas fa-chart-pie" style="font-size:26px;color:#E4EAF3;display:block;margin-bottom:8px;"></i>
+        <p style="font-size:12px;font-weight:600;margin:0;">No data yet</p>
+      </div>`
+    );
+  }
+
+  buildChart('appointments');
+</script>
 </body>
 </html>

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('partials/cache-control') %>
+  <title>Dr. <%= doctor.name %> | Healora</title>
+  <link href="/images/Logo-browser.jpg" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/style.css">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary:      #1a3a4f;
+      --primary-mid:  #1e5070;
+      --accent:       #2e537d;
+      --accent-light: #e6f4f1;
+      --accent-mid:   #3a7a9c;
+      --gold:         #c8932a;
+      --red:          #c94040;
+      --ink:          #1c2b35;
+      --slate:        #4a5e6d;
+      --muted:        #8a9aaa;
+      --border:       #e2e8ed;
+      --surface:      #f5f4f0;
+      --white:        #ffffff;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    /* ── BREADCRUMB BAR ── */
+    .bc-bar {
+      background: var(--primary);
+      padding: 14px 0;
+    }
+    .bc-inner {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: rgba(255,255,255,.45);
+    }
+    .bc-inner a {
+      color: rgba(255,255,255,.6); text-decoration: none;
+      transition: color .2s;
+    }
+    .bc-inner a:hover { color: #fff; }
+    .bc-inner i { font-size: 8px; opacity: .6; }
+    .bc-inner .bc-cur { color: rgba(255,255,255,.85); font-weight: 500; }
+
+    /* ── PROFILE BANNER ── */
+    .profile-banner {
+      background: var(--primary);
+      padding: 0 0 72px;
+    }
+    .profile-banner-inner {
+      display: flex; align-items: flex-end;
+      gap: 28px; padding-top: 28px;
+    }
+    .banner-avatar {
+      width: 108px; height: 108px; border-radius: 50%;
+      border: 4px solid rgba(255,255,255,.18);
+      background: #e6f4f1;
+      color: var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem; flex-shrink: 0; overflow: hidden;
+      box-shadow: 0 8px 28px rgba(0,0,0,.28);
+    }
+    .banner-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .banner-info { flex: 1; padding-bottom: 4px; }
+    .banner-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.85rem; color: #fff;
+      line-height: 1.15; margin-bottom: 4px;
+    }
+    .banner-spec { font-size: 13.5px; font-weight: 600; color: var(--accent-mid); margin-bottom: 3px; }
+    .banner-dept { font-size: 12.5px; color: rgba(255,255,255,.5); font-weight: 400; margin-bottom: 14px; }
+    .banner-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .btag {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 8px;
+      font-size: 11.5px; font-weight: 600;
+      backdrop-filter: blur(6px);
+    }
+    .btag-blue   { background: rgba(255, 255, 255, 0.22); color: #ffffff; border: 1px solid rgba(46,125,110,.3); }
+    .btag-green  { background: rgba(255, 255, 255, 0.14); color: #ffffff; border: 1px solid rgba(34,197,94,.2); }
+    .btag-amber  { background: rgba(255, 255, 255, 0.18); color: #fcd34d; border: 1px solid rgba(200,147,42,.25); }
+    .btag-purple { background: rgba(255, 255, 255, 0.18); color: #ffffff; border: 1px solid rgba(139,92,246,.25); }
+    .avail-badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 5px 13px; border-radius: 20px;
+      background: rgba(46,125,110,.2); border: 1px solid rgba(46,125,110,.35);
+      font-size: 11.5px; font-weight: 600; color: #6ee7b7;
+      margin-top: 13px;
+    }
+    .avail-dot { width: 7px; height: 7px; border-radius: 50%; background: #4ade80; flex-shrink: 0; }
+
+    /* ── PULL-UP WRAPPER ── */
+    .pull-wrap {
+      margin-top: -56px;
+      position: relative; z-index: 10;
+      padding-bottom: 36px;
+    }
+
+    /* ── ACTION CARD (pulled up) ── */
+    .action-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 12px 40px rgba(26,58,79,.12);
+      padding: 22px 26px;
+      display: flex; align-items: center;
+      justify-content: space-between; gap: 24px;
+      flex-wrap: wrap;
+    }
+    .action-stats { display: flex; gap: 0; }
+    .ast-item {
+      padding: 0 28px; border-right: 1px solid var(--border);
+      text-align: center;
+    }
+    .ast-item:first-child { padding-left: 0; }
+    .ast-item:last-child { border-right: none; }
+    .ast-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem; color: var(--ink); line-height: 1;
+      margin-bottom: 4px;
+    }
+    .ast-val sup { font-size: .85rem; color: var(--accent); vertical-align: super; }
+    .ast-lbl { font-size: 10.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; }
+    .action-btns { display: flex; gap: 10px; flex-shrink: 0; }
+    .btn-book {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 22px;
+      background: var(--accent); color: var(--white);
+      border: none; border-radius: 10px;
+      font-size: 13.5px; font-weight: 700;
+      font-family: 'DM Sans', sans-serif; cursor: pointer;
+      text-decoration: none;
+      transition: background .2s, box-shadow .2s;
+    }
+    .btn-book:hover { background: var(--accent-mid); color: var(--white); box-shadow: 0 6px 20px rgba(46,125,110,.28); }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 20px;
+      background: transparent; color: var(--slate);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 13px; font-weight: 600;
+      text-decoration: none;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-back:hover { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+    /* ── BODY GRID ── */
+    .body-grid {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 22px;
+      align-items: start;
+      padding-bottom: 80px;
+    }
+    .left-col { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── INFO CARD ── */
+    .info-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .card-head {
+      display: flex; align-items: center; gap: 10px;
+      padding: 15px 22px;
+      border-bottom: 1px solid var(--border);
+      background: #fafaf8;
+    }
+    .card-head-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: var(--accent-light); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0;
+    }
+    .card-head-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1rem; color: var(--ink);
+    }
+    .card-body { padding: 22px; }
+
+    /* Bio */
+    .bio-text { font-size: 14px; color: var(--slate); line-height: 1.85; font-weight: 400; }
+    .no-info { font-size: 13px; color: var(--muted); font-style: italic; }
+
+    /* Section divider */
+    .section-sep { height: 1px; background: var(--border); margin: 20px 0; }
+    .section-sub-title {
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .7px;
+      color: var(--muted); margin-bottom: 14px;
+    }
+
+    /* Expertise */
+    .expertise-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .expertise-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 11px 14px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 13px; font-weight: 500; color: var(--ink);
+    }
+    .expertise-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+
+    /* Timeline */
+    .timeline { display: flex; flex-direction: column; }
+    .timeline-item { display: flex; gap: 16px; padding-bottom: 22px; position: relative; }
+    .timeline-item:last-child { padding-bottom: 0; }
+    .timeline-left { display: flex; flex-direction: column; align-items: center; }
+    .timeline-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      background: var(--accent-light); border: 1.5px solid #b8ddd8;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; flex-shrink: 0; color: var(--accent);
+    }
+    .timeline-line { width: 2px; flex: 1; background: var(--border); margin: 6px auto 0; }
+    .timeline-item:last-child .timeline-line { display: none; }
+    .timeline-content { padding-top: 5px; }
+    .timeline-degree { font-size: 14.5px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+    .timeline-institution { font-size: 13px; color: var(--slate); margin-bottom: 7px; }
+    .timeline-year {
+      font-size: 11.5px; font-weight: 600;
+      color: var(--accent); background: var(--accent-light);
+      padding: 2px 10px; border-radius: 20px; display: inline-block;
+    }
+
+    /* Availability — accordion */
+    .avail-accordion { display: flex; flex-direction: column; gap: 8px; }
+
+    .avail-item { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+
+    .avail-trigger {
+      width: 100%; background: var(--surface);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; gap: 12px;
+      font-family: 'DM Sans', sans-serif;
+      transition: background .15s;
+    }
+    .avail-trigger:hover { background: #eeede9; }
+    .avail-trigger.open { background: var(--accent-light); }
+
+    .avail-trigger-left { display: flex; align-items: center; gap: 10px; }
+    .avail-day-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--border); flex-shrink: 0;
+      transition: background .2s;
+    }
+    .avail-trigger.open .avail-day-dot { background: var(--accent); }
+
+    .avail-day-name { font-size: 13px; font-weight: 600; color: var(--ink); }
+    .avail-trigger.open .avail-day-name { color: var(--accent); }
+
+    .avail-slot-count {
+      font-size: 11px; font-weight: 600;
+      color: var(--muted); background: var(--border);
+      padding: 2px 9px; border-radius: 20px;
+      transition: background .2s, color .2s;
+    }
+    .avail-trigger.open .avail-slot-count {
+      background: rgba(46,125,110,.15); color: var(--accent);
+    }
+
+    .avail-chevron {
+      color: var(--muted); font-size: 11px;
+      transition: transform .22s, color .2s;
+      flex-shrink: 0;
+    }
+    .avail-trigger.open .avail-chevron { transform: rotate(180deg); color: var(--accent); }
+
+    .avail-panel {
+      max-height: 0; overflow: hidden;
+      transition: max-height .28s ease, padding .22s ease;
+      background: var(--white);
+      padding: 0 16px;
+    }
+    .avail-panel.open {
+      max-height: 300px;
+      padding: 14px 16px;
+    }
+
+    .avail-slots { display: flex; flex-wrap: wrap; gap: 7px; }
+    .slot-pill {
+      padding: 5px 13px; border-radius: 20px;
+      background: var(--accent-light); color: var(--accent);
+      border: 1px solid #b8ddd8;
+      font-size: 11.5px; font-weight: 600;
+    }
+    .avail-none { font-size: 12px; color: var(--muted); font-style: italic; }
+
+    /* ── SIDEBAR ── */
+    .sidebar-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      position: sticky; top: 18px;
+      box-shadow: 0 8px 32px rgba(26,58,79,.08);
+    }
+    .sidebar-top {
+      background: var(--primary);
+      padding: 28px 22px; text-align: center;
+      position: relative; overflow: hidden;
+    }
+    .sidebar-top::before {
+      content: '';
+      position: absolute;
+      width: 180px; height: 180px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(46,125,110,.3) 0%, transparent 70%);
+      right: -50px; top: -60px; pointer-events: none;
+    }
+    .fee-num {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.5rem; color: var(--white); line-height: 1;
+      margin-bottom: 5px; position: relative; z-index: 1;
+    }
+    .fee-lbl {
+      font-size: 11px; font-weight: 600;
+      color: rgba(255,255,255,.45); text-transform: uppercase;
+      letter-spacing: .8px; position: relative; z-index: 1;
+    }
+    .sidebar-body { padding: 18px 20px; }
+    .detail-row {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .detail-row:last-of-type { border-bottom: none; }
+    .detail-lbl { color: var(--muted); font-weight: 500; flex-shrink: 0; }
+    .detail-val { font-weight: 600; color: var(--ink); text-align: right; word-break: break-word; }
+    .sidebar-divider { height: 1px; background: var(--border); margin: 4px 0 16px; }
+    .stars { display: inline-flex; gap: 2px; color: var(--gold); font-size: 12px; }
+    .stars .empty { color: var(--border); }
+
+    /* ── LOGIN MODAL ── */
+    .lp-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(26,58,79,.55);
+      backdrop-filter: blur(6px);
+      z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      padding: 20px;
+      opacity: 0; pointer-events: none;
+      transition: opacity .25s;
+    }
+    .lp-backdrop.show { opacity: 1; pointer-events: all; }
+    .lp-box {
+      background: var(--white);
+      border-radius: 20px; padding: 36px 32px;
+      max-width: 420px; width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,.18);
+      transform: translateY(20px);
+      transition: transform .25s;
+      text-align: center;
+    }
+    .lp-backdrop.show .lp-box { transform: translateY(0); }
+    .lp-icon {
+      width: 60px; height: 60px; border-radius: 50%;
+      background: var(--accent-light); color: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin: 0 auto 18px;
+    }
+    .lp-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem; color: var(--ink); margin-bottom: 8px;
+    }
+    .lp-sub { font-size: 13px; color: var(--slate); line-height: 1.7; margin-bottom: 26px; font-weight: 300; }
+    .lp-btns { display: flex; gap: 10px; }
+    .lp-btn-p {
+      flex: 1; padding: 13px;
+      background: var(--accent); color: var(--white);
+      border: none; border-radius: 10px;
+      font-size: 13.5px; font-weight: 700;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      text-decoration: none;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s;
+    }
+    .lp-btn-p:hover { background: var(--accent-mid); color: var(--white); }
+    .lp-btn-s {
+      flex: 1; padding: 13px;
+      background: var(--surface); color: var(--slate);
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 13.5px; font-weight: 600;
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      text-decoration: none;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .2s, border-color .2s;
+    }
+    .lp-btn-s:hover { background: var(--border); color: var(--ink); }
+    .lp-cancel {
+      margin-top: 14px; background: none; border: none;
+      font-size: 12px; color: var(--muted);
+      cursor: pointer; font-family: 'DM Sans', sans-serif;
+      transition: color .2s;
+    }
+    .lp-cancel:hover { color: var(--slate); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 1024px) {
+      .body-grid { grid-template-columns: 1fr; }
+      .sidebar-card { position: static; }
+    }
+    @media (max-width: 767px) {
+      .profile-banner-inner { flex-direction: column; align-items: flex-start; gap: 14px; }
+      .banner-name { font-size: 1.5rem; }
+      .action-card { flex-direction: column; align-items: flex-start; gap: 18px; }
+      .action-stats { flex-wrap: wrap; gap: 0; }
+      .ast-item { padding: 8px 20px; border-right: none; border-bottom: 1px solid var(--border); width: 50%; }
+      .ast-item:nth-child(odd) { border-right: 1px solid var(--border); }
+      .action-btns { width: 100%; }
+      .btn-book, .btn-back { flex: 1; justify-content: center; }
+      .expertise-grid { grid-template-columns: 1fr; }
+      .card-body { padding: 16px; }
+      .avail-row { flex-direction: column; gap: 8px; }
+      .avail-day { width: auto; }
+    }
+    @media (max-width: 480px) {
+      .lp-btns { flex-direction: column; }
+      .profile-banner { padding-bottom: 64px; }
+    }
+  </style>
+</head>
+<body>
+
+<%- include('partials/navbar') %>
+
+<!-- ── Breadcrumb ── -->
+<div class="bc-bar">
+  <div class="container">
+    <div class="bc-inner">
+      <a href="/"><i class="fas fa-home"></i>&nbsp; Home</a>
+      <i class="fas fa-chevron-right"></i>
+      <a href="/doctors">Doctors</a>
+      <i class="fas fa-chevron-right"></i>
+      <span class="bc-cur">Dr. <%= doctor.name %></span>
+    </div>
+  </div>
+</div>
+
+<!-- ── Profile Banner ── -->
+<div class="profile-banner">
+  <div class="container">
+    <div class="profile-banner-inner">
+
+      <!-- Avatar -->
+      <div class="banner-avatar">
+        <% if (doctor.profileImage) { %>
+          <img src="<%= doctor.profileImage %>" alt="Dr. <%= doctor.name %>">
+        <% } else { %>
+          <%= doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) %>
+        <% } %>
+      </div>
+
+      <!-- Info -->
+      <div class="banner-info">
+        <div class="banner-name">Dr. <%= doctor.name %></div>
+        <div class="banner-spec"><%= doctor.specialization %></div>
+        <div class="banner-dept"><%= doctor.department %> Department</div>
+        <div class="banner-tags">
+          <% if (doctor.qualification) { %>
+            <span class="btag btag-blue"><i class="fas fa-graduation-cap"></i> <%= doctor.qualification %></span>
+          <% } %>
+          <span class="btag btag-green"><i class="fas fa-briefcase"></i> <%= doctor.experience || 0 %>+ Yrs Exp.</span>
+          <% if (doctor.rating > 0) { %>
+            <span class="btag btag-amber"><i class="fas fa-star"></i> <%= Number(doctor.rating).toFixed(1) %></span>
+          <% } %>
+          <span class="btag btag-purple"><i class="fas fa-building"></i> <%= doctor.department %></span>
+        </div>
+        <% if (doctor.availability && doctor.availability.length > 0) { %>
+          <div class="avail-badge">
+            <div class="avail-dot"></div>
+            Available — <%= doctor.availability[0].day %> &amp; more
+          </div>
+        <% } %>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Pull-up Action Card ── -->
+<div class="pull-wrap">
+  <div class="container">
+    <div class="action-card">
+
+      <!-- Stats row -->
+      <div class="action-stats">
+        <div class="ast-item">
+          <div class="ast-val"><%= doctor.experience || 0 %><sup>+</sup></div>
+          <div class="ast-lbl">Years Exp.</div>
+        </div>
+        <div class="ast-item">
+          <div class="ast-val">
+            <% if (doctor.rating > 0) { %>
+              <%= Number(doctor.rating).toFixed(1) %>
+            <% } else { %>
+              <span style="font-size:1.1rem;color:var(--muted);">New</span>
+            <% } %>
+          </div>
+          <div class="ast-lbl">Rating<% if (doctor.ratingCount > 0) { %> · <%= doctor.ratingCount %><% } %></div>
+        </div>
+        <div class="ast-item">
+          <div class="ast-val" style="font-size:1.3rem;">
+            <% if (doctor.consultationFee > 0) { %>₹<%= doctor.consultationFee %><% } else { %>Free<% } %>
+          </div>
+          <div class="ast-lbl">Consult Fee</div>
+        </div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="action-btns">
+        <% if (locals.currentUser) { %>
+          <a href="/patient/book-appointment/<%= doctor._id %>" class="btn-book">
+            <i class="fas fa-calendar-plus"></i> Book Appointment
+          </a>
+        <% } else { %>
+          <button class="btn-book" onclick="showLoginPrompt()">
+            <i class="fas fa-calendar-plus"></i> Book Appointment
+          </button>
+        <% } %>
+        <a href="/doctors" class="btn-back">
+          <i class="fas fa-arrow-left"></i> All Doctors
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── Body Grid ── -->
+<div class="container">
+  <div class="body-grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="left-col">
+
+      <!-- About + Expertise -->
+      <div class="info-card">
+        <div class="card-head">
+          <div class="card-head-icon"><i class="fas fa-user-circle"></i></div>
+          <div class="card-head-title">About Dr. <%= doctor.name.split(' ')[0] %></div>
+        </div>
+        <div class="card-body">
+          <% if (doctor.bio && doctor.bio.trim()) { %>
+            <p class="bio-text"><%= doctor.bio %></p>
+          <% } else { %>
+            <p class="no-info">No bio added yet.</p>
+          <% } %>
+
+          <% if (doctor.expertise && doctor.expertise.length > 0) { %>
+            <div class="section-sep"></div>
+            <div class="section-sub-title">Areas of Expertise</div>
+            <div class="expertise-grid">
+              <% doctor.expertise.forEach(item => { %>
+                <div class="expertise-item">
+                  <div class="expertise-dot"></div>
+                  <%= item %>
+                </div>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+      </div>
+
+      <!-- Education Timeline -->
+      <% if (doctor.education && doctor.education.length > 0) { %>
+      <div class="info-card">
+        <div class="card-head">
+          <div class="card-head-icon"><i class="fas fa-graduation-cap"></i></div>
+          <div class="card-head-title">Education &amp; Training</div>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <% doctor.education.forEach(edu => { %>
+              <div class="timeline-item">
+                <div class="timeline-left">
+                  <div class="timeline-icon"><i class="fas fa-graduation-cap"></i></div>
+                  <div class="timeline-line"></div>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-degree"><%= edu.degree %></div>
+                  <div class="timeline-institution"><%= edu.institution %></div>
+                  <% if (edu.year) { %>
+                    <span class="timeline-year"><%= edu.year %></span>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      </div>
+      <% } else if (doctor.qualification) { %>
+      <!-- Fallback: single qualification string -->
+      <div class="info-card">
+        <div class="card-head">
+          <div class="card-head-icon"><i class="fas fa-graduation-cap"></i></div>
+          <div class="card-head-title">Qualification</div>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-left">
+                <div class="timeline-icon"><i class="fas fa-graduation-cap"></i></div>
+                <div class="timeline-line"></div>
+              </div>
+              <div class="timeline-content">
+                <div class="timeline-degree"><%= doctor.qualification %></div>
+                <div class="timeline-institution"><%= doctor.specialization %></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <% } %>
+
+      <!-- Availability Schedule — accordion -->
+      <div class="info-card">
+        <div class="card-head">
+          <div class="card-head-icon"><i class="fas fa-clock"></i></div>
+          <div class="card-head-title">Availability Schedule</div>
+        </div>
+        <div class="card-body">
+          <% if (doctor.availability && doctor.availability.length > 0) { %>
+            <div class="avail-accordion">
+              <% doctor.availability.forEach((av, idx) => { %>
+                <div class="avail-item">
+                  <button class="avail-trigger" onclick="toggleAvail(this)" type="button">
+                    <div class="avail-trigger-left">
+                      <div class="avail-day-dot"></div>
+                      <span class="avail-day-name"><%= av.day %></span>
+                      <span class="avail-slot-count">
+                        <%= (av.slots && av.slots.length > 0) ? av.slots.length + ' slot' + (av.slots.length > 1 ? 's' : '') : 'No slots' %>
+                      </span>
+                    </div>
+                    <i class="fas fa-chevron-down avail-chevron"></i>
+                  </button>
+                  <div class="avail-panel">
+                    <div class="avail-slots">
+                      <% if (av.slots && av.slots.length > 0) { %>
+                        <% av.slots.forEach(slot => { %>
+                          <%
+                            const [sh, sm] = slot.split(':').map(Number);
+                            const fmt = `${sh % 12 || 12}:${String(sm).padStart(2,'0')} ${sh >= 12 ? 'PM' : 'AM'}`;
+                          %>
+                          <span class="slot-pill"><%= fmt %></span>
+                        <% }) %>
+                      <% } else { %>
+                        <span class="avail-none">No time slots set for this day.</span>
+                      <% } %>
+                    </div>
+                  </div>
+                </div>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <p class="no-info">No availability set yet. Please call to schedule.</p>
+          <% } %>
+        </div>
+      </div>
+
+    </div><!-- /left-col -->
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-card">
+      <div class="sidebar-top">
+        <div class="fee-num">
+          <% if (doctor.consultationFee > 0) { %>₹<%= doctor.consultationFee %><% } else { %>Free<% } %>
+        </div>
+        <div class="fee-lbl">Consultation Fee</div>
+      </div>
+
+      <div class="sidebar-body">
+        <div class="detail-row">
+          <span class="detail-lbl">Specialization</span>
+          <span class="detail-val"><%= doctor.specialization %></span>
+        </div>
+        <div class="detail-row">
+          <span class="detail-lbl">Department</span>
+          <span class="detail-val"><%= doctor.department %></span>
+        </div>
+        <% if (doctor.qualification) { %>
+        <div class="detail-row">
+          <span class="detail-lbl">Qualification</span>
+          <span class="detail-val"><%= doctor.qualification %></span>
+        </div>
+        <% } %>
+        <div class="detail-row">
+          <span class="detail-lbl">Experience</span>
+          <span class="detail-val"><%= doctor.experience || 0 %>+ Years</span>
+        </div>
+        <% if (doctor.rating > 0) { %>
+        <div class="detail-row">
+          <span class="detail-lbl">Rating</span>
+          <span class="detail-val">
+            <div class="stars">
+              <% for (let i = 1; i <= 5; i++) { %>
+                <i class="fas fa-star<%= i <= Math.round(doctor.rating) ? '' : ' empty' %>"></i>
+              <% } %>
+            </div>
+            &nbsp;<%= Number(doctor.rating).toFixed(1) %>
+          </span>
+        </div>
+        <% } %>
+        <div class="detail-row">
+          <span class="detail-lbl">Phone</span>
+          <span class="detail-val"><%= doctor.phone || '—' %></span>
+        </div>
+        <% if (doctor.email) { %>
+        <div class="detail-row">
+          <span class="detail-lbl">Email</span>
+          <span class="detail-val" style="font-size:11.5px;"><%= doctor.email %></span>
+        </div>
+        <% } %>
+        <% if (doctor.languages && doctor.languages.length > 0) { %>
+        <div class="detail-row">
+          <span class="detail-lbl">Languages</span>
+          <span class="detail-val"><%= doctor.languages.join(', ') %></span>
+        </div>
+        <% } %>
+        <div class="detail-row">
+          <span class="detail-lbl">Member Since</span>
+          <span class="detail-val">
+            <%= new Date(doctor.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) %>
+          </span>
+        </div>
+
+        <div class="sidebar-divider"></div>
+
+        <% if (locals.currentUser) { %>
+          <a href="/patient/book-appointment/<%= doctor._id %>" class="btn-book" style="width:100%; justify-content:center;">
+            <i class="fas fa-calendar-plus"></i> Book Appointment
+          </a>
+        <% } else { %>
+          <button class="btn-book" onclick="showLoginPrompt()" style="width:100%; justify-content:center;">
+            <i class="fas fa-calendar-plus"></i> Book Appointment
+          </button>
+        <% } %>
+
+      </div>
+    </div><!-- /sidebar -->
+
+  </div>
+</div>
+
+<!-- ── Login Prompt Modal ── -->
+<div class="lp-backdrop" id="loginPrompt">
+  <div class="lp-box">
+    <div class="lp-icon"><i class="fas fa-calendar-check"></i></div>
+    <div class="lp-title">Sign in to book</div>
+    <div class="lp-sub">
+      You need to be logged in to book an appointment with Dr. <%= doctor.name %>. It's free and takes less than a minute.
+    </div>
+    <div class="lp-btns">
+      <a href="/patient/login?redirect=/patient/book-appointment/<%= doctor._id %>" class="lp-btn-p">
+        <i class="fas fa-sign-in-alt" style="margin-right:6px;"></i> Login
+      </a>
+      <a href="/patient/signup" class="lp-btn-s">Sign Up Free</a>
+    </div>
+    <button class="lp-cancel" onclick="hideLoginPrompt()">Maybe later</button>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  function toggleAvail(trigger) {
+    const panel = trigger.nextElementSibling;
+    const isOpen = trigger.classList.contains('open');
+    trigger.classList.toggle('open', !isOpen);
+    panel.classList.toggle('open', !isOpen);
+  }
+
+  function showLoginPrompt() {
+    document.getElementById('loginPrompt').classList.add('show');
+  }
+  function hideLoginPrompt() {
+    document.getElementById('loginPrompt').classList.remove('show');
+  }
+  document.getElementById('loginPrompt').addEventListener('click', function(e) {
+    if (e.target === this) hideLoginPrompt();
+  });
+</script>
+</body>
+</html>

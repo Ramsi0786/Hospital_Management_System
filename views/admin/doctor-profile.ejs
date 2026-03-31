@@ -287,6 +287,9 @@
             <option value="General Medicine" <%= doctor.department==='General Medicine'?'selected':'' %>>General Medicine</option>
           </select>
         </div>
+        <div class="form-group"><label>Qualification</label><input type="text" id="editQualification" value="<%= doctor.qualification || '' %>" placeholder="e.g. MBBS, MD"></div>
+        <div class="form-group"><label>Experience (years)</label><input type="number" id="editExperience" value="<%= doctor.experience || '' %>" min="0" max="60"></div>
+        <div class="form-group"><label>Consultation Fee (₹) *</label><input type="number" id="editConsultationFee" value="<%= doctor.consultationFee || '' %>" min="0" required placeholder="e.g. 500"></div>
         <div class="form-group"><label>Password (leave blank to keep current)</label><input type="password" id="editPassword" placeholder="Enter new password"></div>
       </div>
       <div class="modal-footer">
@@ -323,13 +326,16 @@
   document.getElementById('editForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const formData = {
-      name:           document.getElementById('editName').value.trim(),
-      email:          document.getElementById('editEmail').value.trim(),
-      phone:          document.getElementById('editPhone').value.trim(),
-      specialization: document.getElementById('editSpecialization').value.trim(),
-      department:     document.getElementById('editDepartment').value,
-      password:       document.getElementById('editPassword').value
-    };
+  name:            document.getElementById('editName').value.trim(),
+  email:           document.getElementById('editEmail').value.trim(),
+  phone:           document.getElementById('editPhone').value.trim(),
+  specialization:  document.getElementById('editSpecialization').value.trim(),
+  department:      document.getElementById('editDepartment').value,
+  qualification:   document.getElementById('editQualification').value.trim(),
+  experience:      document.getElementById('editExperience').value,
+  consultationFee: document.getElementById('editConsultationFee').value,
+  password:        document.getElementById('editPassword').value
+};
     Loader.show('Updating doctor...');
     try {
       const res  = await fetch(`/admin/api/doctors/${doctorId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(formData) });

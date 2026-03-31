@@ -8,215 +8,184 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
-    .main-content { margin-left:230px; padding:30px; min-height:100vh; }
-
-    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:28px; }
-    .page-title { font-size:26px; font-weight:800; color:#1a202c; }
-    .user-profile { display:flex; align-items:center; gap:10px; background:white; padding:8px 16px; border-radius:50px; box-shadow:0 2px 8px rgba(0,0,0,.08); }
-    .user-avatar { width:35px; height:35px; border-radius:50%; background:#203f6a; color:white; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; overflow:hidden; }
-    .user-avatar img { width:100%; height:100%; object-fit:cover; }
-    .user-avatar-name { font-size:14px; font-weight:600; color:#2d3748; }
-
-    /* Stats */
-    .stats-row { display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-bottom:28px; }
-    .stat-card { background:white; border-radius:14px; padding:16px 18px; box-shadow:0 2px 12px rgba(0,0,0,.06); display:flex; align-items:center; gap:12px; }
-    .stat-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
-    .stat-icon.total     { background:#eff6ff; color:#2563eb; }
-    .stat-icon.pending   { background:#fffbeb; color:#d97706; }
-    .stat-icon.confirmed { background:#ecfdf5; color:#059669; }
-    .stat-icon.completed { background:#f0f9ff; color:#0369a1; }
-    .stat-icon.cancelled { background:#fef2f2; color:#dc2626; }
-    .stat-info strong { font-size:20px; font-weight:800; color:#1a202c; display:block; }
-    .stat-info span   { font-size:12px; color:#94a3b8; font-weight:600; }
-
-    /* Filter tabs */
-    .filter-tabs { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
-    .filter-tab { padding:8px 18px; border-radius:20px; border:2px solid #e2e8f0; background:white; font-size:13px; font-weight:700; color:#64748b; text-decoration:none; transition:all .2s; }
-    .filter-tab:hover  { border-color:#93c5fd; color:#1d4ed8; }
-    .filter-tab.active { background:#203f6a; border-color:#203f6a; color:white; }
-
-    /* Empty state */
-    .empty-state { text-align:center; padding:60px 20px; background:white; border-radius:16px; box-shadow:0 2px 12px rgba(0,0,0,.06); }
-    .empty-state i  { font-size:52px; color:#cbd5e1; margin-bottom:16px; display:block; }
-    .empty-state h4 { font-size:20px; font-weight:800; color:#1a202c; margin-bottom:8px; }
-    .empty-state p  { color:#94a3b8; }
-
-    /* Appointment cards */
-    .appointments-list { display:flex; flex-direction:column; gap:14px; }
-    .appt-card { background:white; border-radius:16px; padding:20px 24px; box-shadow:0 2px 12px rgba(0,0,0,.06); display:grid; grid-template-columns:56px 1fr auto; gap:18px; align-items:center; transition:box-shadow .2s; }
-    .appt-card:hover { box-shadow:0 4px 20px rgba(0,0,0,.1); }
-
-    .patient-avatar { width:56px; height:56px; border-radius:50%; background:linear-gradient(135deg,#203f6a,#1a7f8e); color:white; font-size:18px; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; overflow:hidden; border:3px solid #e2e8f0; }
-    .patient-avatar img { width:100%; height:100%; object-fit:cover; }
-
-    .appt-main { min-width:0; }
-    .appt-name { font-size:16px; font-weight:800; color:#1a202c; margin-bottom:2px; }
-    .appt-sub  { font-size:13px; color:#64748b; margin-bottom:8px; }
-    .appt-meta { display:flex; flex-wrap:wrap; gap:8px; }
-    .meta-chip { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:600; color:#374151; background:#f8fafc; padding:4px 10px; border-radius:6px; }
-    .meta-chip i { color:#203f6a; font-size:11px; }
-
-    .appt-right { display:flex; flex-direction:column; align-items:flex-end; gap:10px; flex-shrink:0; }
-    .appt-fee   { font-size:16px; font-weight:800; color:#203f6a; }
-    .appt-actions { display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; }
-
-    /* Status badges */
-    .status-badge { padding:5px 12px; border-radius:20px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
-    .status-badge.pending   { background:#fffbeb; color:#d97706; }
-    .status-badge.confirmed { background:#ecfdf5; color:#059669; }
-    .status-badge.completed { background:#eff6ff; color:#2563eb; }
-    .status-badge.cancelled { background:#fef2f2; color:#dc2626; }
-
-    /* Buttons */
-    .btn-sm { padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .2s; border:none; display:inline-flex; align-items:center; gap:5px; }
-    .btn-view     { background:#eff6ff; color:#2563eb; }
-    .btn-view:hover     { background:#2563eb; color:white; }
-    .btn-confirm  { background:#ecfdf5; color:#059669; }
-    .btn-confirm:hover  { background:#059669; color:white; }
-    .btn-complete { background:#f0f9ff; color:#0369a1; }
-    .btn-complete:hover { background:#0369a1; color:white; }
-    .btn-cancel   { background:#fef2f2; color:#dc2626; }
-    .btn-cancel:hover   { background:#dc2626; color:white; }
-
-    /* Pagination */
-    .pagination-row { display:flex; gap:8px; justify-content:center; margin-top:28px; }
-    .page-btn { width:36px; height:36px; border-radius:8px; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; text-decoration:none; color:#64748b; background:white; border:1px solid #e2e8f0; transition:all .2s; }
-    .page-btn:hover  { border-color:#203f6a; color:#203f6a; }
-    .page-btn.active { background:#203f6a; color:white; border-color:#203f6a; }
-
-    /* Modal */
-    #healora-modal-root { position:fixed; inset:0; z-index:2147483647; pointer-events:none; font-family:'Plus Jakarta Sans',sans-serif; }
-    #healora-modal-root.active { pointer-events:all; }
-    .hm-backdrop { position:absolute; inset:0; background:rgba(8,18,38,.82); display:flex; align-items:center; justify-content:center; opacity:0; transition:opacity .2s; }
-    #healora-modal-root.active .hm-backdrop { opacity:1; }
-    .hm-box { background:white; border-radius:20px; padding:32px; width:90%; max-width:460px; box-shadow:0 28px 72px rgba(8,18,38,.4); transform:translateY(16px) scale(.97); opacity:0; transition:transform .22s, opacity .22s; }
-    #healora-modal-root.active .hm-box { transform:none; opacity:1; }
-    .hm-icon { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; margin:0 auto 18px; }
-    .hm-icon.blue  { background:#eff6ff; color:#203f6a; }
-    .hm-icon.red   { background:#fef2f2; color:#dc2626; }
-    .hm-icon.green { background:#ecfdf5; color:#059669; }
-    .hm-title { font-size:20px; font-weight:800; color:#1a202c; text-align:center; margin-bottom:6px; }
-    .hm-sub   { font-size:14px; color:#64748b; text-align:center; margin-bottom:20px; line-height:1.5; }
-    .hm-detail-row { display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f8fafc; font-size:14px; }
-    .hm-detail-row:last-of-type { border-bottom:none; }
-    .hm-detail-row span:first-child { color:#64748b; }
-    .hm-detail-row span:last-child  { color:#1a202c; font-weight:700; }
-    .hm-btns { display:flex; gap:12px; margin-top:22px; }
-    .hm-btn { flex:1; padding:12px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; transition:all .2s; }
-    .hm-btn.gray  { background:#e2e8f0; color:#4a5568; }
-    .hm-btn.gray:hover  { background:#cbd5e1; }
-    .hm-btn.red   { background:#dc2626; color:white; }
-    .hm-btn.red:hover   { background:#b91c1c; }
-    .hm-btn.blue  { background:#203f6a; color:white; }
-    .hm-btn.blue:hover  { background:#1a3456; }
-    .hm-btn.green { background:#059669; color:white; }
-    .hm-btn.green:hover { background:#047857; }
-    .hm-btn:disabled { background:#94a3b8; cursor:not-allowed; }
-
-    @media (max-width:1024px) { .stats-row { grid-template-columns:repeat(3,1fr); } }
-    @media (max-width:768px)  { .main-content { margin-left:80px; } .appt-card { grid-template-columns:46px 1fr; } .appt-right { display:none; } }
-  </style>
+ <link rel="stylesheet" href="/css/doctor/appointments.css">
 </head>
 <body>
 
 <%- include('../partials/doctor-sidebar', { currentPage: 'appointments' }) %>
-<div id="healora-modal-root"></div>
+<div id="doc-modal-root"></div>
 
 <div class="main-content">
 
-  <div class="top-bar">
-    <h1 class="page-title">My Appointments</h1>
-    <div class="user-profile">
-      <div class="user-avatar">
-        <% if (user.profileImage) { %><img src="<%= user.profileImage %>" alt=""><% } else { %><%= user.name.charAt(0).toUpperCase() %><% } %>
-      </div>
-      <span class="user-avatar-name">Dr. <%= user.name.split(' ')[0] %></span>
-    </div>
-  </div>
+  <%- include('../partials/doctor-topbar', {
+    pageTitle:    'Appointments',
+    pageSubtitle: 'Manage your patient appointments',
+    backUrl:      null,
+    backLabel:    null
+  }) %>
 
-  <!-- Stats -->
+  <!-- Stats row -->
   <div class="stats-row">
-    <div class="stat-card">
-      <div class="stat-icon total"><i class="fas fa-calendar-alt"></i></div>
-      <div class="stat-info"><strong><%= stats.total %></strong><span>Total</span></div>
+    <div class="stat-card <%= !selectedStatus || selectedStatus==='all' ? 'active':'' %>"
+         onclick="window.location.href='/doctor/appointments'">
+      <div class="stat-icon si-all"><i class="fas fa-calendar-alt"></i></div>
+      <div><div class="stat-val"><%= stats.total %></div><div class="stat-label">Total</div></div>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon pending"><i class="fas fa-clock"></i></div>
-      <div class="stat-info"><strong><%= stats.pending %></strong><span>Pending</span></div>
+    <div class="stat-card <%= selectedStatus==='pending' ? 'active':'' %>"
+         onclick="window.location.href='/doctor/appointments?status=pending'">
+      <div class="stat-icon si-pending"><i class="fas fa-hourglass-half"></i></div>
+      <div><div class="stat-val"><%= stats.pending %></div><div class="stat-label">Pending</div></div>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon confirmed"><i class="fas fa-check-circle"></i></div>
-      <div class="stat-info"><strong><%= stats.confirmed %></strong><span>Confirmed</span></div>
+    <div class="stat-card <%= selectedStatus==='confirmed' ? 'active':'' %>"
+         onclick="window.location.href='/doctor/appointments?status=confirmed'">
+      <div class="stat-icon si-confirmed"><i class="fas fa-calendar-check"></i></div>
+      <div><div class="stat-val"><%= stats.confirmed %></div><div class="stat-label">Confirmed</div></div>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon completed"><i class="fas fa-check-double"></i></div>
-      <div class="stat-info"><strong><%= stats.completed %></strong><span>Completed</span></div>
+    <div class="stat-card <%= selectedStatus==='completed' ? 'active':'' %>"
+         onclick="window.location.href='/doctor/appointments?status=completed'">
+      <div class="stat-icon si-completed"><i class="fas fa-check-double"></i></div>
+      <div><div class="stat-val"><%= stats.completed %></div><div class="stat-label">Completed</div></div>
     </div>
-    <div class="stat-card">
-      <div class="stat-icon cancelled"><i class="fas fa-times-circle"></i></div>
-      <div class="stat-info"><strong><%= stats.cancelled %></strong><span>Cancelled</span></div>
+    <div class="stat-card <%= selectedStatus==='cancelled' ? 'active':'' %>"
+         onclick="window.location.href='/doctor/appointments?status=cancelled'">
+      <div class="stat-icon si-cancelled"><i class="fas fa-times-circle"></i></div>
+      <div><div class="stat-val"><%= stats.cancelled %></div><div class="stat-label">Cancelled</div></div>
     </div>
   </div>
 
   <!-- Filter tabs -->
   <div class="filter-tabs">
-    <a href="/doctor/appointments"                  class="filter-tab <%= selectedStatus==='all'       ? 'active':'' %>">All</a>
-    <a href="/doctor/appointments?status=pending"   class="filter-tab <%= selectedStatus==='pending'   ? 'active':'' %>">Pending</a>
-    <a href="/doctor/appointments?status=confirmed" class="filter-tab <%= selectedStatus==='confirmed' ? 'active':'' %>">Confirmed</a>
-    <a href="/doctor/appointments?status=completed" class="filter-tab <%= selectedStatus==='completed' ? 'active':'' %>">Completed</a>
-    <a href="/doctor/appointments?status=cancelled" class="filter-tab <%= selectedStatus==='cancelled' ? 'active':'' %>">Cancelled</a>
+    <a href="/doctor/appointments"                  class="filter-tab <%= !selectedStatus||selectedStatus==='all'?'active':'' %>">All</a>
+    <a href="/doctor/appointments?status=pending"   class="filter-tab <%= selectedStatus==='pending'  ?'active':'' %>">Pending</a>
+    <a href="/doctor/appointments?status=confirmed" class="filter-tab <%= selectedStatus==='confirmed'?'active':'' %>">Confirmed</a>
+    <a href="/doctor/appointments?status=completed" class="filter-tab <%= selectedStatus==='completed'?'active':'' %>">Completed</a>
+    <a href="/doctor/appointments?status=cancelled" class="filter-tab <%= selectedStatus==='cancelled'?'active':'' %>">Cancelled</a>
   </div>
 
-  <!-- List -->
+  <!-- Appointment list -->
   <% if (appointments.length === 0) { %>
     <div class="empty-state">
       <i class="fas fa-calendar-times"></i>
       <h4>No appointments found</h4>
-      <p><%= selectedStatus === 'all' ? 'No appointments yet.' : `No ${selectedStatus} appointments.` %></p>
+      <p><%= selectedStatus && selectedStatus !== 'all' ? `No ${selectedStatus} appointments.` : 'No appointments yet.' %></p>
     </div>
-  <% } else { %>
-    <div class="appointments-list">
-      <% appointments.forEach(appt => { %>
-        <div class="appt-card" id="appt-<%= appt._id %>">
 
-          <div class="patient-avatar">
+  <% } else { %>
+
+    <!-- Data store for JS — avoids EJS inside JS strings -->
+    <div id="appt-data-store" style="display:none;"
+      data-appointments='<%- JSON.stringify(appointments.map(a => ({
+        id:            a._id,
+        patientName:   a.patient ? a.patient.name        : "Unknown",
+        patientImg:    a.patient ? (a.patient.profileImage || "") : "",
+        patientAge:    a.patient ? (a.patient.age         || "") : "",
+        patientGender: a.patient ? (a.patient.gender      || "") : "",
+        patientPhone:  a.patient ? (a.patient.phone       || "") : "",
+        date:          a.date,
+        timeSlot:      a.timeSlot,
+        department:    a.department     || "",
+        reason:        a.reason         || "",
+        fee:           a.consultationFee || 0,
+        status:        a.status,
+        paymentMethod: a.paymentMethod,
+        canConfirm:    a.status === "pending",
+        canComplete:   a.status === "confirmed",
+        canCancel:     ["pending","confirmed"].includes(a.status),
+        canRx:         ["confirmed","completed"].includes(a.status)
+      }))) %>'>
+    </div>
+
+    <div class="appointments-list">
+      <% appointments.forEach(appt => {
+        const [ah, am]  = appt.timeSlot.split(':').map(Number);
+        const aampm     = ah >= 12 ? 'PM' : 'AM';
+        const afmt      = `${ah % 12 || 12}:${String(am).padStart(2,'0')} ${aampm}`;
+        const apptDate  = new Date(appt.date + 'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+        const canConfirm  = appt.status === 'pending';
+        const canComplete = appt.status === 'confirmed';
+        const canCancel   = ['pending','confirmed'].includes(appt.status);
+        const canRx       = ['confirmed','completed'].includes(appt.status);
+      %>
+        <div class="appt-card">
+
+          <!-- Avatar -->
+          <div class="pat-avatar">
             <% if (appt.patient?.profileImage) { %>
               <img src="<%= appt.patient.profileImage %>" alt="">
             <% } else { %>
-              <%= appt.patient ? appt.patient.name.charAt(0).toUpperCase() : 'P' %>
+              <%= appt.patient?.name?.charAt(0)?.toUpperCase() || 'P' %>
             <% } %>
           </div>
 
+          <!-- Info -->
           <div class="appt-main">
             <div class="appt-name"><%= appt.patient?.name || 'Unknown Patient' %></div>
-            <div class="appt-sub"><%= appt.department || 'General' %> · <%= appt.patient?.phone || 'No phone' %></div>
+            <div class="appt-sub">
+              <%= appt.department || 'General' %>
+              <% if (appt.patient?.phone) { %> · <%= appt.patient.phone %><% } %>
+            </div>
             <div class="appt-meta">
-              <span class="meta-chip"><i class="fas fa-calendar"></i> <%= new Date(appt.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'}) %></span>
-              <span class="meta-chip"><i class="fas fa-clock"></i> <%= appt.timeSlot %></span>
-              <span class="meta-chip"><i class="fas fa-<%= appt.paymentMethod==='cash'?'money-bill-wave':appt.paymentMethod==='wallet'?'wallet':'credit-card' %>"></i> <%= appt.paymentMethod==='cash'?'Cash':appt.paymentMethod==='wallet'?'Wallet':'Online' %></span>
+              <span class="meta-chip"><i class="fas fa-calendar"></i><%= apptDate %></span>
+              <span class="meta-chip"><i class="fas fa-clock"></i><%= afmt %></span>
+              <span class="meta-chip">
+                <i class="fas fa-<%= appt.paymentMethod==='cash'?'money-bill-wave':appt.paymentMethod==='wallet'?'wallet':'credit-card' %>"></i>
+                <%= appt.paymentMethod==='cash'?'Cash':appt.paymentMethod==='wallet'?'Wallet':'Online' %>
+              </span>
               <% if (appt.reason) { %>
-                <span class="meta-chip"><i class="fas fa-notes-medical"></i> <%= appt.reason.substring(0,35) %><%= appt.reason.length>35?'...':'' %></span>
+                <span class="meta-chip"><i class="fas fa-notes-medical"></i><%= appt.reason.substring(0,30) %><%= appt.reason.length>30?'…':'' %></span>
               <% } %>
             </div>
           </div>
 
+          <!-- Right side -->
           <div class="appt-right">
-            <span class="status-badge <%= appt.status %>"><%= appt.status %></span>
-            <div class="appt-fee">₹<%= appt.consultationFee %></div>
+            <span class="sbadge <%= appt.status %>"><%= appt.status %></span>
+            <div class="appt-fee">₹<%= appt.consultationFee || 0 %></div>
             <div class="appt-actions">
-              <button class="btn-sm btn-view" onclick="openDetailModal('<%= appt._id %>')"><i class="fas fa-eye"></i> View</button>
-              <% if (appt.status === 'pending') { %>
-                <button class="btn-sm btn-confirm"  onclick="updateStatus('<%= appt._id %>','confirmed')"><i class="fas fa-check"></i> Confirm</button>
+
+              <!-- View -->
+              <button class="btn-sm btn-view"
+                data-id="<%= appt._id %>"
+                onclick="openViewModal(this.dataset.id)">
+                <i class="fas fa-eye"></i> View
+              </button>
+
+              <!-- Prescription (confirmed or completed) -->
+              <% if (canRx) { %>
+                <button class="btn-sm btn-rx"
+                  data-id="<%= appt._id %>"
+                  onclick="openRxModal(this.dataset.id)">
+                  <i class="fas fa-prescription"></i> Rx
+                </button>
               <% } %>
-              <% if (appt.status === 'confirmed') { %>
-                <button class="btn-sm btn-complete" onclick="updateStatus('<%= appt._id %>','completed')"><i class="fas fa-check-double"></i> Complete</button>
+
+              <!-- Confirm (pending cash appointments) -->
+              <% if (canConfirm) { %>
+                <button class="btn-sm btn-confirm"
+                  data-id="<%= appt._id %>"
+                  onclick="openConfirmModal(this.dataset.id)">
+                  <i class="fas fa-check"></i> Confirm
+                </button>
               <% } %>
-              <% if (['pending','confirmed'].includes(appt.status)) { %>
-                <button class="btn-sm btn-cancel"   onclick="updateStatus('<%= appt._id %>','cancelled')"><i class="fas fa-times"></i> Cancel</button>
+
+              <!-- Complete (confirmed appointments) -->
+              <% if (canComplete) { %>
+                <button class="btn-sm btn-complete"
+                  data-id="<%= appt._id %>"
+                  onclick="openCompleteModal(this.dataset.id)">
+                  <i class="fas fa-check-double"></i> Complete
+                </button>
               <% } %>
+
+              <!-- Cancel (pending or confirmed) -->
+              <% if (canCancel) { %>
+                <button class="btn-sm btn-cancel"
+                  data-id="<%= appt._id %>"
+                  onclick="openCancelModal(this.dataset.id)">
+                  <i class="fas fa-times"></i> Cancel
+                </button>
+              <% } %>
+
             </div>
           </div>
 
@@ -225,24 +194,47 @@
     </div>
 
     <% if (pagination.totalPages > 1) { %>
-      <div class="pagination-row">
+      <div class="pg-row">
         <% for (let i = 1; i <= pagination.totalPages; i++) { %>
           <a href="/doctor/appointments?status=<%= selectedStatus %>&page=<%= i %>"
-             class="page-btn <%= pagination.page === i ? 'active' : '' %>"><%= i %></a>
+             class="pg-btn <%= pagination.page === i ? 'active' : '' %>"><%= i %></a>
         <% } %>
       </div>
     <% } %>
-  <% } %>
 
+  <% } %>
 </div>
 
 <script>
-  const modalRoot = document.getElementById('healora-modal-root');
+  /* ── Data store ── */
+  const APPTS = JSON.parse(
+    document.getElementById('appt-data-store')?.dataset.appointments || '[]'
+  );
+
+  function getAppt(id) { return APPTS.find(a => a.id === id); }
+
+  function fmtTime(slot) {
+    const [h, m] = slot.split(':').map(Number);
+    return `${h % 12 || 12}:${String(m).padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`;
+  }
+
+  function fmtDate(d) {
+    return new Date(d + 'T00:00:00').toLocaleDateString('en-US',{
+      weekday:'short', month:'short', day:'numeric', year:'numeric'
+    });
+  }
+
+  function payLabel(m) {
+    return m === 'cash' ? 'Cash' : m === 'wallet' ? 'Wallet' : 'Online (Razorpay)';
+  }
+
+  /* ── Modal engine ── */
+  const modalRoot = document.getElementById('doc-modal-root');
 
   function showModal(html) {
-    modalRoot.innerHTML = `<div class="hm-backdrop" id="hm-backdrop">${html}</div>`;
-    document.getElementById('hm-backdrop').addEventListener('click', e => {
-      if (e.target === document.getElementById('hm-backdrop')) hideModal();
+    modalRoot.innerHTML = `<div class="dm-backdrop" id="dm-backdrop">${html}</div>`;
+    document.getElementById('dm-backdrop').addEventListener('click', e => {
+      if (e.target === document.getElementById('dm-backdrop')) hideModal();
     });
     requestAnimationFrame(() => requestAnimationFrame(() => modalRoot.classList.add('active')));
     document.body.style.overflow = 'hidden';
@@ -251,106 +243,403 @@
   function hideModal() {
     modalRoot.classList.remove('active');
     document.body.style.overflow = '';
-    setTimeout(() => { modalRoot.innerHTML = ''; }, 250);
+    setTimeout(() => { modalRoot.innerHTML = ''; }, 260);
   }
 
-  function openDetailModal(id) {
-    const card   = document.getElementById('appt-' + id);
-    const name   = card.querySelector('.appt-name').textContent.trim();
-    const sub    = card.querySelector('.appt-sub').textContent.trim();
-    const chips  = card.querySelectorAll('.meta-chip');
-    const date   = chips[0]?.textContent.trim() || '';
-    const time   = chips[1]?.textContent.trim() || '';
-    const payment= chips[2]?.textContent.trim() || '';
-    const reason = chips[3]?.textContent.trim() || 'Not specified';
-    const fee    = card.querySelector('.appt-fee').textContent.trim();
-    const badge  = card.querySelector('.status-badge');
-    const status = badge.textContent.trim();
-    const statusClass = [...badge.classList].find(c => c !== 'status-badge') || '';
+  /* ── Patient info snippet ── */
+  function patientInfoHtml(a) {
+    return `
+      <div class="dm-info">
+        <div class="dm-row"><span>Patient</span><span>${a.patientName}</span></div>
+        <div class="dm-row"><span>Date</span><span>${fmtDate(a.date)}</span></div>
+        <div class="dm-row"><span>Time</span><span>${fmtTime(a.timeSlot)}</span></div>
+        <div class="dm-row"><span>Department</span><span>${a.department || '—'}</span></div>
+        <div class="dm-row"><span>Fee</span><span>₹${a.fee}</span></div>
+        <div class="dm-row"><span>Payment</span><span>${payLabel(a.paymentMethod)}</span></div>
+      </div>`;
+  }
 
+  /* ── VIEW modal ── */
+  function openViewModal(id) {
+    const a = getAppt(id);
+    if (!a) return;
     showModal(`
-      <div class="hm-box" onclick="event.stopPropagation()">
-        <div class="hm-icon blue"><i class="fas fa-user"></i></div>
-        <div class="hm-title">${name}</div>
-        <div class="hm-sub">${sub}</div>
-        <div class="hm-detail-row"><span>Date</span><span>${date}</span></div>
-        <div class="hm-detail-row"><span>Time</span><span>${time}</span></div>
-        <div class="hm-detail-row"><span>Payment</span><span>${payment}</span></div>
-        <div class="hm-detail-row"><span>Reason</span><span>${reason}</span></div>
-        <div class="hm-detail-row"><span>Fee</span><span>${fee}</span></div>
-        <div class="hm-detail-row"><span>Status</span><span class="status-badge ${statusClass}">${status}</span></div>
-        <div class="hm-btns">
-          <button class="hm-btn gray" onclick="hideModal()">Close</button>
+      <div class="dm-box" onclick="event.stopPropagation()">
+        <div class="dm-icon blue"><i class="fas fa-calendar-check"></i></div>
+        <div class="dm-title">Appointment Details</div>
+        <div class="dm-sub" style="margin-bottom:14px;">Status: <span class="sbadge ${a.status}">${a.status}</span></div>
+        <div class="dm-info">
+          <div class="dm-row"><span>Patient</span><span>${a.patientName}</span></div>
+          <div class="dm-row"><span>Date</span><span>${fmtDate(a.date)}</span></div>
+          <div class="dm-row"><span>Time</span><span>${fmtTime(a.timeSlot)}</span></div>
+          <div class="dm-row"><span>Department</span><span>${a.department || '—'}</span></div>
+          <div class="dm-row"><span>Fee</span><span>₹${a.fee}</span></div>
+          <div class="dm-row"><span>Payment</span><span>${payLabel(a.paymentMethod)}</span></div>
+          ${a.patientAge    ? `<div class="dm-row"><span>Age</span><span>${a.patientAge} yrs</span></div>` : ''}
+          ${a.patientGender ? `<div class="dm-row"><span>Gender</span><span style="text-transform:capitalize;">${a.patientGender}</span></div>` : ''}
+          ${a.patientPhone  ? `<div class="dm-row"><span>Phone</span><span>${a.patientPhone}</span></div>` : ''}
+          ${a.reason        ? `<div class="dm-row"><span>Reason</span><span>${a.reason}</span></div>` : ''}
+        </div>
+        <div class="dm-btns">
+          <button class="dm-btn gray" onclick="hideModal()">Close</button>
+          ${a.canRx ? `<button class="dm-btn purple" onclick="hideModal();setTimeout(()=>openRxModal('${id}'),260)"><i class="fas fa-prescription"></i> Add Rx</button>` : ''}
         </div>
       </div>
     `);
   }
 
-  function updateStatus(id, status) {
-  if (status === 'cancelled') {
+  /* ── CONFIRM modal (pending → confirmed) ── */
+  function openConfirmModal(id) {
+    const a = getAppt(id);
+    if (!a) return;
     showModal(`
-      <div class="hm-box" onclick="event.stopPropagation()">
-        <div class="hm-icon red"><i class="fas fa-times-circle"></i></div>
-        <div class="hm-title">Cancel Appointment</div>
-        <div class="hm-sub">Please provide a reason. The patient will be notified via email with available slots.</div>
-        <textarea id="cancelReasonInput" class="hm-textarea" placeholder="Reason for cancellation (required)" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;resize:vertical;min-height:90px;outline:none;margin-bottom:16px;background:#fff;color:#1a202c;"></textarea>
-        <div class="hm-btns">
-          <button class="hm-btn gray" onclick="hideModal()">Go Back</button>
-          <button class="hm-btn red" id="confirmBtn" onclick="confirmStatusUpdate('${id}','cancelled')">Cancel Appointment</button>
+      <div class="dm-box" onclick="event.stopPropagation()">
+        <div class="dm-icon amber"><i class="fas fa-check"></i></div>
+        <div class="dm-title">Confirm Appointment?</div>
+        <div class="dm-sub">Confirming this appointment means you acknowledge the booking and the patient will be scheduled.</div>
+        ${patientInfoHtml(a)}
+        <div class="dm-btns">
+          <button class="dm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="dm-btn amber" id="dm-confirm-btn"
+            onclick="doStatusUpdate('${id}','confirmed')">
+            <i class="fas fa-check"></i> Confirm Appointment
+          </button>
         </div>
       </div>
     `);
-    return;
   }
 
-  const labels = { confirmed:'Confirm', completed:'Complete' };
-  const colors = { confirmed:'green',  completed:'blue' };
-  const icons  = { confirmed:'fa-check', completed:'fa-check-double' };
-  const msgs   = { confirmed:'This will confirm the appointment.', completed:'This will mark the appointment as completed.' };
+  /* ── COMPLETE modal (confirmed → completed) ── */
+  function openCompleteModal(id) {
+    const a = getAppt(id);
+    if (!a) return;
+    showModal(`
+      <div class="dm-box" onclick="event.stopPropagation()">
+        <div class="dm-icon green"><i class="fas fa-check-double"></i></div>
+        <div class="dm-title">Mark as Completed?</div>
+        <div class="dm-sub">This means the consultation with <strong>${a.patientName}</strong> has been done. You can still add a prescription after marking complete.</div>
+        ${patientInfoHtml(a)}
+        <div class="dm-btns">
+          <button class="dm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="dm-btn green" id="dm-confirm-btn"
+            onclick="doStatusUpdate('${id}','completed')">
+            <i class="fas fa-check-double"></i> Mark Completed
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  /* ── CANCEL modal ── */
+  function openCancelModal(id) {
+    const a = getAppt(id);
+    if (!a) return;
+    showModal(`
+      <div class="dm-box" onclick="event.stopPropagation()">
+        <div class="dm-icon red"><i class="fas fa-times-circle"></i></div>
+        <div class="dm-title">Cancel Appointment?</div>
+        <div class="dm-sub">
+          Cancelling appointment with <strong>${a.patientName}</strong>
+          on ${fmtDate(a.date)} at ${fmtTime(a.timeSlot)}.
+          ${a.paymentMethod !== 'cash' ? '<br><span style="color:#059669;font-weight:700;">Patient will receive a 100% refund to their wallet.</span>' : ''}
+        </div>
+        <div style="margin-bottom:6px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+            Reason for cancellation <span style="color:#dc2626;">*</span>
+          </label>
+          <textarea class="dm-textarea" id="dm-cancel-reason"
+            placeholder="Please provide a reason — patient will be notified via email..."></textarea>
+          <div class="dm-error" id="dm-cancel-error">Cancellation reason is required.</div>
+        </div>
+        <div class="dm-btns">
+          <button class="dm-btn gray" onclick="hideModal()">Keep Appointment</button>
+          <button class="dm-btn red" id="dm-confirm-btn" onclick="doCancelUpdate('${id}')">
+            <i class="fas fa-times"></i> Cancel Appointment
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  /* ── PRESCRIPTION modal — view first, edit on demand ── */
+let _rxFileData = null;
+let _rxFileType = null;
+let _currentRxId = null;
+
+function openRxModal(id) {
+  const a = getAppt(id);
+  if (!a) return;
+  _rxFileData  = null;
+  _rxFileType  = null;
+  _currentRxId = id;
 
   showModal(`
-    <div class="hm-box" onclick="event.stopPropagation()">
-      <div class="hm-icon ${colors[status]}"><i class="fas ${icons[status]}"></i></div>
-      <div class="hm-title">${labels[status]} Appointment?</div>
-      <div class="hm-sub">${msgs[status]}</div>
-      <div class="hm-btns">
-        <button class="hm-btn gray" onclick="hideModal()">Go Back</button>
-        <button class="hm-btn ${colors[status]}" id="confirmBtn" onclick="confirmStatusUpdate('${id}','${status}')">${labels[status]}</button>
+    <div class="dm-box" onclick="event.stopPropagation()"
+         style="max-width:520px;max-height:88vh;overflow-y:auto;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+        <div class="dm-icon purple" style="margin-bottom:0;flex-shrink:0;">
+          <i class="fas fa-prescription"></i>
+        </div>
+        <div>
+          <div class="dm-title" style="margin-bottom:0;">Prescription & Notes</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:2px;">
+            ${a.patientName}
+            ${a.patientAge    ? ' · ' + a.patientAge + ' yrs' : ''}
+            ${a.patientGender ? ' · ' + a.patientGender        : ''}
+          </div>
+        </div>
       </div>
+
+      <div id="rx-loading" style="text-align:center;padding:24px;color:#94a3b8;">
+        <i class="fas fa-spinner fa-spin" style="font-size:24px;"></i>
+        <p style="font-size:13px;margin-top:8px;">Loading...</p>
+      </div>
+
+      <!-- Read-only view -->
+      <div id="rx-view" style="display:none;"></div>
+
+      <!-- Edit form -->
+      <div id="rx-form" style="display:none;">
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Diagnosis</label>
+          <textarea id="rx-diagnosis" class="dm-textarea" style="min-height:72px;" placeholder="Patient diagnosis..."></textarea>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Medicines & Dosage</label>
+          <textarea id="rx-medicines" class="dm-textarea" style="min-height:90px;" placeholder="e.g. Paracetamol 500mg · twice daily · 5 days"></textarea>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">Additional Notes</label>
+          <textarea id="rx-notes" class="dm-textarea" style="min-height:72px;" placeholder="Any additional instructions or advice..."></textarea>
+        </div>
+        <div style="margin-bottom:14px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+            Follow-up Date <span style="color:#94a3b8;font-weight:400;">(optional)</span>
+          </label>
+          <input type="date" id="rx-followup" class="dm-textarea"
+            style="min-height:unset;resize:none;padding:10px 14px;cursor:pointer;">
+        </div>
+        <div style="margin-bottom:18px;">
+          <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+            Upload File <span style="color:#94a3b8;font-weight:400;">(optional · PDF or image)</span>
+          </label>
+          <div id="rx-existing-file"></div>
+          <div style="border:2px dashed #e2e8f0;border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .2s;background:#fafbfc;"
+               onclick="document.getElementById('rx-file-input').click()">
+            <i class="fas fa-cloud-upload-alt" style="font-size:22px;color:#94a3b8;display:block;margin-bottom:6px;"></i>
+            <p style="font-size:13px;color:#64748b;margin:0;">Click to upload</p>
+            <span style="font-size:11px;color:#94a3b8;">PDF, JPG, PNG — max 5MB</span>
+          </div>
+          <input type="file" id="rx-file-input" accept=".pdf,.jpg,.jpeg,.png"
+            style="display:none;" onchange="handleRxFile(this)">
+          <div id="rx-file-preview" style="margin-top:8px;"></div>
+        </div>
+        <div id="rx-alert" style="display:none;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px;align-items:center;gap:7px;"></div>
+        <div class="dm-btns">
+          <button class="dm-btn gray" onclick="switchRxToView()">
+            <i class="fas fa-arrow-left"></i> Back
+          </button>
+          <button class="dm-btn purple" id="rx-save-btn" onclick="saveRx('${id}')">
+            <i class="fas fa-save"></i> Save Prescription
+          </button>
+        </div>
+      </div>
+
     </div>
   `);
+
+  // Load prescription
+  fetch(`/doctor/appointments/${id}/prescription`)
+    .then(r => r.json())
+    .then(data => {
+      const rx = data.prescription || null;
+      document.getElementById('rx-loading').style.display = 'none';
+
+      if (rx && (rx.diagnosis || rx.medicines || rx.notes || rx.fileUrl)) {
+        // Has existing prescription — show read-only view
+        renderRxView(rx);
+      } else {
+        // No prescription yet — go straight to form
+        document.getElementById('rx-form').style.display = 'block';
+      }
+    })
+    .catch(() => {
+      document.getElementById('rx-loading').innerHTML =
+        '<p style="color:#dc2626;font-size:13px;font-weight:600;">Failed to load. Please try again.</p>';
+    });
 }
 
-async function confirmStatusUpdate(id, status) {
-  const btn = document.getElementById('confirmBtn');
-  let reason = '';
+function renderRxView(rx) {
+  const viewEl = document.getElementById('rx-view');
+  if (!viewEl) return;
 
-  if (status === 'cancelled') {
-    reason = document.getElementById('cancelReasonInput')?.value.trim() || '';
-    if (!reason) {
-      document.getElementById('cancelReasonInput').style.borderColor = '#dc2626';
-      document.getElementById('cancelReasonInput').placeholder = 'Reason is required';
+  const field = (label, value) => value ? `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">${label}</div>
+      <div style="font-size:14px;color:#1a202c;font-weight:500;background:#f8fafc;padding:10px 14px;border-radius:8px;border:1px solid #f0f2f5;white-space:pre-wrap;line-height:1.6;">${value}</div>
+    </div>` : '';
+
+  viewEl.innerHTML = `
+    ${field('Diagnosis',        rx.diagnosis)}
+    ${field('Medicines & Dosage', rx.medicines)}
+    ${field('Additional Notes', rx.notes)}
+    ${rx.followUpDate ? `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Follow-up Date</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#eff6ff;color:#1d4ed8;padding:7px 14px;border-radius:8px;font-size:13px;font-weight:700;">
+          <i class="fas fa-calendar"></i>
+          ${new Date(rx.followUpDate + 'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'long',day:'numeric',year:'numeric'})}
+        </div>
+      </div>` : ''}
+    ${rx.fileUrl ? `
+      <div style="margin-bottom:14px;">
+        <div style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px;">Attached File</div>
+        <a href="${rx.fileUrl}" target="_blank"
+           style="display:inline-flex;align-items:center;gap:7px;background:#f0fdf4;color:#059669;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;border:1px solid #bbf7d0;">
+          <i class="fas fa-file-alt"></i> View Uploaded File
+        </a>
+      </div>` : ''}
+    <div class="dm-btns" style="margin-top:6px;">
+      <button class="dm-btn gray" onclick="hideModal()">Close</button>
+      <button class="dm-btn purple" onclick="switchRxToEdit('${JSON.stringify(rx).replace(/'/g, "\\'")}')">
+        <i class="fas fa-edit"></i> Edit Prescription
+      </button>
+    </div>
+  `;
+
+  viewEl.style.display = 'block';
+}
+
+function switchRxToEdit(rxJson) {
+  let rx = {};
+  try { rx = JSON.parse(rxJson); } catch {}
+
+  document.getElementById('rx-view').style.display = 'none';
+  document.getElementById('rx-form').style.display = 'block';
+
+  // Pre-fill form with existing data
+  document.getElementById('rx-diagnosis').value = rx.diagnosis    || '';
+  document.getElementById('rx-medicines').value = rx.medicines    || '';
+  document.getElementById('rx-notes').value     = rx.notes        || '';
+  document.getElementById('rx-followup').value  = rx.followUpDate || '';
+
+  if (rx.fileUrl) {
+    document.getElementById('rx-existing-file').innerHTML = `
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;font-size:13px;color:#166534;">
+        <span><i class="fas fa-file-alt" style="margin-right:6px;"></i>File already uploaded</span>
+        <a href="${rx.fileUrl}" target="_blank"
+           style="color:#059669;font-weight:700;font-size:12px;text-decoration:none;">View</a>
+      </div>`;
+  }
+}
+
+function switchRxToView() {
+  document.getElementById('rx-form').style.display = 'none';
+  document.getElementById('rx-view').style.display = 'block';
+}
+
+  function handleRxFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('File must be under 5MB'); input.value = ''; return; }
+    _rxFileType = file.type === 'application/pdf' ? 'pdf' : 'image';
+    document.getElementById('rx-file-preview').innerHTML =
+      `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:9px 14px;font-size:13px;color:#374151;display:flex;align-items:center;gap:8px;margin-top:4px;">
+        <i class="fas fa-file" style="color:#0f4c75;"></i>${file.name}
+       </div>`;
+    const reader = new FileReader();
+    reader.onload = e => { _rxFileData = e.target.result; };
+    reader.readAsDataURL(file);
+  }
+
+  async function saveRx(id) {
+    const diagnosis    = document.getElementById('rx-diagnosis')?.value.trim();
+    const medicines    = document.getElementById('rx-medicines')?.value.trim();
+    const notes        = document.getElementById('rx-notes')?.value.trim();
+    const followUpDate = document.getElementById('rx-followup')?.value;
+    const alertEl      = document.getElementById('rx-alert');
+    const btn          = document.getElementById('rx-save-btn');
+
+    if (!diagnosis && !medicines && !notes && !_rxFileData) {
+      alertEl.style.cssText = 'display:flex;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px;align-items:center;gap:7px;';
+      alertEl.innerHTML     = '<i class="fas fa-exclamation-circle"></i> Please fill in at least one field.';
       return;
+    }
+
+    alertEl.style.display = 'none';
+    btn.disabled    = true;
+    btn.innerHTML   = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      const res  = await fetch(`/doctor/appointments/${id}/prescription`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ diagnosis, medicines, notes, followUpDate,
+                                  fileData: _rxFileData || '', fileType: _rxFileType || '' })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+  alertEl.style.cssText = 'display:flex;background:#f0fdf4;color:#059669;border:1px solid #bbf7d0;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px;align-items:center;gap:7px;';
+  alertEl.innerHTML     = '<i class="fas fa-check-circle"></i> Prescription saved successfully!';
+  btn.disabled  = false;
+  btn.innerHTML = '<i class="fas fa-save"></i> Save Prescription';
+  setTimeout(() => {
+    renderRxView(data.prescription);
+    document.getElementById('rx-form').style.display = 'none';
+  }, 1000);
+      } else {
+        alertEl.style.cssText = 'display:flex;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:10px 14px;border-radius:8px;font-size:13px;font-weight:600;margin-bottom:14px;align-items:center;gap:7px;';
+        alertEl.innerHTML     = `<i class="fas fa-exclamation-circle"></i> ${data.error || 'Failed to save'}`;
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Save Prescription';
+      }
+    } catch {
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> Save Prescription';
+      alert('Something went wrong. Please try again.');
     }
   }
 
-  btn.disabled = true;
-  btn.textContent = 'Updating...';
-  try {
-    const res  = await fetch(`/doctor/appointments/${id}/status`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, reason })
-    });
-    const data = await res.json();
-    if (data.success) { hideModal(); window.location.reload(); }
-    else { alert(data.error || 'Failed to update'); btn.disabled = false; btn.textContent = 'Retry'; }
-  } catch {
-    alert('Something went wrong.');
-    btn.disabled = false; btn.textContent = 'Retry';
+  /* ── Status update — no reason needed ── */
+  async function doStatusUpdate(id, status) {
+    const btn = document.getElementById('dm-confirm-btn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+    try {
+      const res  = await fetch(`/doctor/appointments/${id}/status`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (data.success) { hideModal(); window.location.reload(); }
+      else { alert(data.error || 'Failed to update'); btn.disabled = false; btn.innerHTML = 'Retry'; }
+    } catch { alert('Something went wrong.'); btn.disabled = false; btn.innerHTML = 'Retry'; }
   }
-}
-</script>
 
+  /* ── Cancel — reason required ── */
+  async function doCancelUpdate(id) {
+    const reason = document.getElementById('dm-cancel-reason')?.value.trim();
+    const errEl  = document.getElementById('dm-cancel-error');
+    if (!reason) { errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    const btn = document.getElementById('dm-confirm-btn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelling...';
+
+    try {
+      const res  = await fetch(`/doctor/appointments/${id}/status`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: 'cancelled', reason })
+      });
+      const data = await res.json();
+      if (data.success) { hideModal(); window.location.reload(); }
+      else { alert(data.error || 'Failed'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-times"></i> Cancel Appointment'; }
+    } catch { alert('Something went wrong.'); btn.disabled = false; btn.innerHTML = '<i class="fas fa-times"></i> Cancel Appointment'; }
+  }
+</script>
 </body>
 </html>

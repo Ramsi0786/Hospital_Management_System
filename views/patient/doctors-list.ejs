@@ -16,23 +16,12 @@
 
   <div class="main-content">
 
-    <!-- Top Bar -->
-    <div class="top-bar">
-      <div>
-        <h1 class="page-title">Find Your Doctor</h1>
-        <p class="page-subtitle">Connect with experienced healthcare professionals</p>
-      </div>
-      <button class="user-profile-btn">
-        <div class="user-avatar-small">
-          <% if (locals.user && user.profileImage) { %>
-            <img src="<%= user.profileImage %>" alt="<%= user.name %>">
-          <% } else { %>
-            <%= user.name.charAt(0).toUpperCase() %>
-          <% } %>
-        </div>
-        <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
-      </button>
-    </div>
+    <%- include('../partials/patient-topbar', {
+    pageTitle:    user.name.split(' ')[0] + "'s Dashboard",
+    pageSubtitle: 'Find your Doctor',
+    backUrl:      null,
+    backLabel:    null
+  }) %>
 
     <!-- Filter Bar (single row) -->
     <form method="GET" action="/patient/doctors" id="filterForm">
@@ -142,11 +131,20 @@
 
             <div class="stats-row">
               <div class="stat-item">
-                <span class="stat-value">⭐ <%= doctor.rating || '4.5' %></span>
-                <span class="stat-label">Rating</span>
+                <span class="stat-value">
+  <% if (doctor.rating && doctor.rating > 0) { %>
+    ⭐ <%= Number(doctor.rating).toFixed(1) %>
+<% if (doctor.ratingCount && doctor.ratingCount > 0) { %>
+  <span style="font-size:11px;color:#94a3b8;">(<%= doctor.ratingCount %>)</span>
+<% } %>
+  <% } else { %>
+    <span style="color:#94a3b8;font-size:12px;">✨ New</span>
+  <% } %>
+</span>
+<span class="stat-label">Rating</span>
               </div>
               <div class="stat-item">
-                <span class="stat-value"><%= doctor.experience || '0' %>+ yrs</span>
+                <span class="stat-value"><%= doctor.experience ? doctor.experience + '+ yrs' : '2+ yrs' %></span>
                 <span class="stat-label">Exp.</span>
               </div>
               <div class="stat-item">
@@ -158,7 +156,14 @@
             <div class="card-footer">
               <div class="fee-info">
                 
-                <span class="fee-amount"><span class="fee-label">Consultation Fee</span> ₹<%= doctor.consultationFee || '500' %></span>
+              <span class="fee-amount">
+                <span class="fee-label">Fee</span>
+                <% if (doctor.consultationFee && doctor.consultationFee > 0) { %>
+                  ₹<%= doctor.consultationFee %>
+                <% } else { %>
+              <span style="color:#94a3b8;font-size:12px;">Not set</span>
+              <% } %>
+              </span>  
               </div>
               <div class="action-buttons">
                 <a href="/patient/doctors/<%= doctor._id %>" class="btn-view">

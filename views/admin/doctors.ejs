@@ -213,12 +213,28 @@
           </div>
 
           <div class="form-group">
-            <label>Department <span class="require-star">*</span></label>
-            <select id="doctorDepartment">
-              <option value="">Select Department</option>
-            </select>
-            <span class="error-message" id="errorDepartment"></span>
-          </div>
+  <label>Department <span class="require-star">*</span></label>
+  <select id="doctorDepartment">
+    <option value="">Select Department</option>
+  </select>
+  <span class="error-message" id="errorDepartment"></span>
+</div>
+
+<div class="form-group">
+  <label>Consultation Fee (₹) <span class="require-star">*</span></label>
+  <input type="number" id="doctorConsultationFee" placeholder="e.g. 500" min="0">
+  <span class="error-message" id="errorConsultationFee"></span>
+</div>
+
+<div class="form-group">
+  <label>Qualification</label>
+  <input type="text" id="doctorQualification" placeholder="e.g. MBBS, MD">
+</div>
+
+<div class="form-group">
+  <label>Experience (years)</label>
+  <input type="number" id="doctorExperience" placeholder="e.g. 5" min="0" max="60">
+</div>
 
         </div>
 
@@ -531,14 +547,17 @@
       clearErrors();
 
       const formData = {
-        name:           document.getElementById('doctorName').value.trim(),
-        email:          document.getElementById('doctorEmail').value.trim(),
-        phone:          document.getElementById('doctorPhone').value.trim(),
-        password:       document.getElementById('doctorPassword').value,
-        specialization: document.getElementById('doctorSpecialization').value.trim(),
-        department:     document.getElementById('doctorDepartment').value,
-        profileImage:   selectedAvatarValue   
-      };
+  name:            document.getElementById('doctorName').value.trim(),
+  email:           document.getElementById('doctorEmail').value.trim(),
+  phone:           document.getElementById('doctorPhone').value.trim(),
+  password:        document.getElementById('doctorPassword').value,
+  specialization:  document.getElementById('doctorSpecialization').value.trim(),
+  department:      document.getElementById('doctorDepartment').value,
+  profileImage:    selectedAvatarValue,
+  consultationFee: document.getElementById('doctorConsultationFee').value,
+  qualification:   document.getElementById('doctorQualification').value.trim(),
+  experience:      document.getElementById('doctorExperience').value
+};
 
       let hasError = false;
       if (formData.name.length < 3)                               { document.getElementById('errorName').textContent = 'Full name required (min 3 chars)'; hasError = true; }
@@ -547,6 +566,7 @@
       if (formData.password.length < 6)                           { document.getElementById('errorPassword').textContent = 'Password must be at least 6 characters'; hasError = true; }
       if (!formData.specialization)                               { document.getElementById('errorSpecialization').textContent = 'Specialization is required'; hasError = true; }
       if (!formData.department)                                   { document.getElementById('errorDepartment').textContent = 'Department is required'; hasError = true; }
+      if (!formData.consultationFee || formData.consultationFee <= 0) { document.getElementById('errorConsultationFee').textContent = 'Consultation fee is required'; hasError = true; }
       if (hasError) return;
 
       Loader.show('Adding doctor...');

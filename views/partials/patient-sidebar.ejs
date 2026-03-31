@@ -1,9 +1,9 @@
 <div class="modern-sidebar" id="sidebar">
 
   <div class="sidebar-header">
-    <div class="logo-container">
-      <span class="logo-text">Healora</span>
-    </div>
+    <a href="/" class="logo-container" style="text-decoration:none;">
+  <i class="fas fa-home"></i><span class="logo-text">Healora</span>
+</a>
     <button class="sidebar-toggle" id="sidebarToggle">
       <i class="fas fa-bars"></i>
     </button>
@@ -14,7 +14,7 @@
       <span class="nav-section-title">MAIN MENU</span>
       
       <a href="/patient/dashboard" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'dashboard' ? 'active' : '' %>">
-        <div class="nav-icon"><i class="fas fa-home"></i></div>
+        <div class="nav-icon"><i class="fas fa-tachometer-alt"></i></div>
         <span class="nav-text">Dashboard</span>
       </a>
 
@@ -58,12 +58,6 @@
       <a href="/patient/medical-records" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'medical-records' ? 'active' : '' %>">
         <div class="nav-icon"><i class="fas fa-file-medical"></i></div>
         <span class="nav-text">Medical Records</span>
-        <div class="nav-indicator"></div>
-      </a>
-
-      <a href="/patient/prescriptions" class="nav-item <%= typeof currentPage !== 'undefined' && currentPage === 'prescriptions' ? 'active' : '' %>">
-        <div class="nav-icon"><i class="fas fa-prescription"></i></div>
-        <span class="nav-text">Prescriptions</span>
         <div class="nav-indicator"></div>
       </a>
     </div>

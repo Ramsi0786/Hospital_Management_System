@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/css/admin/leave-request.css">
+</head>
+<body>
+  
+<%- include('../partials/admin-topbar', { breadcrumb: 'Leave Requests', admin: admin }) %>
+
+<%- include('../partials/admin-sidebar', { currentPage: 'leave-requests' }) %>
+<div id="admin-modal-root"></div>
+
+<div class="main-content">
+
+  <!-- Topbar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1 style="font-size:24px;font-weight:800;color:#1a202c;margin:0;">Leave Requests</h1>
+      <p style="font-size:13px;color:#94a3b8;margin:4px 0 0;font-weight:500;">Review and manage doctor leave requests</p>
+    </div>
+    <% if (stats.emergencyCount > 0) { %>
+      <div style="background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;padding:10px 16px;display:flex;align-items:center;gap:8px;">
+        <i class="fas fa-exclamation-circle" style="color:#dc2626;"></i>
+        <span style="font-size:13px;font-weight:800;color:#dc2626;">
+          <%= stats.emergencyCount %> urgent emergency request<%= stats.emergencyCount > 1 ? 's' : '' %> pending
+        </span>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon si-total"><i class="fas fa-calendar-alt"></i></div>
+      <div>
+        <div class="stat-val"><%= pagination.total %></div>
+        <div class="stat-label">Total Requests</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-pending"><i class="fas fa-clock"></i></div>
+      <div>
+        <div class="stat-val"><%= stats.pendingCount %></div>
+        <div class="stat-label">Pending</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-emergency"><i class="fas fa-exclamation-circle"></i></div>
+      <div>
+        <div class="stat-val"><%= stats.emergencyCount %></div>
+        <div class="stat-label">Emergency Pending</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-approved"><i class="fas fa-check-circle"></i></div>
+      <div>
+        <div class="stat-val">
+          <%
+            const approvedCount = leaves.filter(l =>
+              ['approved','auto_approved'].includes(l.status)
+            ).length;
+          %>
+          <%= approvedCount %>
+        </div>
+        <div class="stat-label">Approved (this page)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs">
+    <a href="/admin/leave-requests"                  class="filter-tab <%= !filters.status || filters.status === 'all' ? 'active' : '' %>">All</a>
+    <a href="/admin/leave-requests?status=pending"   class="filter-tab <%= filters.status === 'pending'      ? 'active' : '' %>">Pending</a>
+    <a href="/admin/leave-requests?status=approved"  class="filter-tab <%= filters.status === 'approved'     ? 'active' : '' %>">Approved</a>
+    <a href="/admin/leave-requests?status=rejected"  class="filter-tab <%= filters.status === 'rejected'     ? 'active' : '' %>">Rejected</a>
+    <a href="/admin/leave-requests?status=auto_approved" class="filter-tab <%= filters.status === 'auto_approved' ? 'active' : '' %>">Auto Approved</a>
+  </div>
+
+  <!-- Leave cards -->
+  <% if (leaves.length === 0) { %>
+    <div class="empty-state">
+      <i class="fas fa-calendar-check"></i>
+      <h4>No leave requests found</h4>
+      <p><%= filters.status && filters.status !== 'all' ? `No ${filters.status} requests.` : 'No leave requests submitted yet.' %></p>
+    </div>
+
+  <% } else { %>
+
+    <!-- Hidden data store -->
+    <div id="leave-data-store" style="display:none;"
+      data-leaves='<%- JSON.stringify(leaves.map(l => ({
+        id:            l._id,
+        doctorName:    l.doctor ? l.doctor.name : "Unknown",
+        date:          l.date,
+        type:          l.type,
+        halfDayPeriod: l.halfDayPeriod || null,
+        reason:        l.reason,
+        status:        l.status,
+        isEmergency:   l.isEmergency,
+        autoApproveAt: l.autoApproveAt,
+        affectedCount: l.affectedAppointmentsCount || 0,
+        earningsLoss:  l.estimatedConsultationLoss || 0,
+        withinAllowance:       l.withinAllowance,
+        salaryDeductionAmount: l.salaryDeductionAmount || 0,
+        salaryDeductionType:   l.salaryDeductionType || "none",
+        adminNote:     l.adminNote || ""
+      }))) %>'>
+    </div>
+
+    <div class="leave-list">
+      <% leaves.forEach(leave => {
+        const lDate = new Date(leave.date + 'T00:00:00').toLocaleDateString('en-US',{
+          weekday:'long', month:'long', day:'numeric', year:'numeric'
+        });
+        const typeLabel =
+          leave.type === 'emergency' ? 'Emergency' :
+          leave.type === 'half'      ? `Half Day — ${leave.halfDayPeriod || ''}` :
+          'Full Day';
+        const isPending = leave.status === 'pending';
+      %>
+        <div class="leave-card <%= leave.isEmergency && isPending ? 'emergency' : leave.status %>">
+
+          <!-- Top row -->
+          <div class="leave-card-top">
+            <div class="leave-doc-info">
+              <div class="doc-av">
+                <% if (leave.doctor?.profileImage) { %>
+                  <img src="<%= leave.doctor.profileImage %>" alt="">
+                <% } else { %>
+                  <%= leave.doctor?.name?.charAt(0)?.toUpperCase() || 'D' %>
+                <% } %>
+              </div>
+              <div>
+                <div class="doc-name">Dr. <%= leave.doctor?.name || 'Unknown' %></div>
+                <div class="doc-spec">
+                  <%= leave.doctor?.specialization || '' %>
+                  <% if (leave.doctor?.department) { %> · <%= leave.doctor.department %><% } %>
+                </div>
+              </div>
+            </div>
+
+            <div class="leave-badges">
+              <% if (leave.isEmergency) { %>
+                <span class="lbadge emergency">🚨 Emergency</span>
+              <% } else { %>
+                <span class="lbadge <%= leave.type === 'half' ? 'half' : 'normal' %>">
+                  <%= typeLabel %>
+                </span>
+              <% } %>
+              <span class="lbadge <%= leave.status %>">
+                <%= leave.status === 'auto_approved' ? 'Auto Approved' : leave.status %>
+              </span>
+              <% if (leave.isEmergency && isPending && leave.autoApproveAt) { %>
+                <span class="countdown" id="countdown-<%= leave._id %>">
+                  <i class="fas fa-clock"></i>
+                  <span>Auto-approves in...</span>
+                </span>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Details -->
+          <div class="leave-details">
+            <div class="detail-item">
+              <div class="detail-label">Date</div>
+              <div class="detail-val"><%= lDate %></div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Appointments</div>
+              <div class="detail-val"><%= leave.affectedAppointmentsCount || 0 %> affected</div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Fees Lost</div>
+              <div class="detail-val">₹<%= leave.estimatedConsultationLoss || 0 %></div>
+            </div>
+            <div class="detail-item">
+              <div class="detail-label">Salary Impact</div>
+              <div class="detail-val">
+                <% if (leave.withinAllowance) { %>
+                  <span class="salary-chip free"><i class="fas fa-check"></i> No deduction</span>
+                <% } else if (leave.salaryDeductionAmount > 0) { %>
+                  <span class="salary-chip deduct"><i class="fas fa-minus"></i> ₹<%= leave.salaryDeductionAmount %></span>
+                <% } else { %>
+                  <span style="color:#94a3b8;font-size:12px;">Not configured</span>
+                <% } %>
+              </div>
+            </div>
+            <% if (leave.requestedAt) { %>
+              <div class="detail-item">
+                <div class="detail-label">Requested</div>
+                <div class="detail-val" style="font-size:12px;">
+                  <%= new Date(leave.requestedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) %>
+                </div>
+              </div>
+            <% } %>
+            <% if (leave.respondedAt) { %>
+              <div class="detail-item">
+                <div class="detail-label">Responded</div>
+                <div class="detail-val" style="font-size:12px;">
+                  <%= new Date(leave.respondedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) %>
+                </div>
+              </div>
+            <% } %>
+          </div>
+
+          <!-- Reason -->
+<div class="reason-box <%= leave.isEmergency ? 'emergency-reason' : '' %>">
+  <strong class="reason-label <%= leave.isEmergency ? 'reason-label-emergency' : 'reason-label-normal' %>">
+    Reason:
+  </strong>
+  <%= leave.reason %>
+</div>
+
+          <!-- Admin note (if responded) -->
+          <% if (leave.adminNote) { %>
+            <div class="admin-note">
+              <strong style="font-size:11px;font-weight:800;color:#0f4c75;text-transform:uppercase;letter-spacing:.4px;">Admin Note:</strong>
+              <%= leave.adminNote %>
+            </div>
+          <% } %>
+
+          <!-- Actions (only for pending) -->
+          <% if (isPending) { %>
+            <div class="leave-actions">
+              <button class="btn-approve"
+                data-id="<%= leave._id %>"
+                onclick="openApproveModal(this.dataset.id)">
+                <i class="fas fa-check"></i> Approve
+              </button>
+              <button class="btn-reject"
+                data-id="<%= leave._id %>"
+                onclick="openRejectModal(this.dataset.id)">
+                <i class="fas fa-times"></i> Reject
+              </button>
+            </div>
+          <% } %>
+
+        </div>
+      <% }) %>
+    </div>
+
+    <% if (pagination.totalPages > 1) { %>
+      <div class="pg-row">
+        <% for (let i = 1; i <= pagination.totalPages; i++) { %>
+          <a href="/admin/leave-requests?status=<%= filters.status || '' %>&page=<%= i %>"
+             class="pg-btn <%= pagination.page === i ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+      </div>
+    <% } %>
+
+  <% } %>
+</div>
+
+<script>
+  /* ── Data store ── */
+  const LEAVES = JSON.parse(
+    document.getElementById('leave-data-store')?.dataset.leaves || '[]'
+  );
+
+  function getLeave(id) { return LEAVES.find(l => l.id === id); }
+
+  /* ── Countdown timers ── */
+  function startCountdowns() {
+    LEAVES.forEach(l => {
+      if (!l.isEmergency || l.status !== 'pending' || !l.autoApproveAt) return;
+      const el = document.getElementById(`countdown-${l.id}`);
+      if (!el) return;
+
+      const tick = () => {
+        const diff = new Date(l.autoApproveAt) - Date.now();
+        if (diff <= 0) {
+          el.innerHTML = '<i class="fas fa-clock"></i> Auto-approving...';
+          return;
+        }
+        const hrs  = Math.floor(diff / 3600000);
+        const mins = Math.floor((diff % 3600000) / 60000);
+        const secs = Math.floor((diff % 60000) / 1000);
+        el.innerHTML = `<i class="fas fa-clock"></i> Auto-approves in ${hrs > 0 ? hrs+'h ' : ''}${mins}m ${secs}s`;
+      };
+
+      tick();
+      setInterval(tick, 1000);
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', startCountdowns);
+
+  /* ── Modal engine ── */
+  const modalRoot = document.getElementById('admin-modal-root');
+
+  function showModal(html) {
+    modalRoot.innerHTML = `<div class="am-backdrop" id="am-backdrop">${html}</div>`;
+    document.getElementById('am-backdrop').addEventListener('click', e => {
+      if (e.target === document.getElementById('am-backdrop')) hideModal();
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => modalRoot.classList.add('active')));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideModal() {
+    modalRoot.classList.remove('active');
+    document.body.style.overflow = '';
+    setTimeout(() => { modalRoot.innerHTML = ''; }, 260);
+  }
+
+  /* ── Approve modal ── */
+  function openApproveModal(id) {
+    const l = getLeave(id);
+    if (!l) return;
+
+    const dateLabel = new Date(l.date + 'T00:00:00').toLocaleDateString('en-US',{
+      weekday:'short', month:'short', day:'numeric', year:'numeric'
+    });
+
+    const salaryHtml = l.withinAllowance
+      ? `<div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#059669;font-weight:600;">
+           <i class="fas fa-check-circle" style="margin-right:6px;"></i> Within monthly allowance — No salary deduction
+         </div>`
+      : `<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:13px;color:#dc2626;font-weight:600;">
+           <i class="fas fa-exclamation-circle" style="margin-right:6px;"></i>
+           Salary deduction of ₹${l.salaryDeductionAmount} will be created (pending your confirmation)
+         </div>`;
+
+    showModal(`
+      <div class="am-box" onclick="event.stopPropagation()">
+        <div style="width:48px;height:48px;background:#ecfdf5;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#059669;margin-bottom:14px;">
+          <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="am-title">Approve Leave Request</div>
+        <div class="am-sub">
+          Dr. <strong>${l.doctorName}</strong> — ${dateLabel}
+          ${l.affectedCount > 0 ? `<br><span style="color:#d97706;font-weight:700;">${l.affectedCount} appointment(s) will be cancelled with full patient refunds.</span>` : ''}
+        </div>
+
+        ${salaryHtml}
+
+        <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+          Admin Note <span style="font-weight:400;color:#94a3b8;">(optional)</span>
+        </label>
+        <textarea class="am-input" id="approve-note"
+          placeholder="Add a note for the doctor (optional)..."></textarea>
+
+        <div class="am-btns">
+          <button class="am-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="am-btn green" id="approve-btn" onclick="confirmApprove('${id}')">
+            <i class="fas fa-check"></i> Approve Leave
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  async function confirmApprove(id) {
+    const note = document.getElementById('approve-note')?.value.trim() || '';
+    const btn  = document.getElementById('approve-btn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving...';
+
+    try {
+      const res  = await fetch(`/admin/api/leave-requests/${id}/approve`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ adminNote: note })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        hideModal();
+        showToast(data.message, 'success');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        alert(data.error || 'Failed to approve');
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Approve Leave';
+      }
+    } catch {
+      alert('Something went wrong.');
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-check"></i> Approve Leave';
+    }
+  }
+
+  /* ── Reject modal ── */
+  function openRejectModal(id) {
+    const l = getLeave(id);
+    if (!l) return;
+
+    const dateLabel = new Date(l.date + 'T00:00:00').toLocaleDateString('en-US',{
+      weekday:'short', month:'short', day:'numeric', year:'numeric'
+    });
+
+    showModal(`
+      <div class="am-box" onclick="event.stopPropagation()">
+        <div style="width:48px;height:48px;background:#fef2f2;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#dc2626;margin-bottom:14px;">
+          <i class="fas fa-times-circle"></i>
+        </div>
+        <div class="am-title">Reject Leave Request</div>
+        <div class="am-sub">
+          Dr. <strong>${l.doctorName}</strong> — ${dateLabel}<br>
+          The doctor will be notified with your reason via email.
+        </div>
+
+        <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;">
+          Reason for rejection <span style="color:#dc2626;">*</span>
+        </label>
+        <textarea class="am-input" id="reject-note"
+          placeholder="Please provide a reason..."></textarea>
+        <div class="am-error" id="reject-error">Rejection reason is required.</div>
+
+        <div class="am-btns">
+          <button class="am-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="am-btn red" id="reject-btn" onclick="confirmReject('${id}')">
+            <i class="fas fa-times"></i> Reject Request
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  async function confirmReject(id) {
+    const note  = document.getElementById('reject-note')?.value.trim();
+    const errEl = document.getElementById('reject-error');
+    if (!note) { errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    const btn = document.getElementById('reject-btn');
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Rejecting...';
+
+    try {
+      const res  = await fetch(`/admin/api/leave-requests/${id}/reject`, {
+        method:  'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ adminNote: note })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        hideModal();
+        showToast('Leave request rejected. Doctor has been notified.', 'info');
+        setTimeout(() => window.location.reload(), 1500);
+      } else {
+        alert(data.error || 'Failed to reject');
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-times"></i> Reject Request';
+      }
+    } catch {
+      alert('Something went wrong.');
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-times"></i> Reject Request';
+    }
+  }
+
+  /* ── Toast ── */
+  function showToast(msg, type = 'success') {
+    const colors = { success: '#059669', info: '#0f4c75', error: '#dc2626' };
+    const t = document.createElement('div');
+    t.style.cssText = `
+      position:fixed; bottom:24px; right:24px; z-index:99999;
+      background:white; border-radius:10px; padding:14px 18px;
+      box-shadow:0 8px 30px rgba(0,0,0,.15);
+      font-family:'Plus Jakarta Sans',sans-serif;
+      font-size:14px; font-weight:700; color:#1a202c;
+      display:flex; align-items:center; gap:10px;
+      border-left:4px solid ${colors[type]};
+      animation: slideInRight .3s ease;
+    `;
+    t.innerHTML = `<i class="fas fa-${type==='success'?'check-circle':type==='error'?'exclamation-circle':'info-circle'}" style="color:${colors[type]};"></i> ${msg}`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+  }
+</script>
+</body>
+</html>

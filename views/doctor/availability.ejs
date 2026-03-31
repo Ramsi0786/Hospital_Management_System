@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <%- include('../partials/cache-control') %>
+  <title><%= title %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family:'Plus Jakarta Sans',sans-serif; background:#f1f5f9; min-height:100vh; }
+    .main-content { margin-left:230px; padding:30px; min-height:100vh; }
+
+    /* ── Cards ── */
+    .av-card {
+      background:white; border-radius:16px; padding:24px;
+      box-shadow:0 2px 12px rgba(0,0,0,.06);
+      border:1.5px solid #f0f2f5; margin-bottom:20px;
+    }
+
+    .av-card-title {
+      font-size:15px; font-weight:800; color:#1a202c;
+      display:flex; align-items:center; gap:8px;
+      margin-bottom:18px; padding-bottom:14px;
+      border-bottom:1.5px solid #f8fafc;
+    }
+
+    .av-card-title i { color:#0f4c75; }
+
+    /* ── Schedule grid ── */
+    .schedule-grid {
+      display:grid;
+      grid-template-columns:repeat(auto-fill, minmax(140px,1fr));
+      gap:10px;
+    }
+
+    .day-chip {
+      background:#f8fafc; border-radius:10px;
+      padding:12px 14px; border:1.5px solid #f0f2f5;
+    }
+
+    .day-chip.working {
+      background:#f0fdf4; border-color:#bbf7d0;
+    }
+
+    .day-chip.off {
+      background:#fafafa; border-color:#f0f2f5;
+      opacity:.7;
+    }
+
+    .day-name {
+      font-size:12px; font-weight:800; color:#1a202c;
+      text-transform:uppercase; letter-spacing:.4px;
+      margin-bottom:4px;
+    }
+
+    .day-status {
+      font-size:11px; font-weight:600;
+      display:flex; align-items:center; gap:4px;
+    }
+
+    .day-status.on  { color:#059669; }
+    .day-status.off { color:#94a3b8; }
+
+    .day-slots {
+      font-size:11px; color:#64748b; margin-top:4px; font-weight:500;
+    }
+
+    /* ── Monthly usage ── */
+    .usage-grid {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:14px;
+    }
+
+    .usage-card {
+      background:#f8fafc; border-radius:12px;
+      padding:16px; border:1.5px solid #f0f2f5;
+      text-align:center;
+    }
+
+    .usage-num {
+      font-size:26px; font-weight:800; color:#1a202c;
+      line-height:1;
+    }
+
+    .usage-label {
+      font-size:12px; color:#64748b; font-weight:600;
+      margin-top:4px;
+    }
+
+    .usage-limit {
+      font-size:11px; margin-top:6px; font-weight:700;
+      padding:2px 8px; border-radius:20px; display:inline-block;
+    }
+
+    .usage-ok   { background:#ecfdf5; color:#059669; }
+    .usage-warn { background:#fffbeb; color:#d97706; }
+    .usage-over { background:#fef2f2; color:#dc2626; }
+
+    /* ── Leave history table ── */
+    .leave-table { width:100%; border-collapse:collapse; }
+    .leave-table th {
+      padding:10px 14px; font-size:11px; font-weight:700;
+      color:#94a3b8; text-transform:uppercase; letter-spacing:.4px;
+      text-align:left; border-bottom:1.5px solid #f0f2f5;
+      background:#f8fafc;
+    }
+
+    .leave-table td {
+      padding:13px 14px; font-size:13px; color:#374151;
+      border-bottom:1px solid #f8fafc; vertical-align:middle;
+    }
+
+    .leave-table tr:last-child td { border-bottom:none; }
+    .leave-table tr:hover td { background:#fafbfc; }
+
+    /* ── Status badges ── */
+    .lbadge {
+      padding:4px 10px; border-radius:20px;
+      font-size:11px; font-weight:800;
+      text-transform:uppercase; letter-spacing:.3px;
+      display:inline-block;
+    }
+
+    .lbadge.pending      { background:#fffbeb; color:#d97706; }
+    .lbadge.approved     { background:#ecfdf5; color:#059669; }
+    .lbadge.rejected     { background:#fef2f2; color:#dc2626; }
+    .lbadge.auto_approved{ background:#eff6ff; color:#2563eb; }
+
+    /* ── Request button ── */
+    .btn-request {
+      display:inline-flex; align-items:center; gap:8px;
+      padding:12px 24px;
+      background:linear-gradient(135deg,#0f4c75,#1a7f8e);
+      color:white; border:none; border-radius:10px;
+      font-size:14px; font-weight:700; cursor:pointer;
+      font-family:inherit; transition:all .2s;
+    }
+
+    .btn-request:hover { opacity:.92; transform:translateY(-1px); }
+
+    /* ── Empty ── */
+    .empty-state {
+      text-align:center; padding:40px 20px; color:#94a3b8;
+    }
+
+    .empty-state i {
+      font-size:36px; display:block;
+      margin-bottom:10px; color:#e2e8f0;
+    }
+
+    .empty-state p { font-size:13px; font-weight:600; margin:0; }
+
+    /* ── Notice banner ── */
+    .notice {
+      padding:12px 16px; border-radius:10px;
+      font-size:13px; font-weight:600;
+      display:flex; align-items:flex-start; gap:10px;
+      margin-bottom:20px;
+    }
+
+    .notice.info  { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+    .notice.warn  { background:#fffbeb; color:#92400e; border:1px solid #fde68a; }
+
+    /* ── Modal ── */
+    #doc-modal-root { position:fixed; inset:0; z-index:9999; pointer-events:none; font-family:'Plus Jakarta Sans',sans-serif; }
+    #doc-modal-root.active { pointer-events:all; }
+    .dm-backdrop { position:absolute; inset:0; background:rgba(8,18,38,.75); backdrop-filter:blur(4px); display:flex; align-items:center; justify-content:center; padding:20px; opacity:0; transition:opacity .25s; }
+    #doc-modal-root.active .dm-backdrop { opacity:1; }
+    .dm-box { background:white; border-radius:18px; padding:28px; width:100%; max-width:500px; box-shadow:0 24px 60px rgba(0,0,0,.25); transform:translateY(20px); transition:transform .25s; max-height:90vh; overflow-y:auto; }
+    #doc-modal-root.active .dm-box { transform:translateY(0); }
+
+    .dm-title { font-size:17px; font-weight:800; color:#1a202c; margin-bottom:4px; }
+    .dm-sub   { font-size:13px; color:#64748b; margin-bottom:20px; line-height:1.6; }
+
+    .fm-group { margin-bottom:16px; }
+    .fm-label {
+      display:block; font-size:11px; font-weight:700;
+      color:#374151; text-transform:uppercase;
+      letter-spacing:.4px; margin-bottom:6px;
+    }
+
+    .fm-input {
+      width:100%; padding:11px 14px;
+      border:1.5px solid #e2e8f0; border-radius:10px;
+      font-size:14px; font-family:inherit; color:#374151;
+      outline:none; transition:border-color .2s; background:white;
+    }
+
+    .fm-input:focus { border-color:#0f4c75; }
+
+    textarea.fm-input { resize:vertical; min-height:80px; }
+
+    .type-tabs {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:8px;
+    }
+
+    .type-tab {
+      padding:10px 8px; border-radius:10px;
+      border:1.5px solid #e2e8f0; background:white;
+      font-size:12px; font-weight:700; color:#64748b;
+      cursor:pointer; font-family:inherit;
+      transition:all .2s; text-align:center;
+    }
+
+    .type-tab:hover { border-color:#0f4c75; color:#0f4c75; }
+
+    .type-tab.active {
+      background:#0f4c75; border-color:#0f4c75;
+      color:white;
+    }
+
+    .type-tab.emergency-tab.active {
+      background:#dc2626; border-color:#dc2626;
+    }
+
+    /* Impact box */
+    .impact-box {
+      background:#f8fafc; border-radius:10px;
+      padding:14px 16px; margin-bottom:16px;
+      border:1.5px solid #f0f2f5;
+    }
+
+    .impact-box.warning {
+      background:#fffbeb; border-color:#fde68a;
+    }
+
+    .impact-box.emergency {
+      background:#fef2f2; border-color:#fecaca;
+    }
+
+    .impact-row {
+      display:flex; justify-content:space-between;
+      font-size:13px; padding:5px 0;
+      border-bottom:1px solid rgba(0,0,0,.05);
+    }
+
+    .impact-row:last-child { border-bottom:none; }
+    .impact-row span:first-child { color:#64748b; font-weight:500; }
+    .impact-row span:last-child  { font-weight:700; color:#1a202c; }
+
+    .dm-btns { display:flex; gap:10px; margin-top:6px; }
+    .dm-btn  { flex:1; padding:12px; border-radius:10px; border:none; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit; transition:all .2s; display:inline-flex; align-items:center; justify-content:center; gap:7px; }
+    .dm-btn.gray  { background:#f1f5f9; color:#64748b; }
+    .dm-btn.gray:hover  { background:#e2e8f0; }
+    .dm-btn.navy  { background:#0f4c75; color:white; }
+    .dm-btn.navy:hover  { background:#0a3553; }
+    .dm-btn.red   { background:#dc2626; color:white; }
+    .dm-btn.red:hover   { background:#b91c1c; }
+    .dm-btn:disabled { opacity:.6; cursor:not-allowed; }
+
+    .alert-box {
+      padding:10px 14px; border-radius:8px;
+      font-size:13px; font-weight:600;
+      display:none; align-items:center; gap:7px;
+      margin-bottom:14px;
+    }
+
+    .alert-box.error   { background:#fef2f2; color:#dc2626; border:1px solid #fecaca; }
+    .alert-box.success { background:#f0fdf4; color:#059669; border:1px solid #bbf7d0; }
+
+    @media (max-width:768px) {
+      .main-content { margin-left:0; padding:20px; padding-top:70px; }
+      .schedule-grid { grid-template-columns:repeat(2,1fr); }
+      .usage-grid    { grid-template-columns:repeat(3,1fr); }
+      .leave-table   { min-width:600px; }
+      .table-scroll  { overflow-x:auto; }
+    }
+  </style>
+</head>
+<body>
+
+<%- include('../partials/doctor-sidebar', { currentPage: 'availability' }) %>
+<div id="doc-modal-root"></div>
+
+<div class="main-content">
+
+  <%- include('../partials/doctor-topbar', {
+    pageTitle:    'My Availability',
+    pageSubtitle: 'View your schedule and manage leave requests',
+    backUrl:      null,
+    backLabel:    null
+  }) %>
+
+  <!-- Notice -->
+  <div class="notice info">
+    <i class="fas fa-info-circle" style="flex-shrink:0;margin-top:1px;"></i>
+    <span>Your working schedule is managed by the hospital administration. You can request leave for specific dates below.</span>
+  </div>
+
+  <!-- Current Schedule -->
+  <div class="av-card">
+    <div class="av-card-title">
+      <i class="fas fa-calendar-week"></i>
+      Current Weekly Schedule
+    </div>
+
+    <% const DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+       const DAY_LABELS = { monday:'Mon', tuesday:'Tue', wednesday:'Wed', thursday:'Thu', friday:'Fri', saturday:'Sat', sunday:'Sun' };
+    %>
+
+    <% if (weekly) { %>
+      <div class="schedule-grid">
+        <% DAYS.forEach(day => {
+          const sched = weekly.schedule?.[day];
+          const isWorking = sched?.isWorking || false;
+          const slotCount = sched?.slots?.length || 0;
+        %>
+          <div class="day-chip <%= isWorking ? 'working' : 'off' %>">
+            <div class="day-name"><%= DAY_LABELS[day] %></div>
+            <div class="day-status <%= isWorking ? 'on' : 'off' %>">
+              <i class="fas fa-<%= isWorking ? 'check-circle' : 'minus-circle' %>"></i>
+              <%= isWorking ? 'Working' : 'Day Off' %>
+            </div>
+            <% if (isWorking && slotCount > 0) { %>
+              <div class="day-slots"><%= slotCount %> slots</div>
+            <% } %>
+          </div>
+        <% }) %>
+      </div>
+      <% if (weekly.slotDuration) { %>
+        <p style="font-size:12px;color:#94a3b8;font-weight:600;margin-top:14px;">
+          <i class="fas fa-clock" style="margin-right:4px;"></i>
+          Slot duration: <%= weekly.slotDuration %> minutes
+        </p>
+      <% } %>
+    <% } else { %>
+      <div class="empty-state">
+        <i class="fas fa-calendar-times"></i>
+        <p>No schedule configured yet. Contact admin.</p>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- Monthly Leave Usage -->
+  <%
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const monthLabel = monthNames[(monthlyUsage.month || 1) - 1] + ' ' + (monthlyUsage.year || new Date().getFullYear());
+    const normalAllowance    = salaryConfig?.normalLeaveAllowance    || 2;
+    const halfAllowance      = salaryConfig?.halfDayAllowance        || 4;
+    const emergencyAllowance = salaryConfig?.emergencyFreeCount      || 1;
+  %>
+
+  <div class="av-card">
+    <div class="av-card-title">
+      <i class="fas fa-chart-bar"></i>
+      Leave Usage — <%= monthLabel %>
+    </div>
+
+    <div class="usage-grid">
+      <div class="usage-card">
+        <div class="usage-num"><%= monthlyUsage.normalUsed || 0 %></div>
+        <div class="usage-label">Full Day Leaves</div>
+        <span class="usage-limit <%= (monthlyUsage.normalUsed || 0) < normalAllowance ? 'usage-ok' : (monthlyUsage.normalUsed || 0) === normalAllowance ? 'usage-warn' : 'usage-over' %>">
+          <%= normalAllowance %> free/month
+        </span>
+      </div>
+      <div class="usage-card">
+        <div class="usage-num"><%= monthlyUsage.halfUsed || 0 %></div>
+        <div class="usage-label">Half Day Leaves</div>
+        <span class="usage-limit <%= (monthlyUsage.halfUsed || 0) < halfAllowance ? 'usage-ok' : (monthlyUsage.halfUsed || 0) === halfAllowance ? 'usage-warn' : 'usage-over' %>">
+          <%= halfAllowance %> free/month
+        </span>
+      </div>
+      <div class="usage-card">
+        <div class="usage-num"><%= monthlyUsage.emergencyUsed || 0 %></div>
+        <div class="usage-label">Emergency Leaves</div>
+        <span class="usage-limit <%= (monthlyUsage.emergencyUsed || 0) < emergencyAllowance ? 'usage-ok' : 'usage-over' %>">
+          <%= emergencyAllowance %> free/month
+        </span>
+      </div>
+    </div>
+
+    <% if (!salaryConfig) { %>
+      <p style="font-size:12px;color:#94a3b8;margin-top:14px;font-weight:500;">
+        <i class="fas fa-info-circle" style="margin-right:4px;"></i>
+        Salary not configured — deduction calculations unavailable. Contact admin.
+      </p>
+    <% } %>
+  </div>
+
+  <!-- Leave Requests History + Request Button -->
+  <div class="av-card">
+    <div class="av-card-title">
+      <i class="fas fa-calendar-minus"></i>
+      My Leave Requests
+      <div style="margin-left:auto;">
+        <button class="btn-request" onclick="openRequestModal()">
+          <i class="fas fa-plus"></i> Request Leave
+        </button>
+      </div>
+    </div>
+
+    <% if (!leaveRequests || leaveRequests.length === 0) { %>
+      <div class="empty-state">
+        <i class="fas fa-calendar-check"></i>
+        <p>No leave requests yet</p>
+      </div>
+    <% } else { %>
+      <div class="table-scroll">
+        <table class="leave-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Reason</th>
+              <th>Appointments</th>
+              <th>Salary Impact</th>
+              <th>Status</th>
+              <th>Requested</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% leaveRequests.forEach(leave => {
+              const lDate = new Date(leave.date + 'T00:00:00').toLocaleDateString('en-US',{
+                weekday:'short', month:'short', day:'numeric', year:'numeric'
+              });
+              const typeLabel =
+                leave.type === 'emergency' ? '🚨 Emergency' :
+                leave.type === 'half' ? `Half Day (${leave.halfDayPeriod || ''})` :
+                'Full Day';
+            %>
+              <tr>
+                <td style="font-weight:700;color:#1a202c;white-space:nowrap;"><%= lDate %></td>
+                <td>
+                  <span class="<%= leave.type === 'emergency' ? 'text-danger' : 'text-dark' %> fw-semibold" style="font-size:13px;">
+  <%= typeLabel %>
+</span>
+                </td>
+                <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="<%= leave.reason %>">
+                  <%= leave.reason %>
+                </td>
+                <td style="text-align:center;font-weight:700;">
+                  <%= leave.affectedAppointmentsCount || 0 %>
+                </td>
+                <td>
+                  <% if (leave.withinAllowance) { %>
+                    <span style="font-size:12px;font-weight:700;color:#059669;">No deduction</span>
+                  <% } else if (leave.salaryDeductionAmount > 0) { %>
+                    <span style="font-size:12px;font-weight:700;color:#dc2626;">₹<%= leave.salaryDeductionAmount %></span>
+                  <% } else { %>
+                    <span style="font-size:12px;color:#94a3b8;">—</span>
+                  <% } %>
+                </td>
+                <td>
+                  <span class="lbadge <%= leave.status %>">
+                    <%= leave.status === 'auto_approved' ? 'Auto Approved' : leave.status %>
+                  </span>
+                </td>
+                <td style="font-size:12px;color:#94a3b8;white-space:nowrap;">
+                  <%= new Date(leave.requestedAt).toLocaleDateString('en-US',{month:'short',day:'numeric'}) %>
+                </td>
+              </tr>
+              <% if (leave.adminNote && ['approved','rejected'].includes(leave.status)) { %>
+                <tr>
+                  <td colspan="7" style="padding:6px 14px 12px;background:#f8fafc;">
+                    <span style="font-size:12px;color:#64748b;font-weight:600;">
+                      <i class="fas fa-comment" style="margin-right:4px;color:#0f4c75;"></i>
+                      Admin note: <%= leave.adminNote %>
+                    </span>
+                  </td>
+                </tr>
+              <% } %>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
+  </div>
+
+</div>
+
+<script>
+  const modalRoot = document.getElementById('doc-modal-root');
+
+  function showModal(html) {
+    modalRoot.innerHTML = `<div class="dm-backdrop" id="dm-backdrop">${html}</div>`;
+    document.getElementById('dm-backdrop').addEventListener('click', e => {
+      if (e.target === document.getElementById('dm-backdrop')) hideModal();
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => modalRoot.classList.add('active')));
+    document.body.style.overflow = 'hidden';
+  }
+
+  function hideModal() {
+    modalRoot.classList.remove('active');
+    document.body.style.overflow = '';
+    setTimeout(() => { modalRoot.innerHTML = ''; }, 260);
+  }
+
+  /* ── Leave request modal ── */
+  let _selectedType     = 'full';
+  let _halfDayPeriod    = 'morning';
+  let _impactData       = null;
+  let _impactLoading    = false;
+  let _impactDebounce   = null;
+
+  function openRequestModal() {
+    _selectedType  = 'full';
+    _halfDayPeriod = 'morning';
+    _impactData    = null;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    showModal(`
+      <div class="dm-box" onclick="event.stopPropagation()">
+        <div class="dm-title"><i class="fas fa-calendar-minus" style="color:#0f4c75;margin-right:8px;"></i>Request Leave</div>
+        <div class="dm-sub">Submit a leave request for admin approval. Emergency requests auto-approve in 2 hours.</div>
+
+        <!-- Leave type -->
+        <div class="fm-group">
+          <label class="fm-label">Leave Type</label>
+          <div class="type-tabs">
+            <button class="type-tab active" id="tab-full"
+              onclick="selectType('full')">
+              <i class="fas fa-calendar-day" style="display:block;font-size:16px;margin-bottom:4px;"></i>
+              Full Day
+            </button>
+            <button class="type-tab" id="tab-half"
+              onclick="selectType('half')">
+              <i class="fas fa-adjust" style="display:block;font-size:16px;margin-bottom:4px;"></i>
+              Half Day
+            </button>
+            <button class="type-tab emergency-tab" id="tab-emergency"
+              onclick="selectType('emergency')">
+              <i class="fas fa-exclamation-circle" style="display:block;font-size:16px;margin-bottom:4px;"></i>
+              Emergency
+            </button>
+          </div>
+        </div>
+
+        <!-- Half day period (shown only for half) -->
+        <div id="half-period-wrap" style="display:none;" class="fm-group">
+          <label class="fm-label">Period</label>
+          <div style="display:flex;gap:8px;">
+            <button class="type-tab active" id="period-morning"
+              onclick="selectPeriod('morning')"
+              style="flex:1;">
+              <i class="fas fa-sun" style="margin-right:4px;"></i> Morning
+            </button>
+            <button class="type-tab" id="period-afternoon"
+              onclick="selectPeriod('afternoon')"
+              style="flex:1;">
+              <i class="fas fa-cloud-sun" style="margin-right:4px;"></i> Afternoon
+            </button>
+          </div>
+        </div>
+
+        <!-- Emergency notice -->
+        <div id="emergency-notice" style="display:none;" class="notice warn" style="margin-bottom:16px;">
+          <i class="fas fa-exclamation-triangle" style="flex-shrink:0;"></i>
+          <span>Emergency leaves are for genuine medical or personal emergencies. They auto-approve in 2 hours if admin doesn't respond. <strong>Salary deduction may apply.</strong></span>
+        </div>
+
+        <!-- Date -->
+        <div class="fm-group">
+          <label class="fm-label">Date</label>
+          <input type="date" class="fm-input" id="leave-date"
+            min="${today}"
+            onchange="onDateOrTypeChange()">
+        </div>
+
+        <!-- Impact box -->
+        <div id="impact-wrap" style="display:none;"></div>
+
+        <!-- Reason -->
+        <div class="fm-group">
+          <label class="fm-label">Reason <span style="color:#dc2626;">*</span></label>
+          <textarea class="fm-input" id="leave-reason"
+            placeholder="Please describe the reason for your leave..."></textarea>
+        </div>
+
+        <!-- Alert -->
+        <div class="alert-box error" id="leave-alert">
+          <i class="fas fa-exclamation-circle"></i>
+          <span id="leave-alert-msg"></span>
+        </div>
+
+        <div class="dm-btns">
+          <button class="dm-btn gray" onclick="hideModal()">Cancel</button>
+          <button class="dm-btn navy" id="leave-submit-btn" onclick="submitLeave()">
+            <i class="fas fa-paper-plane"></i> Submit Request
+          </button>
+        </div>
+      </div>
+    `);
+  }
+
+  function selectType(type) {
+    _selectedType = type;
+    ['full','half','emergency'].forEach(t => {
+      document.getElementById(`tab-${t}`)?.classList.toggle('active', t === type);
+    });
+    document.getElementById('half-period-wrap').style.display =
+      type === 'half' ? 'block' : 'none';
+    document.getElementById('emergency-notice').style.display =
+      type === 'emergency' ? 'flex' : 'none';
+    onDateOrTypeChange();
+  }
+
+  function selectPeriod(period) {
+    _halfDayPeriod = period;
+    ['morning','afternoon'].forEach(p => {
+      document.getElementById(`period-${p}`)?.classList.toggle('active', p === period);
+    });
+    onDateOrTypeChange();
+  }
+
+  function onDateOrTypeChange() {
+    const date = document.getElementById('leave-date')?.value;
+    if (!date) return;
+    clearTimeout(_impactDebounce);
+    _impactDebounce = setTimeout(() => fetchImpact(date), 400);
+  }
+
+  async function fetchImpact(date) {
+    const wrap = document.getElementById('impact-wrap');
+    if (!wrap) return;
+
+    wrap.style.display = 'block';
+    wrap.innerHTML = `
+      <div class="impact-box" style="margin-bottom:16px;">
+        <div style="text-align:center;padding:10px;color:#94a3b8;">
+          <i class="fas fa-spinner fa-spin"></i> Calculating impact...
+        </div>
+      </div>`;
+
+    try {
+      const params = new URLSearchParams({
+        date,
+        type: _selectedType,
+        ...((_selectedType === 'half') && { halfDayPeriod: _halfDayPeriod })
+      });
+
+      const res  = await fetch(`/doctor/leave/impact?${params}`);
+      const data = await res.json();
+
+      if (!data.success) {
+        wrap.innerHTML = `
+          <div class="impact-box warning" style="margin-bottom:16px;">
+            <div style="font-size:13px;font-weight:700;color:#92400e;">
+              <i class="fas fa-exclamation-triangle" style="margin-right:6px;"></i>
+              ${data.error}
+            </div>
+          </div>`;
+        _impactData = null;
+        return;
+      }
+
+      _impactData = data;
+
+      const isEmerg = data.isEmergency;
+      const boxClass = isEmerg ? 'emergency' : (data.salaryImpact?.withinAllowance === false ? 'warning' : '');
+
+      const deductionHtml = data.salaryImpact?.withinAllowance
+        ? `<span style="color:#059669;font-weight:700;">No deduction (within allowance)</span>`
+        : `<span style="color:#dc2626;font-weight:700;">₹${data.salaryImpact?.amount || 0} — ${data.salaryImpact?.description || ''}</span>`;
+
+      wrap.innerHTML = `
+        <div class="impact-box ${boxClass}" style="margin-bottom:16px;">
+          <div style="font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;">
+            ${isEmerg ? '🚨 Emergency Leave Impact' : '📊 Leave Impact Summary'}
+          </div>
+          <div class="impact-row">
+            <span>Date</span>
+            <span>${new Date(date+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric',year:'numeric'})}</span>
+          </div>
+          <div class="impact-row">
+            <span>Days until date</span>
+            <span>${data.daysUntil} day${data.daysUntil !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="impact-row">
+            <span>Appointments affected</span>
+            <span>${data.affectedCount} appointment${data.affectedCount !== 1 ? 's' : ''}</span>
+          </div>
+          <div class="impact-row">
+            <span>Consultation fees lost</span>
+            <span>₹${data.earningsLoss}</span>
+          </div>
+          <div class="impact-row">
+            <span>Salary deduction</span>
+            <span>${deductionHtml}</span>
+          </div>
+          ${isEmerg ? `
+          <div style="margin-top:10px;padding:8px 10px;background:rgba(220,38,38,.06);border-radius:6px;font-size:12px;color:#dc2626;font-weight:600;line-height:1.5;">
+            ⚠️ This will be treated as an emergency leave.
+            Auto-approved in 2 hours if admin doesn't respond.
+            ${data.affectedCount > 0 ? `All ${data.affectedCount} appointment(s) will be cancelled with full patient refunds if approved.` : ''}
+          </div>` : (data.affectedCount > 0 ? `
+          <div style="margin-top:10px;padding:8px 10px;background:rgba(15,76,117,.06);border-radius:6px;font-size:12px;color:#0f4c75;font-weight:600;">
+            ℹ️ If approved, ${data.affectedCount} appointment(s) will be cancelled with full patient refunds.
+          </div>` : '')}
+        </div>`;
+
+    } catch (err) {
+      wrap.innerHTML = `
+        <div class="impact-box" style="margin-bottom:16px;">
+          <div style="font-size:13px;color:#dc2626;font-weight:600;">Failed to load impact data.</div>
+        </div>`;
+    }
+  }
+
+  async function submitLeave() {
+    const date   = document.getElementById('leave-date')?.value;
+    const reason = document.getElementById('leave-reason')?.value.trim();
+    const alertEl = document.getElementById('leave-alert');
+    const alertMsg = document.getElementById('leave-alert-msg');
+    const btn    = document.getElementById('leave-submit-btn');
+
+    const showErr = (msg) => {
+      alertMsg.textContent = msg;
+      alertEl.style.display = 'flex';
+    };
+
+    if (!date)   { showErr('Please select a date.'); return; }
+    if (!reason) { showErr('Please provide a reason for your leave.'); return; }
+    if (_impactData === null && document.getElementById('impact-wrap')?.style.display !== 'none') {
+      showErr('Please wait for impact calculation to complete.'); return;
+    }
+
+    alertEl.style.display = 'none';
+    btn.disabled  = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+      const res  = await fetch('/doctor/leave/request', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          date,
+          type:          _selectedType,
+          halfDayPeriod: _selectedType === 'half' ? _halfDayPeriod : null,
+          reason
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        hideModal();
+        // Show success then reload
+        setTimeout(() => window.location.reload(), 300);
+      } else {
+        showErr(data.error || 'Failed to submit. Please try again.');
+        btn.disabled  = false;
+        btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+      }
+    } catch {
+      showErr('Something went wrong. Please try again.');
+      btn.disabled  = false;
+      btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit Request';
+    }
+  }
+</script>
+</body>
+</html>

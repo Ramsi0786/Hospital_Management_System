@@ -95,18 +95,12 @@
 <%- include('../partials/patient-sidebar', { currentPage: 'doctors' }) %>
 
 <div class="main-content">
-  <div class="top-bar">
-    <div>
-      <a href="/patient/doctors/<%= doctor._id %>" class="back-btn">
-        <i class="fas fa-arrow-left"></i> Back to Doctor
-      </a>
-      <h1 class="page-title">Book Appointment</h1>
-    </div>
-    <button class="user-profile-btn">
-      <div class="user-avatar-small"><%= user.name.charAt(0).toUpperCase() %></div>
-      <span class="user-name">Hello <%= user.name.split(' ')[0] %></span>
-    </button>
-  </div>
+  <%- include('../partials/patient-topbar', {
+  pageTitle:    'Book Appointment',
+  pageSubtitle: null,
+  backUrl:      null,
+  backLabel:    null
+}) %>
 
   <div class="booking-layout">
 
@@ -139,7 +133,9 @@
           </div>
           <div class="appt-chip">
             <i class="fas fa-clock"></i>
-            <%= slot %>
+            <% const [sh, sm] = slot.split(':').map(Number);
+            const sampm = sh >= 12 ? 'PM' : 'AM';
+            %><%= `${sh % 12 || 12}:${String(sm).padStart(2,'0')} ${sampm}` %>
           </div>
           <div class="appt-chip">
             <i class="fas fa-indian-rupee-sign"></i>
@@ -230,8 +226,11 @@
       </div>
       <div class="summary-row">
         <span>Time Slot</span>
-        <strong><%= slot %></strong>
-      </div>
+        <strong><%
+          const [oh, om] = slot.split(':').map(Number);
+          const oampm = oh >= 12 ? 'PM' : 'AM';
+          %><%= `${oh % 12 || 12}:${String(om).padStart(2,'0')} ${oampm}` %></strong>
+        </div>
 
       <div class="summary-total">
         <span>Total</span>
@@ -316,6 +315,11 @@
   // ── Main booking handler ────────────────────────────────
   async function handleBooking() {
     hideAlert();
+
+    if (!PD.fee || PD.fee <= 0) {
+    showAlert('This doctor has not set a consultation fee yet. Please contact support.');
+    return;
+  }
 
     if (selectedPayment === 'wallet' && PD.walletBalance < PD.fee) {
       showAlert(`Insufficient wallet balance. You need ₹${PD.fee}, you have ₹${PD.walletBalance}.`);
@@ -419,8 +423,8 @@
 
       const rzp = new Razorpay(options);
       rzp.on('payment.failed', function(resp) {
-        showAlert(`Payment failed: ${resp.error.description}`);
         setLoading(false);
+        showPaymentFailed(resp.error.description || 'Payment was declined. Please try again.');
       });
       rzp.open();
 
@@ -429,6 +433,47 @@
       setLoading(false);
     }
   }
+
+  function showPaymentFailed(msg) {
+  showAlert(msg);
+
+  const btn = document.getElementById('bookBtn');
+  btn.disabled = false;
+  btn.style.background = '#fef2f2';
+  btn.style.border = '2px solid #fecaca';
+  btn.style.color = '#dc2626';
+  btn.style.cursor = 'default';
+  btn.style.transform = 'none';
+  btn.style.boxShadow = 'none';
+  btn.innerHTML = `
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;pointer-events:none;">
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;">
+        <i class="fas fa-times-circle"></i> Payment Failed
+      </div>
+      <div style="font-size:12px;font-weight:500;opacity:.8;">${msg}</div>
+    </div>
+  `;
+
+  const existing = document.getElementById('retryBtn');
+  if (existing) existing.remove();
+
+  const retryBtn = document.createElement('button');
+  retryBtn.id = 'retryBtn';
+  retryBtn.className = 'btn-book';
+  retryBtn.style.background = '#203f6a';
+  retryBtn.style.marginTop = '10px';
+  retryBtn.innerHTML = `<i class="fas fa-redo"></i> <span>Retry Payment</span>`;
+  retryBtn.onclick = function() {
+    btn.style = '';
+    btn.disabled = false;
+    btn.innerHTML = `<i class="fas fa-calendar-check"></i><span id="bookBtnText">Confirm Booking</span>`;
+    retryBtn.remove();
+    hideAlert();
+    handleRazorpay();
+  };
+
+  btn.insertAdjacentElement('afterend', retryBtn);
+}
 </script>
 </body>
 </html>
