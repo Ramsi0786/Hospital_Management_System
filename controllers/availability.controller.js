@@ -2,7 +2,7 @@ import {
   WeeklyAvailability,
   MonthlyAvailability,
   DailyException
-} from '../models/doctorAvailability.model.js';
+} from '../models/doctoravailability.model';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 

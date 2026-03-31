@@ -1,7 +1,7 @@
 
 import Doctor from '../models/doctor.model.js';
 import Appointment from '../models/appointment.model.js';
-import { WeeklyAvailability, MonthlyAvailability, DailyException } from '../models/doctorAvailability.model.js';
+import { WeeklyAvailability, MonthlyAvailability, DailyException } from '../models/doctoravailability.model.js';
 import Wallet from '../models/wallet.model.js';
 import WalletTransaction from '../models/walletTransaction.model.js';
 import Payment from '../models/payment.model.js';

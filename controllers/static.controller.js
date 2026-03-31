@@ -3,7 +3,7 @@ import Patient from "../models/patient.model.js";
 import Settings from '../models/settings.model.js';
 import nodemailer from 'nodemailer';
 import ContactMessage from '../models/contactMessage.model.js';
-import { WeeklyAvailability } from '../models/doctorAvailability.model.js';
+import { WeeklyAvailability } from '../models/doctoravailability.model.js';
 import { sanitizePagination, PAGINATION } from '../constants/index.js';
 
 export const landingPage = async (req, res) => {

@@ -1,7 +1,7 @@
 import cron            from 'node-cron';
 import LeaveRequest    from '../models/leaveRequest.model.js';
 import SalaryDeduction from '../models/salaryDeduction.model.js';
-import { DailyException } from '../models/doctorAvailability.model.js';
+import { DailyException } from '../models/doctoravailability.model.js';
 import { sendLeaveAutoApprovedEmail } from '../utils/sendEmail.js';
 import Notification    from '../models/notification.model.js';
 import { cancelAppointmentsForLeave } from '../utils/cancelAppointments.js';

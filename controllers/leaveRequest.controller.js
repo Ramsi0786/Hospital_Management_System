@@ -3,7 +3,7 @@ import DoctorSalary     from '../models/doctorSalary.model.js';
 import SalaryDeduction  from '../models/salaryDeduction.model.js';
 import Doctor           from '../models/doctor.model.js';
 import Appointment      from '../models/appointment.model.js';
-import { DailyException, WeeklyAvailability } from '../models/doctorAvailability.model.js';
+import { DailyException, WeeklyAvailability } from '../models/doctoravailability.model.js';
 import Admin            from '../models/admin.model.js';
 import { cancelAppointmentsForLeave } from '../utils/cancelAppointments.js';
 import Notification from '../models/notification.model.js';
