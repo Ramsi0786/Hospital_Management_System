@@ -10,7 +10,7 @@ import cloudinary from '../config/cloudinary.js';
 import bcrypt from 'bcryptjs';
 import RefreshToken from '../models/refreshToken.model.js';
 import Wallet from '../models/wallet.model.js';
-import WalletTransaction from '../models/walletTransaction.model.js';
+import WalletTransaction from '../models/wallettransaction.model.js';
 import Notification from '../models/notification.model.js';
 
 export const getDashboard = (req, res) => {

@@ -3,7 +3,7 @@ import Doctor from "../models/doctor.model.js";
 import Settings from "../models/settings.model.js"
 import Appointment from "../models/appointment.model.js";
 import Wallet from '../models/wallet.model.js';
-import WalletTransaction from '../models/walletTransaction.model.js';
+import WalletTransaction from '../models/wallettransaction.model.js';
 import Payment from '../models/payment.model.js';
 import Invoice from '../models/invoice.model.js';
 import bcrypt from "bcryptjs";

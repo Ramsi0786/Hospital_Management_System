@@ -3,7 +3,7 @@ import Doctor from '../models/doctor.model.js';
 import Appointment from '../models/appointment.model.js';
 import { WeeklyAvailability, MonthlyAvailability, DailyException } from '../models/doctoravailability.model.js';
 import Wallet from '../models/wallet.model.js';
-import WalletTransaction from '../models/walletTransaction.model.js';
+import WalletTransaction from '../models/wallettransaction.model.js';
 import Payment from '../models/payment.model.js';
 import { sendAppointmentCancelledByDoctorEmail } from '../utils/sendEmail.js';
 import { sanitizePagination } from '../constants/index.js';

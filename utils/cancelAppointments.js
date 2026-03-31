@@ -1,6 +1,6 @@
 import Appointment       from '../models/appointment.model.js';
 import Wallet            from '../models/wallet.model.js';
-import WalletTransaction from '../models/walletTransaction.model.js';
+import WalletTransaction from '../models/wallettransaction.model.js';
 import Payment           from '../models/payment.model.js';
 import { sendAppointmentCancelledLeaveEmail } from './sendEmail.js';
 

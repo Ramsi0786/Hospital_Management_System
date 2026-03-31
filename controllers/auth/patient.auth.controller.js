@@ -1,6 +1,6 @@
 import Patient from "../../models/patient.model.js";
 import Wallet from "../../models/wallet.model.js";
-import WalletTransaction from "../../models/walletTransaction.model.js";
+import WalletTransaction from "../../models/wallettransaction.model.js";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import passport from "passport";

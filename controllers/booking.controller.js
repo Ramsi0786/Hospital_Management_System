@@ -1,7 +1,7 @@
 import Appointment from '../models/appointment.model.js';
 import Doctor from '../models/doctor.model.js';
 import Wallet from '../models/wallet.model.js';
-import WalletTransaction from '../models/walletTransaction.model.js';
+import WalletTransaction from '../models/wallettransaction.model.js';
 import Payment from '../models/payment.model.js';
 import Review from '../models/review.model.js';
 import { resolveSlots } from './availability.controller.js';
