@@ -1,16 +1,110 @@
-<div class="pagination-wrapper">
-  <% if (currentPage > 1) { %>
-    <a href="?page=<%= currentPage - 1 %>&search=<%= searchQuery %>&department=<%= selectedDepartment %><%= sortBy ? '&sort=' + sortBy : '' %>" 
-       class="btn-page">Previous</a>
-  <% } %>
+<%# views/partials/pagination.ejs %>
+<style>
+  .pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 0;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
 
-  <% for (let i = 1; i <= totalPages; i++) { %>
-    <a href="?page=<%= i %>&search=<%= searchQuery %>&department=<%= selectedDepartment %><%= sortBy ? '&sort=' + sortBy : '' %>"
-       class="btn-page <%= i === currentPage ? 'active' : '' %>"><%= i %></a>
-  <% } %>
+  .pagination-info {
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+  }
 
-  <% if (currentPage < totalPages) { %>
-    <a href="?page=<%= currentPage + 1 %>&search=<%= searchQuery %>&department=<%= selectedDepartment %><%= sortBy ? '&sort=' + sortBy : '' %>" 
-       class="btn-page">Next</a>
-  <% } %>
+  .pagination-buttons {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .pagination-btn {
+    min-width: 34px;
+    height: 34px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1.5px solid #e2e8f0;
+    background: white;
+    color: #374151;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all .15s;
+    cursor: pointer;
+  }
+
+  .pagination-btn:hover:not(.disabled):not(.active) {
+    border-color: #0f4c75;
+    color: #0f4c75;
+    background: #f0f9ff;
+    text-decoration: none;
+  }
+
+  .pagination-btn.active {
+    background: #0f4c75;
+    border-color: #0f4c75;
+    color: white;
+    cursor: default;
+  }
+
+  .pagination-btn.disabled {
+    opacity: .4;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .pagination-ellipsis {
+    min-width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: #94a3b8;
+  }
+</style>
+
+<div class="pagination-container">
+  <div class="pagination-info">
+    Page <%= currentPage %> of <%= totalPages %> &nbsp;·&nbsp; <%= totalItems %> total
+  </div>
+
+  <div class="pagination-buttons">
+    <a href="?page=<%= currentPage - 1 %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&department=<%= typeof selectedDepartment !== 'undefined' ? selectedDepartment : '' %><%= typeof sortBy !== 'undefined' && sortBy ? '&sort=' + sortBy : '' %>"
+       class="pagination-btn <%= currentPage <= 1 ? 'disabled' : '' %>"
+       <%= currentPage <= 1 ? 'aria-disabled="true" tabindex="-1"' : '' %>>
+      <i class="fas fa-chevron-left"></i>
+    </a>
+
+    <% for (let i = 1; i <= totalPages; i++) { %>
+      <% if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) { %>
+        <% if (i === currentPage - 2 && i > 2) { %>
+          <span class="pagination-ellipsis">···</span>
+        <% } %>
+
+        <a href="?page=<%= i %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&department=<%= typeof selectedDepartment !== 'undefined' ? selectedDepartment : '' %><%= typeof sortBy !== 'undefined' && sortBy ? '&sort=' + sortBy : '' %>"
+           class="pagination-btn <%= i === currentPage ? 'active' : '' %>">
+          <%= i %>
+        </a>
+
+        <% if (i === currentPage + 2 && i < totalPages - 1) { %>
+          <span class="pagination-ellipsis">···</span>
+        <% } %>
+      <% } %>
+    <% } %>
+
+    <a href="?page=<%= currentPage + 1 %>&search=<%= typeof searchQuery !== 'undefined' ? searchQuery : '' %>&department=<%= typeof selectedDepartment !== 'undefined' ? selectedDepartment : '' %><%= typeof sortBy !== 'undefined' && sortBy ? '&sort=' + sortBy : '' %>"
+       class="pagination-btn <%= currentPage >= totalPages ? 'disabled' : '' %>"
+       <%= currentPage >= totalPages ? 'aria-disabled="true" tabindex="-1"' : '' %>>
+      <i class="fas fa-chevron-right"></i>
+    </a>
+  </div>
 </div>

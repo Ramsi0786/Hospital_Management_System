@@ -3,6 +3,8 @@ import Patient from '../models/patient.model.js';
 
 export const publicAuth = async (req, res, next) => {
   try {
+      res.locals.currentPath = req.path;
+
     const token = req.cookies.accessToken;
     if (!token) return next();
 

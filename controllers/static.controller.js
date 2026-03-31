@@ -3,6 +3,7 @@ import Patient from "../models/patient.model.js";
 import Settings from '../models/settings.model.js';
 import nodemailer from 'nodemailer';
 import ContactMessage from '../models/contactMessage.model.js';
+import { WeeklyAvailability } from '../models/doctorAvailability.model.js';
 import { sanitizePagination, PAGINATION } from '../constants/index.js';
 
 export const landingPage = async (req, res) => {
@@ -88,16 +89,30 @@ export const doctorsPage = async (req, res) => {
   }
 };
 
+
 export const doctorDetailPage = async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id)
-      .select("name specialization department phone profileImage rating ratingCount experience bio qualification consultationFee availability createdAt");
+      .select("name specialization department phone profileImage rating ratingCount experience bio qualification consultationFee createdAt");
 
     if (!doctor) return res.redirect("/doctors");
 
+    // Fetch real availability
+    const weeklyAvail = await WeeklyAvailability.findOne({ doctor: doctor._id });
+
+    const DAYS = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
+    const availability = weeklyAvail
+      ? DAYS
+          .filter(day => weeklyAvail.schedule?.[day]?.isWorking)
+          .map(day => ({
+            day: day.charAt(0).toUpperCase() + day.slice(1),
+            slots: weeklyAvail.schedule[day].slots || []
+          }))
+      : [];
+
     res.render("doctor-detail", {
       title: `Dr. ${doctor.name} - Healora`,
-      doctor,
+      doctor: { ...doctor.toObject(), availability },
       currentUser: res.locals.currentUser || null
     });
   } catch (error) {

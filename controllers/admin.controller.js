@@ -567,14 +567,17 @@ export const reactivatePatient = async (req, res) => {
 export const addDoctor = async (req, res) => {
   try {
     const { 
-      name, 
-      email, 
-      phone, 
-      password, 
-      specialization, 
-      department,
-      profileImage 
-    } = req.body;
+  name, 
+  email, 
+  phone, 
+  password, 
+  specialization, 
+  department,
+  profileImage,
+  consultationFee,
+  qualification,
+  experience
+} = req.body;
 
     const existingDoctor = await Doctor.findOne({ email });
     if (existingDoctor) {
