@@ -13,7 +13,7 @@
 </head>
 <body>
 
-<%- include('../partials/patient-sidebar', { currentPage: 'wallet' }) %>
+<%- include('../partials/pagination', { currentPage, totalPages, totalItems, selectedStatus: selectedType ? `type=${selectedType}` : '', searchQuery: '', selectedDepartment: '', sortBy: '' }) %>
 
 <!-- Modal root — direct child of <body>, escapes sidebar stacking context -->
 <div id="healora-modal-root"></div>
