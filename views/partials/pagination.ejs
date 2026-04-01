@@ -74,7 +74,7 @@
 
 <div class="pagination-container">
   <div class="pagination-info">
-    Page <%= currentPage %> of <%= totalPages %> &nbsp;·&nbsp; <%= totalItems %> total
+    Page <%= currentPage %> of <%= totalPages %> <% if (typeof totalItems !== 'undefined') { %>&nbsp;·&nbsp; <%= totalItems %> total<% } %>
   </div>
 
   <div class="pagination-buttons">
