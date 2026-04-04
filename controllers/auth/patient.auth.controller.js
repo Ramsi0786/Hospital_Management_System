@@ -36,12 +36,14 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     httpOnly: true,
     sameSite: 'lax',
     secure: true,
+    path: '/',
     maxAge: 15 * 60 * 1000
   });
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     sameSite: 'lax',
     secure: true,
+    path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 };
@@ -351,22 +353,22 @@ export const refreshAccessToken = async (req, res) => {
     const storedToken = await RefreshToken.findOne({ token: incomingToken });
 
     if (!storedToken) {
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
+      res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
+      res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
       return res.status(401).json({ error: "Invalid refresh token" });
     }
 
     if (storedToken.isUsed) {
       await RefreshToken.deleteMany({ family: storedToken.family });
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
+      res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
+      res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
       return res.status(401).json({ error: "Token reuse detected. Please login again." });
     }
 
     if (storedToken.expiresAt < new Date()) {
       await RefreshToken.deleteOne({ _id: storedToken._id });
-      res.clearCookie('accessToken');
-      res.clearCookie('refreshToken');
+      res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
+      res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
       return res.status(401).json({ error: "Refresh token expired" });
     }
 
@@ -379,8 +381,8 @@ export const refreshAccessToken = async (req, res) => {
     return res.status(200).json({ success: true });
   } catch (err) {
     console.error("Refresh token error:", err);
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
+    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
     return res.status(500).json({ error: "Server error" });
   }
 };
@@ -556,13 +558,13 @@ export const logout = async (req, res) => {
       if (stored) await RefreshToken.deleteMany({ family: stored.family });
     }
 
-    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true });
-    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true });
+    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
+    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
     return res.redirect('/patient/login');
   } catch (error) {
     console.error('Logout error:', error);
-    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true });
-    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true });
+    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
+    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
     return res.redirect('/patient/login');
   }
 };
