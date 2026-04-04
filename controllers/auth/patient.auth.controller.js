@@ -556,13 +556,13 @@ export const logout = async (req, res) => {
       if (stored) await RefreshToken.deleteMany({ family: stored.family });
     }
 
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true });
+    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true });
     return res.redirect('/patient/login');
   } catch (error) {
     console.error('Logout error:', error);
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true });
+    res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true });
     return res.redirect('/patient/login');
   }
 };
