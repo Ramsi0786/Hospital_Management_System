@@ -5,6 +5,8 @@ import { publicAuth } from "../middleware/publicAuth.middleware.js";
 
 router.use(publicAuth);
 
+router.get('/auth/check', staticController.checkAuthStatus);
+
 router.route('/').get(staticController.landingPage);
 router.route('/login').get(staticController.loginPage);
 router.route('/about-us').get(staticController.aboutUsPage);

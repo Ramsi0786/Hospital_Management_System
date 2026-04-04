@@ -35,11 +35,13 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     sameSite: 'lax',
+    secure: true,
     maxAge: 15 * 60 * 1000
   });
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     sameSite: 'lax',
+    secure: true,
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
 };
@@ -71,7 +73,7 @@ export const signup = async (req, res) => {
   const { name, email, phone, password, confirmPassword } = req.body;
   let errors = {};
 
-  if (!name || name.trim().length < 5)          errors.name = "Name must be at least 5 characters long";
+  if (!name || name.trim().length < 3)          errors.name = "Name must be at least 4 characters";
   else if (!/^[a-zA-Z\s]+$/.test(name.trim()))  errors.name = "Name can only contain letters and spaces";
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

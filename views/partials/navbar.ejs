@@ -88,9 +88,9 @@
 
         <!-- DESKTOP LOGIN -->
         <li class="nav-item d-none d-lg-block">
-          <a href="/login" class="btn btn-primary rounded-pill px-4 py-2">
-            Login
-          </a>
+         <% if (!locals.user) { %>
+          <a href="/login" class="btn btn-primary rounded-pill px-4 py-2">Login</a>
+         <% } %>
         </li>
 
         <% } %>

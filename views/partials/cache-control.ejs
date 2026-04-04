@@ -6,29 +6,24 @@
 <script>
   (function() {
     'use strict';
-
     history.pushState(null, null, location.href);
-    
-    window.onpopstate = function () {
-      const hasCookies = document.cookie.includes('accessToken') || 
-                        document.cookie.includes('refreshToken') ||
-                        document.cookie.includes('token') ||
-                        document.cookie.includes('adminToken');
-      
-      if (!hasCookies) {
-        console.log("Back button - no cookies - redirecting");
- 
-        if (window.location.pathname.includes('/admin')) {
-          window.location.replace('/admin/login');
-        } else if (window.location.pathname.includes('/doctor')) {
-          window.location.replace('/doctor/login');
-        } else {
-          window.location.replace('/patient/login');
+    window.onpopstate = async function () {
+      history.pushState(null, null, location.href);
+      try {
+        const res = await fetch('/auth/check', { credentials: 'include' });
+        const data = await res.json();
+        if (!data.loggedIn) {
+          if (window.location.pathname.includes('/admin')) {
+            window.location.replace('/admin/login');
+          } else if (window.location.pathname.includes('/doctor')) {
+            window.location.replace('/doctor/login');
+          } else {
+            window.location.replace('/patient/login');
+          }
         }
-      } else {
-        history.pushState(null, null, location.href);
+      } catch {
+        window.location.replace('/');
       }
     };
-
   })();
 </script>

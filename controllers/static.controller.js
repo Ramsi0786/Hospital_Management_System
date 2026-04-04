@@ -5,6 +5,7 @@ import nodemailer from 'nodemailer';
 import ContactMessage from '../models/contactMessage.model.js';
 import { WeeklyAvailability } from '../models/doctoravailability.model.js';
 import { sanitizePagination, PAGINATION } from '../constants/index.js';
+import { verifyAccessToken } from '../config/jwt.js';
 
 export const landingPage = async (req, res) => {
   try {
@@ -227,6 +228,17 @@ export const submitContact = async (req, res) => {
   } catch (err) {
     console.error('Contact form error:', err);
     res.status(500).json({ success: false, error: 'Failed to send message' });
+  }
+};
+
+export const checkAuthStatus = (req, res) => {
+  const token = req.cookies.accessToken || req.cookies.adminToken;
+  if (!token) return res.json({ loggedIn: false });
+  try {
+    verifyAccessToken(token);
+    return res.json({ loggedIn: true });
+  } catch {
+    return res.json({ loggedIn: false });
   }
 };
 
