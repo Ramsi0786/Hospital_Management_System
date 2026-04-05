@@ -561,11 +561,11 @@ export const logout = async (req, res) => {
 
     res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
     res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
-    return res.redirect('/patient/login');
+    return res.redirect('/');
   } catch (error) {
     console.error('Logout error:', error);
     res.clearCookie('accessToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
     res.clearCookie('refreshToken', { httpOnly: true, sameSite: 'lax', secure: true, path: '/' });
-    return res.redirect('/patient/login');
+    return res.redirect('/');
   }
 };
