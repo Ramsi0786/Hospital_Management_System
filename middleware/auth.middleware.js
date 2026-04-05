@@ -70,9 +70,12 @@ const protect = async (req, res, next) => {
         expiresAt
       });
 
+      const isProduction = process.env.NODE_ENV === 'production';
       res.cookie('accessToken', newAccessToken, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: 'lax',
+        path: '/',
+        secure: isProduction,
         maxAge: 15 * 60 * 1000
       });
 

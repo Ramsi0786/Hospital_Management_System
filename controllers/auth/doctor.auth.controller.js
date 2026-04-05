@@ -28,15 +28,20 @@ const issueTokens = async (doctorId, family = null) => {
 };
 
 const setAuthCookies = (res, accessToken, refreshToken) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
-    sameSite: 'strict',
-    maxAge: 15 * 60 * 1000    // 15 min
+    sameSite: 'lax',
+    secure: isProduction,
+    path: '/',
+    maxAge: 15 * 60 * 1000
   });
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
-    sameSite: 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
+    sameSite: 'lax',
+    secure: isProduction,
+    path: '/',
+    maxAge: 7 * 24 * 60 * 60 * 1000
   });
 };
 

@@ -32,17 +32,18 @@ const issueTokens = async (userId, family = null) => {
 };
 
 const setAuthCookies = (res, accessToken, refreshToken) => {
+  const isProduction = process.env.NODE_ENV === 'production';
   res.cookie('accessToken', accessToken, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: true,
+    secure: isProduction,
     path: '/',
     maxAge: 15 * 60 * 1000
   });
   res.cookie('refreshToken', refreshToken, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: true,
+    secure: isProduction,
     path: '/',
     maxAge: 7 * 24 * 60 * 60 * 1000
   });
