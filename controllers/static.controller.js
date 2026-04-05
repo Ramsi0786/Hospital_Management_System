@@ -25,6 +25,8 @@ export const landingPage = async (req, res) => {
       title: "Healora - Smarter Healthcare, Simplified for Everyone",
       doctors,
       currentUser: res.locals.currentUser || null,
+      user: res.locals.user || null, 
+      
       stats: {
         experience: expSetting?.value ?? 10,
         doctors:    totalDoctors,
@@ -38,6 +40,7 @@ export const landingPage = async (req, res) => {
       title: "Healora - Smarter Healthcare, Simplified for Everyone",
       doctors: [],
       currentUser: null,
+      user: null,     
       stats: { experience: 10, doctors: 0, patients: 0, awards: 15 }
     });
   }
