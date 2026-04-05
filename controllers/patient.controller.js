@@ -284,8 +284,28 @@ export const getDoctorSlots = async (req, res) => {
     }).select('timeSlot');
 
     const bookedSlots = booked.map(a => a.timeSlot);
-    const available   = resolved.slots.filter(s => !bookedSlots.includes(s));
+    const now = new Date();
+const todayStr = now.toISOString().split('T')[0]; // "2026-04-05"
 
+const available = resolved.slots.filter(s => {
+  // Remove already booked slots
+  if (bookedSlots.includes(s)) return false;
+
+  // If date is in the past entirely, remove all slots
+  if (date < todayStr) return false;
+
+  // If date is today, only show slots at least 1 hour from now
+  if (date === todayStr) {
+    const [slotHour, slotMinute] = s.split(':').map(Number);
+    const slotTime = new Date();
+    slotTime.setHours(slotHour, slotMinute, 0, 0);
+    const diffMs = slotTime - now;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    if (diffHours < 1) return false; // less than 1 hour away — hide it
+  }
+
+  return true;
+});
     res.json({ success: true, slots: available, isWorking: true, bookedSlots });
   } catch (error) {
     console.error('Get doctor slots error:', error);

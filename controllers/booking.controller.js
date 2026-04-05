@@ -68,6 +68,18 @@ export const downloadInvoice = async (req, res) => {
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 async function isSlotAvailable(doctorId, date, timeSlot) {
+  // Block past slots — if date is today, check if slot time has passed
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0]; // "2026-04-05"
+
+  if (date === todayStr) {
+    const [slotHour, slotMinute] = timeSlot.split(':').map(Number);
+    const slotTime = new Date();
+    slotTime.setHours(slotHour, slotMinute, 0, 0);
+    if (slotTime <= now) return false; // slot is in the past
+  }
+
+  if (date < todayStr) return false;
 
   const resolved = await resolveSlots(doctorId, date);
   if (!resolved.isWorking || !resolved.slots.includes(timeSlot)) return false;
@@ -148,18 +160,29 @@ export const createBooking = async (req, res) => {
 
     // ── CASH ──────────────────────────────────────────────
     if (paymentMethod === 'cash') {
-      const appointment = await Appointment.create({
-        patient:       patientId,
-        doctor:        doctorId,
-        department:    doctor.department,
-        date,
-        timeSlot,
-        reason:        reason || '',
-        status:        'pending',
-        paymentMethod: 'cash',
-        paymentStatus: 'pending',
-        consultationFee: fee
-      });
+      let appointment;
+      try {
+        appointment = await Appointment.create({ 
+          patient:       patientId,
+          doctor:        doctorId,
+          department:    doctor.department,
+          date,
+          timeSlot,
+          reason:        reason || '',
+          status:        'pending',
+          paymentMethod: 'cash',
+          paymentStatus: 'pending',
+          consultationFee: fee
+        });
+      } catch (err) {
+        if (err.code === 11000) {
+          return res.status(409).json({ 
+            success: false, 
+            error: 'This slot was just booked by someone else. Please choose another slot.' 
+          });
+        }
+        throw err; 
+      }
 
       await Payment.create({
         appointment: appointment._id,
