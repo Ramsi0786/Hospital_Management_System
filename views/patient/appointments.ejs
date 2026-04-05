@@ -85,12 +85,21 @@
             </div>
             <% if (appt.status==='cancelled' && appt.refundAmount>0) { %>
               <div style="margin-top:8px;">
-                <span class="refund-info"><i class="fas fa-undo"></i> Refund: ₹<%= appt.refundAmount %> (<%= appt.refundPercentage %>%) — <%= appt.refundStatus %></span>
+                <span class="refund-info"><i class="fas fa-undo"></i> Refund: ₹<%= appt.refundAmount %> (<%= appt.refundPercentage %>%) — <%=
+                  appt.refundStatus === 'processed' ? 'Credited to Wallet' :
+                  appt.refundStatus === 'pending'   ? 'Processing' :
+                  appt.refundStatus === 'failed'    ? 'Failed' : appt.refundStatus
+                  %></span>
               </div>
             <% } %>
           </div>
           <div class="appt-right">
-            <span class="status-badge <%= appt.status %>"><%= appt.status %></span>
+            <span class="status-badge <%= appt.status %>"><%=
+              appt.status === 'pending'   ? 'Pending' :
+              appt.status === 'confirmed' ? 'Confirmed' :
+              appt.status === 'completed' ? 'Completed' :
+              appt.status === 'cancelled' ? 'Cancelled' : appt.status
+              %></span>
             <div class="appt-fee">₹<%= appt.consultationFee %></div>
             <div class="appt-actions">
               <a href="/patient/appointments/<%= appt._id %>" class="btn-sm btn-view"><i class="fas fa-eye"></i> View</a>
