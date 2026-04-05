@@ -78,10 +78,12 @@ const protect = async (req, res, next) => {
         secure: isProduction,
         maxAge: 15 * 60 * 1000
       });
-
+      
       res.cookie('refreshToken', newRefreshToken, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: 'lax',
+        secure: isProduction,
+        path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
       
@@ -193,16 +195,21 @@ const protectDoctor = async (req, res, next) => {
         family: storedToken.family, 
         expiresAt
       });
-
+      
+      const isProduction = process.env.NODE_ENV === 'production';
       res.cookie('accessToken', newAccessToken, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: 'lax',
+        secure: isProduction,
+        path: '/',
         maxAge: 15 * 60 * 1000
       });
-
+      
       res.cookie('refreshToken', newRefreshToken, {
         httpOnly: true,
-        sameSite: 'strict',
+        sameSite: 'lax',
+        secure: isProduction,
+        path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
