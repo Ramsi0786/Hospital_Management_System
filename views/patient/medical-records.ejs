@@ -167,8 +167,8 @@
                     onclick="viewRecord('<%= record.fileType %>', '<%= record.fileUrl %>')">
                     <i class="fas fa-eye"></i> View File
                   </button>
-                  <a href="<%= record.fileUrl %>" download
-                     class="btn-action btn-view" style="background:#f0fdf4;color:#059669;text-decoration:none;">
+                  <a href="<%= record.fileUrl %>" target="_blank"
+                    class="btn-action btn-view" style="background:#f0fdf4;color:#059669;text-decoration:none;">
                     <i class="fas fa-download"></i> Download
                   </a>
                 <% } else { %>

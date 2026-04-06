@@ -511,13 +511,16 @@ export const uploadMedicalRecord = async (req, res) => {
     const folder = `healora/medical-records/${patientId}`;
     const resourceType = fileType === 'pdf' ? 'raw' : 'image';
 
-    const uploadRes = await cloudinary.uploader.upload(fileData, {
-      folder,
-      resource_type: resourceType,
-      ...(fileType === 'image' && {
-        transformation: [{ quality: 'auto:good' }, { fetch_format: 'auto' }]
-      })
-    });
+const uploadRes = await cloudinary.uploader.upload(fileData, {
+  folder,
+  resource_type: resourceType,
+  ...(fileType === 'pdf' && {
+    flags: 'attachment'  // forces browser to download instead of display
+  }),
+  ...(fileType === 'image' && {
+    transformation: [{ quality: 'auto:good' }, { fetch_format: 'auto' }]
+  })
+});
 
     const record = await MedicalRecord.create({
       patient:    patientId,

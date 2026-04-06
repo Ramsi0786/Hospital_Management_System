@@ -177,23 +177,61 @@ export const generateInvoicePDF = (data) => {
             { align: 'right', width: W - MARGIN - 10 });
 
     // ════════════════════════ PAYMENT STATUS ════════════════════════
-    y += 50;
-    const statusColor = appointment.paymentStatus === 'paid'    ? GREEN :
-                        appointment.paymentStatus === 'pending' ? '#d97706' : '#dc2626';
-    const statusText  = appointment.paymentStatus === 'paid'    ? 'PAID' :
-                        appointment.paymentStatus === 'pending' ? 'PAYMENT PENDING' : 'UNPAID';
+y += 50;
 
-    doc.roundedRect(MARGIN, y, 150, 28, 5).fill(statusColor);
-    doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(11)
-      .text(statusText, MARGIN, y + 8, { width: 150, align: 'center' });
+// Show cancellation info if cancelled
+if (appointment.status === 'cancelled') {
+  doc.roundedRect(MARGIN, y, 160, 28, 5).fill('#dc2626');
+  doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(11)
+    .text('CANCELLED', MARGIN, y + 8, { width: 160, align: 'center' });
 
-    if (appointment.paymentMethod === 'cash') {
-      doc.fillColor(GREY).font('Helvetica').fontSize(9)
-        .text('Please pay at the clinic on the day of your appointment.', MARGIN + 160, y + 9);
-    } else if (appointment.razorpayPaymentId) {
-      doc.fillColor(GREY).font('Helvetica').fontSize(9)
-        .text(`Transaction ID: ${appointment.razorpayPaymentId}`, MARGIN + 160, y + 9);
-    }
+  doc.fillColor(GREY).font('Helvetica').fontSize(9)
+    .text(`Cancelled by: ${appointment.cancelledBy || 'N/A'}`, MARGIN + 170, y + 2);
+
+  if (appointment.cancellationReason) {
+    doc.fillColor(GREY).font('Helvetica').fontSize(9)
+      .text(`Reason: ${appointment.cancellationReason}`, MARGIN + 170, y + 14);
+  }
+
+  y += 40;
+
+  // Refund info
+  if (appointment.refundAmount > 0) {
+    doc.rect(MARGIN, y, W - MARGIN * 2, 50).fill('#f0fdf4');
+    doc.roundedRect(MARGIN, y, W - MARGIN * 2, 50, 5).stroke('#059669');
+
+    doc.fillColor(GREEN).font('Helvetica-Bold').fontSize(11)
+      .text('REFUND INFORMATION', MARGIN + 10, y + 8);
+    doc.fillColor(BLACK).font('Helvetica').fontSize(10)
+      .text(`Refund Amount: Rs. ${appointment.refundAmount}`, MARGIN + 10, y + 24);
+    doc.fillColor(GREY).font('Helvetica').fontSize(9)
+      .text(`Status: ${appointment.refundStatus?.toUpperCase() || 'PENDING'}  |  Method: Credited to Wallet`, MARGIN + 10, y + 38);
+    y += 60;
+  } else if (appointment.status === 'cancelled') {
+    doc.fillColor(GREY).font('Helvetica').fontSize(9)
+      .text('No refund applicable for this cancellation.', MARGIN, y);
+    y += 20;
+  }
+
+} else {
+  // Normal payment status
+  const statusColor = appointment.paymentStatus === 'paid'    ? GREEN :
+                      appointment.paymentStatus === 'pending' ? '#d97706' : '#dc2626';
+  const statusText  = appointment.paymentStatus === 'paid'    ? 'PAID' :
+                      appointment.paymentStatus === 'pending' ? 'PAYMENT PENDING' : 'UNPAID';
+
+  doc.roundedRect(MARGIN, y, 150, 28, 5).fill(statusColor);
+  doc.fillColor(WHITE).font('Helvetica-Bold').fontSize(11)
+    .text(statusText, MARGIN, y + 8, { width: 150, align: 'center' });
+
+  if (appointment.paymentMethod === 'cash') {
+    doc.fillColor(GREY).font('Helvetica').fontSize(9)
+      .text('Please pay at the clinic on the day of your appointment.', MARGIN + 160, y + 9);
+  } else if (appointment.razorpayPaymentId) {
+    doc.fillColor(GREY).font('Helvetica').fontSize(9)
+      .text(`Transaction ID: ${appointment.razorpayPaymentId}`, MARGIN + 160, y + 9);
+  }
+}
 
     // ════════════════════════ FOOTER ════════════════════════
     const footerY = doc.page.height - 70;
