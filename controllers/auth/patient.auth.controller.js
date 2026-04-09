@@ -120,10 +120,15 @@ export const signup = async (req, res) => {
 
       await redisClient.setEx(`otp:email:${email}`, 300, otp);
       await sendOtpEmail(email, otp);
-
-      return res.status(200).json({
-        message: "Account reactivated! Please verify your email with the OTP sent.",
-        requiresOtp: true
+      req.session.save((err) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ errors: { general: 'Session error — please try again.' } });
+        }
+        return res.status(200).json({
+          message: "Account reactivated! Please verify your email with the OTP sent.",
+          requiresOtp: true
+        });
       });
     }
 
@@ -151,12 +156,18 @@ export const signup = async (req, res) => {
     req.session.otpVerified = false;
 
     await redisClient.setEx(`otp:email:${email}`, 300, otp);
-    await sendOtpEmail(email, otp);
+await sendOtpEmail(email, otp);
 
-    return res.status(201).json({
-      message: "OTP sent to your email",
-      requiresOtp: true
-    });
+req.session.save((err) => {
+  if (err) {
+    console.error('Session save error:', err);
+    return res.status(500).json({ errors: { general: 'Session error — please try again.' } });
+  }
+  return res.status(201).json({
+    message: "OTP sent to your email",
+    requiresOtp: true
+  });
+});
   } catch (err) {
     console.error("Signup Error:", err);
     return res.status(500).json({
