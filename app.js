@@ -24,6 +24,7 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 startAutoApproveJob();
 
+app.set('trust proxy', 1);
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use(cookieParser());
@@ -35,7 +36,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production',
+      secure: true,
       httpOnly: true,
       sameSite: 'lax',
       maxAge: 600000
