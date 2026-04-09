@@ -195,17 +195,17 @@ async handleFormSubmit(formId, endpoint, validationType, callbacks = {}) {
       }
       
       if (response.ok) {
-  if (window.Alert && result.message) {
-    Alert.success(result.message, () => {
-      if (callbacks.onSuccess) {
-        callbacks.onSuccess(result);
-      }
-    });
-  } else {
+        if (window.Alert && result.message) {
+  Alert.success(result.message).then(() => {
     if (callbacks.onSuccess) {
       callbacks.onSuccess(result);
     }
+  });
+} else {
+  if (callbacks.onSuccess) {
+    callbacks.onSuccess(result);
   }
+}
 } else {
         const serverErrors = result.errors || {};
         Object.keys(serverErrors).forEach(field => {
