@@ -4,6 +4,8 @@ import express from "express";
 import path from "path";
 import cookieParser from "cookie-parser";
 import session from "express-session";
+import RedisStore from "connect-redis";
+import redisClient from "./config/redisClient.js";
 import passport from "./config/passport.js";
 import connectDB from "./config/db.js";
 
@@ -28,12 +30,14 @@ app.use(cookieParser());
 app.use(attachSettings);
 app.use(
   session({
+    store: new RedisStore({ client: redisClient }),
     secret: process.env.JWT_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: process.env.NODE_ENV === 'production', 
+      secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
+      sameSite: 'lax',
       maxAge: 600000
     }
   })
