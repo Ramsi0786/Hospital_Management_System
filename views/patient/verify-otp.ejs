@@ -133,7 +133,7 @@
           showAlert('✓ Email verified! Redirecting...', 'success');
           verifyBtn.innerHTML = '<i class="fas fa-check-circle"></i> Verified!';
           setTimeout(() => {
-            window.location.href = data.redirect || '/patient/dashboard';
+            window.location.replace(data.redirect || '/patient/dashboard');
           }, 1500);
         } else {
           showAlert(data.errors?.otp || data.errors?.general || 'Verification failed', 'error');
