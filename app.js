@@ -4,7 +4,7 @@ import express from "express";
 import path from "path";
 import cookieParser from "cookie-parser";
 import session from "express-session";
-import RedisStore from "connect-redis";
+import { RedisStore } from "connect-redis";
 import redisClient from "./config/redis.js";
 import passport from "./config/passport.js";
 import connectDB from "./config/db.js";
