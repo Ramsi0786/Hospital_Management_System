@@ -177,13 +177,13 @@ export const getDoctorDetails = async (req, res) => {
       });
     }
 
-    const today = new Date();
-    const now   = new Date();
+    const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const now   = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
 
     const dates = Array.from({ length: 7 }, (_, i) => {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
-      return d.toISOString().split('T')[0];
+      return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
     });
 
     const resolvedAll = await Promise.all(
@@ -284,24 +284,21 @@ export const getDoctorSlots = async (req, res) => {
     }).select('timeSlot');
 
     const bookedSlots = booked.map(a => a.timeSlot);
-    const now = new Date();
-const todayStr = now.toISOString().split('T')[0]; // "2026-04-05"
+    const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+    const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
 const available = resolved.slots.filter(s => {
-  // Remove already booked slots
   if (bookedSlots.includes(s)) return false;
 
-  // If date is in the past entirely, remove all slots
   if (date < todayStr) return false;
 
-  // If date is today, only show slots at least 1 hour from now
   if (date === todayStr) {
     const [slotHour, slotMinute] = s.split(':').map(Number);
     const slotTime = new Date();
     slotTime.setHours(slotHour, slotMinute, 0, 0);
     const diffMs = slotTime - now;
     const diffHours = diffMs / (1000 * 60 * 60);
-    if (diffHours < 1) return false; // less than 1 hour away — hide it
+    if (diffHours < 1) return false; 
   }
 
   return true;

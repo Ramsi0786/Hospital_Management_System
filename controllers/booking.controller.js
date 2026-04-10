@@ -68,9 +68,8 @@ export const downloadInvoice = async (req, res) => {
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 async function isSlotAvailable(doctorId, date, timeSlot) {
-  // Block past slots — if date is today, check if slot time has passed
-  const now = new Date();
-  const todayStr = now.toISOString().split('T')[0]; // "2026-04-05"
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
 
   if (date === todayStr) {
     const [slotHour, slotMinute] = timeSlot.split(':').map(Number);
