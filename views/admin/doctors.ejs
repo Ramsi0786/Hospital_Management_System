@@ -13,8 +13,6 @@
   <link rel="stylesheet" href="/css/admin/doctor.css">
   <link rel="stylesheet" href="/css/custom-alerts.css">
   <link rel="stylesheet" href="/css/pagination.css">
-
-  
 </head>
 <body>
 
@@ -38,14 +36,12 @@
         <i class="fas fa-search"></i>
         <input type="text" id="searchInput" class="search-input" placeholder="Search by name, email or specialization...">
       </div>
-
       <div class="filter-wrapper">
         <i class="fas fa-building"></i>
         <select id="departmentFilter" class="filter-select">
           <option value="">All Departments</option>
         </select>
       </div>
-
       <div class="filter-wrapper">
         <i class="fas fa-filter"></i>
         <select id="statusFilter" class="filter-select">
@@ -55,7 +51,6 @@
           <option value="inactive">Inactive</option>
         </select>
       </div>
-
       <div class="filter-wrapper">
         <i class="fas fa-sort"></i>
         <select id="sortFilter" class="filter-select">
@@ -101,150 +96,189 @@
     <div id="pagination"></div>
   </div>
 
-  <div class="modal-overlay" id="doctorModal">
-    <div class="modal-content-custom">
-      <div class="modal-header">
-        <h3 id="modalTitle">Add New Doctor</h3>
-        <button class="btn-close-modal" onclick="closeDoctorModal()">
-          <i class="fas fa-times"></i>
-        </button>
+ <!-- ADD DOCTOR MODAL -->
+<div class="modal-overlay" id="doctorModal">
+  <div style="background:#fff; border-radius:16px; width:90%; max-width:780px; overflow:hidden; font-family:'Poppins',system-ui,sans-serif; max-height:90vh; display:flex; flex-direction:column;">
+
+    <!-- Header -->
+    <div style="background:#203f6a; padding:20px 28px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:36px; height:36px; background:rgba(255,255,255,0.15); border-radius:8px; display:flex; align-items:center; justify-content:center;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        </div>
+        <div>
+          <div id="modalTitle" style="color:white; font-size:16px; font-weight:600; margin:0;">Add new doctor</div>
+          <div style="color:rgba(255,255,255,0.6); font-size:12px;">Fill in the details below to register a new doctor</div>
+        </div>
       </div>
+      <button onclick="closeDoctorModal()" style="width:32px; height:32px; border-radius:8px; border:none; background:rgba(255,255,255,0.1); cursor:pointer; display:flex; align-items:center; justify-content:center; color:white;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
 
-      <form id="doctorForm">
-        <div class="modal-body">
-          <input type="hidden" id="doctorId">
+    <!-- Form -->
+    <form id="doctorForm" style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+      <input type="hidden" id="doctorId">
 
-          <!-- ── AVATAR SELECTOR ──────────────────── -->
-          <div class="form-group">
-            <label class="avatar-selector-label">
-              Profile Avatar <span class="require-star">*</span>
-            </label>
-            <p class="avatar-selector-hint">Choose a default avatar or upload a custom photo</p>
+      <!-- Scrollable body -->
+      <div style="padding:24px 28px; overflow-y:auto; flex:1;">
 
-            <div class="avatar-options">
+        <!-- Avatar section -->
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:18px 20px; margin-bottom:20px; display:flex; align-items:center; gap:20px; flex-wrap:wrap;">
+          <div style="display:flex; gap:14px; align-items:center;">
 
-              <!-- Male default -->
-              <div class="avatar-option selected" data-value="/images/defaults/doctor-male.png" onclick="selectAvatar(this)">
-                <div class="avatar-option-img-wrap">
-                  <img src="/images/defaults/doctor-male.png" alt="Male Doctor">
-                  <div class="avatar-check"><i class="fas fa-check"></i></div>
+            <!-- Male -->
+            <div class="avatar-option selected" data-value="/images/defaults/doctor-male.png" onclick="selectAvatar(this)" style="text-align:center; cursor:pointer;">
+              <div class="avatar-option-img-wrap" style="width:60px; height:60px; border-radius:50%; border:2.5px solid #203f6a; overflow:hidden; position:relative;">
+                <img src="/images/defaults/doctor-male.png" alt="Male" style="width:100%; height:100%; object-fit:cover;">
+                <div class="avatar-check" style="position:absolute; inset:0; background:rgba(32,63,106,0.5); display:flex; align-items:center; justify-content:center; border-radius:50%;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                 </div>
-                <span class="avatar-option-label">Male</span>
               </div>
-
-              <!-- Female default -->
-              <div class="avatar-option" data-value="/images/defaults/doctor-female.png" onclick="selectAvatar(this)">
-                <div class="avatar-option-img-wrap">
-                  <img src="/images/defaults/doctor-female.png" alt="Female Doctor">
-                  <div class="avatar-check"><i class="fas fa-check"></i></div>
-                </div>
-                <span class="avatar-option-label">Female</span>
-              </div>
-
-               <div class="avatar-option upload-option" onclick="triggerAvatarUpload()">
-                <div class="avatar-option-img-wrap upload-wrap" id="uploadWrap">
-                  <img src="" alt="" id="uploadPreviewImg" style="display:none; width:100%; height:100%; object-fit:cover;">
-                  <div class="upload-placeholder" id="uploadPlaceholder">
-                    <i class="fas fa-camera"></i>
-                    <span>Upload</span>
-                  </div>
-                  <div class="avatar-check"><i class="fas fa-check"></i></div>
-                </div>
-                <span class="avatar-option-label">Custom</span>
-                <input type="file" id="customAvatarInput" accept="image/jpeg,image/png,image/webp"
-                       style="display:none;" onchange="handleAvatarUpload(this)">
-              </div>
-
+              <div style="font-size:11px; color:#203f6a; font-weight:600; margin-top:5px;">Male</div>
             </div>
 
-            <div class="avatar-live-preview">
-              <div class="preview-circle">
-                <img id="avatarLivePreview" src="/images/defaults/doctor-male.png" alt="Preview">
+            <!-- Female -->
+            <div class="avatar-option" data-value="/images/defaults/doctor-female.png" onclick="selectAvatar(this)" style="text-align:center; cursor:pointer;">
+              <div class="avatar-option-img-wrap" style="width:60px; height:60px; border-radius:50%; border:2px solid #e2e8f0; overflow:hidden; position:relative;">
+                <img src="/images/defaults/doctor-female.png" alt="Female" style="width:100%; height:100%; object-fit:cover;">
+                <div class="avatar-check" style="position:absolute; inset:0; background:rgba(32,63,106,0.5); display:flex; align-items:center; justify-content:center; border-radius:50%; opacity:0;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+              <div style="font-size:11px; color:#94a3b8; font-weight:600; margin-top:5px;">Female</div>
+            </div>
+
+            <!-- Upload -->
+            <div class="avatar-option upload-option" onclick="triggerAvatarUpload()" style="text-align:center; cursor:pointer;">
+              <div class="avatar-option-img-wrap upload-wrap" id="uploadWrap" style="width:60px; height:60px; border-radius:50%; border:2px dashed #cbd5e1; overflow:hidden; position:relative; background:#f8fafc;">
+                <img src="" alt="" id="uploadPreviewImg" style="display:none; width:100%; height:100%; object-fit:cover;">
+                <div class="upload-placeholder" id="uploadPlaceholder" style="width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; color:#9ca3af;">
+                  <i class="fas fa-camera" style="font-size:16px;"></i>
+                  <span style="font-size:9px; font-weight:600; text-transform:uppercase;">Upload</span>
+                </div>
+                <div class="avatar-check" style="position:absolute; inset:0; background:rgba(32,63,106,0.5); display:flex; align-items:center; justify-content:center; border-radius:50%; opacity:0;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                </div>
+              </div>
+              <div style="font-size:11px; color:#94a3b8; font-weight:600; margin-top:5px;">Custom</div>
+              <input type="file" id="customAvatarInput" accept="image/jpeg,image/png,image/webp" style="display:none;" onchange="handleAvatarUpload(this)">
+            </div>
+
+          </div>
+
+          <!-- Live preview -->
+          <div style="flex:1; min-width:180px;">
+            <div style="display:flex; align-items:center; gap:10px; padding:10px 14px; background:white; border:1px solid #e2e8f0; border-radius:10px;">
+              <div style="width:40px; height:40px; border-radius:50%; overflow:hidden; border:2px solid #e2e8f0; flex-shrink:0;">
+                <img id="avatarLivePreview" src="/images/defaults/doctor-male.png" style="width:100%; height:100%; object-fit:cover;">
               </div>
               <div>
-                <div class="preview-name" id="previewDoctorName">Dr. Name</div>
-                <div class="preview-role" id="previewDoctorRole">Specialist</div>
+                <div id="previewDoctorName" style="font-size:13px; font-weight:600; color:#1e293b;">Dr. Name</div>
+                <div id="previewDoctorRole" style="font-size:11px; color:#94a3b8;">Specialist</div>
               </div>
             </div>
-
-            <p class="avatar-upload-note" id="avatarUploadNote">
-              <i class="fas fa-info-circle"></i>
+            <p id="avatarUploadNote" style="display:none; align-items:center; gap:6px; margin-top:8px; font-size:12px; color:#6b7280;">
+              <i class="fas fa-info-circle" style="color:#667eea;"></i>
               Custom photo selected — will be saved with the doctor.
             </p>
           </div>
+        </div>
 
-          <hr class="form-divider">
+        <!-- 2-column form grid -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
 
-          <div class="form-group">
-            <label>Full Name <span class="require-star">*</span></label>
-            <input type="text" id="doctorName" placeholder="Full Name"
-                   oninput="updateAvatarPreviewName(this.value)">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Full name <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="doctorName" placeholder="e.g. John Smith" oninput="updateAvatarPreviewName(this.value)"
+              style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit; transition:border-color .2s;">
             <span class="error-message" id="errorName"></span>
           </div>
 
-          <div class="form-group">
-            <label>Email <span class="require-star">*</span></label>
-            <input type="email" id="doctorEmail" placeholder="Email">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Email address <span style="color:#ef4444;">*</span></label>
+            <input type="email" id="doctorEmail" placeholder="doctor@healora.com"
+              style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit; transition:border-color .2s;">
             <span class="error-message" id="errorEmail"></span>
           </div>
 
-          <div class="form-group">
-            <label>Phone <span class="require-star">*</span></label>
-            <input type="tel" id="doctorPhone" placeholder="Phone Number">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Phone number <span style="color:#ef4444;">*</span></label>
+            <input type="tel" id="doctorPhone" placeholder="10-digit number"
+              style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit; transition:border-color .2s;">
             <span class="error-message" id="errorPhone"></span>
           </div>
 
-          <div class="form-group">
-            <label>Password <span class="require-star">*</span></label>
-            <div style="display: flex; gap: 10px;">
-              <input type="password" id="doctorPassword" placeholder="Min 6 characters" style="flex: 1;">
-              <button type="button" onclick="generatePassword()" class="btn btn-secondary" style="white-space: nowrap;">
-                <i class="fas fa-key"></i> Generate
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Password <span style="color:#ef4444;">*</span></label>
+            <div style="display:flex; gap:8px;">
+              <input type="password" id="doctorPassword" placeholder="Min 6 characters"
+                style="flex:1; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit;">
+              <button type="button" onclick="generatePassword()"
+                style="padding:10px 12px; background:#f1f5f9; border:1px solid #e2e8f0; border-radius:8px; cursor:pointer; font-size:12px; font-weight:600; color:#374151; white-space:nowrap; font-family:inherit;">
+                <i class="fas fa-key"></i> Gen
               </button>
             </div>
             <span class="error-message" id="errorPassword"></span>
           </div>
 
-          <div class="form-group">
-            <label>Specialization <span class="require-star">*</span></label>
-            <input type="text" id="doctorSpecialization" placeholder="e.g., Cardiologist"
-                   oninput="updateAvatarPreviewRole(this.value)">
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Specialization <span style="color:#ef4444;">*</span></label>
+            <input type="text" id="doctorSpecialization" placeholder="e.g. Cardiologist" oninput="updateAvatarPreviewRole(this.value)"
+              style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit; transition:border-color .2s;">
             <span class="error-message" id="errorSpecialization"></span>
           </div>
 
-          <div class="form-group">
-  <label>Department <span class="require-star">*</span></label>
-  <select id="doctorDepartment">
-    <option value="">Select Department</option>
-  </select>
-  <span class="error-message" id="errorDepartment"></span>
-</div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Department <span style="color:#ef4444;">*</span></label>
+            <select id="doctorDepartment"
+              style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit; background:white; cursor:pointer;">
+              <option value="">Select department</option>
+            </select>
+            <span class="error-message" id="errorDepartment"></span>
+          </div>
 
-<div class="form-group">
-  <label>Consultation Fee (₹) <span class="require-star">*</span></label>
-  <input type="number" id="doctorConsultationFee" placeholder="e.g. 500" min="0">
-  <span class="error-message" id="errorConsultationFee"></span>
-</div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Consultation fee (₹) <span style="color:#ef4444;">*</span></label>
+            <input type="number" id="doctorConsultationFee" placeholder="e.g. 500" min="0"
+              style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit; transition:border-color .2s;">
+            <span class="error-message" id="errorConsultationFee"></span>
+          </div>
 
-<div class="form-group">
-  <label>Qualification</label>
-  <input type="text" id="doctorQualification" placeholder="e.g. MBBS, MD">
-</div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Qualification</label>
+            <input type="text" id="doctorQualification" placeholder="e.g. MBBS, MD"
+              style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit; transition:border-color .2s;">
+          </div>
 
-<div class="form-group">
-  <label>Experience (years)</label>
-  <input type="number" id="doctorExperience" placeholder="e.g. 5" min="0" max="60">
-</div>
+          <div>
+            <label style="display:block; font-size:12px; font-weight:600; color:#374151; margin-bottom:6px;">Experience (years)</label>
+            <input type="number" id="doctorExperience" placeholder="e.g. 5" min="0" max="60"
+              style="width:100%; padding:10px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; color:#1e293b; outline:none; font-family:inherit; transition:border-color .2s;">
+          </div>
 
         </div>
+      </div>
 
-        <div class="modal-footer">
-          <button type="button" class="btn-modal btn-cancel" onclick="closeDoctorModal()">Cancel</button>
-          <button type="submit" class="btn-modal btn-submit">Save Doctor</button>
+      <!-- Footer -->
+      <div style="padding:16px 28px; border-top:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; background:#fafbfc; flex-shrink:0;">
+        <span style="font-size:12px; color:#94a3b8;"><span style="color:#ef4444;">*</span> Required fields</span>
+        <div style="display:flex; gap:10px;">
+          <button type="button" onclick="closeDoctorModal()"
+            style="padding:10px 20px; border-radius:8px; border:1px solid #e2e8f0; background:white; font-size:13px; font-weight:600; color:#64748b; cursor:pointer; font-family:inherit;">
+            Cancel
+          </button>
+          <button type="submit"
+            style="padding:10px 24px; border-radius:8px; border:none; background:#203f6a; color:white; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:8px;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            Save doctor
+          </button>
         </div>
-      </form>
-    </div>
+      </div>
+
+    </form>
   </div>
+</div>
 
   <%- include('../partials/logout-modal') %>
   <%- include('../partials/loading') %>
@@ -257,17 +291,13 @@
   <%- include('../partials/admin-scripts') %>
 
   <script>
-    
     let selectedAvatarValue = '/images/defaults/doctor-male.png';
 
     function selectAvatar(el) {
-
       document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
       el.classList.add('selected');
-
       selectedAvatarValue = el.dataset.value;
       document.getElementById('avatarLivePreview').src = selectedAvatarValue;
-
       document.getElementById('customAvatarInput').value = '';
       document.getElementById('uploadPreviewImg').style.display = 'none';
       document.getElementById('uploadPlaceholder').style.display = 'flex';
@@ -280,31 +310,23 @@
 
     function handleAvatarUpload(input) {
       if (!input.files || !input.files[0]) return;
-
       const file = input.files[0];
-
       if (file.size > 2 * 1024 * 1024) {
         Alert.error('Image too large. Please select an image under 2MB.');
         input.value = '';
         return;
       }
-
       const reader = new FileReader();
       reader.onload = (e) => {
         const dataUrl = e.target.result;
-
         const previewImg = document.getElementById('uploadPreviewImg');
         previewImg.src = dataUrl;
         previewImg.style.display = 'block';
         document.getElementById('uploadPlaceholder').style.display = 'none';
-
         document.getElementById('avatarLivePreview').src = dataUrl;
-
         document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
         document.querySelector('.upload-option').classList.add('selected');
-
         selectedAvatarValue = dataUrl;
-
         document.getElementById('avatarUploadNote').style.display = 'flex';
       };
       reader.readAsDataURL(file);
@@ -320,7 +342,6 @@
     }
 
     function resetAvatarSelector() {
-
       selectedAvatarValue = '/images/defaults/doctor-male.png';
       document.getElementById('avatarLivePreview').src = selectedAvatarValue;
       document.querySelectorAll('.avatar-option').forEach(opt => opt.classList.remove('selected'));
@@ -334,40 +355,26 @@
     }
 
     const state = {
-      search: '',
-      department: '',
-      status: '',
-      sortBy: 'createdAt',
-      sortOrder: 'desc',
-      page: 1,
-      limit: 10,
-      total: 0,
-      totalPages: 0
+      search: '', department: '', status: '',
+      sortBy: 'createdAt', sortOrder: 'desc',
+      page: 1, limit: 10, total: 0, totalPages: 0
     };
 
     let allDepartments = [];
 
-   async function loadDoctors() {
+    async function loadDoctors() {
       Loader.show('Loading doctors...');
       try {
         const params = new URLSearchParams({
-          search: state.search,
-          department: state.department,
-          status: state.status,
-          sortBy: state.sortBy,
-          sortOrder: state.sortOrder,
-          page: state.page,
-          limit: state.limit
+          search: state.search, department: state.department,
+          status: state.status, sortBy: state.sortBy,
+          sortOrder: state.sortOrder, page: state.page, limit: state.limit
         });
-
         const response = await fetch(`/admin/api/doctors?${params}`);
         const data = await response.json();
-
         if (!data.success) throw new Error(data.error);
-
         state.total = data.pagination.total;
         state.totalPages = data.pagination.totalPages;
-
         renderDoctors(data.doctors);
         renderPagination();
         updateResultsInfo();
@@ -394,16 +401,13 @@
     function populateDepartmentDropdowns() {
       const filterSelect = document.getElementById('departmentFilter');
       const formSelect   = document.getElementById('doctorDepartment');
-
       filterSelect.innerHTML = '<option value="">All Departments</option>';
       formSelect.innerHTML   = '<option value="">Select Department</option>';
-
       allDepartments.forEach(dept => {
         if (!dept.isDeleted) {
           const o1 = document.createElement('option');
           o1.value = dept.name; o1.textContent = dept.name;
           filterSelect.appendChild(o1);
-
           const o2 = document.createElement('option');
           o2.value = dept.name; o2.textContent = dept.name;
           formSelect.appendChild(o2);
@@ -422,7 +426,6 @@
 
     function renderDoctors(doctors) {
       const tbody = document.getElementById('doctorsTableBody');
-
       if (!doctors || doctors.length === 0) {
         tbody.innerHTML = `
           <tr><td colspan="7">
@@ -434,13 +437,11 @@
           </td></tr>`;
         return;
       }
-
       tbody.innerHTML = doctors.map(doctor => {
         const initials = doctor.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
         const avatarHtml = doctor.profileImage
           ? `<img src="${doctor.profileImage}" alt="${doctor.name}" class="doctor-avatar-img">`
           : `<div class="doctor-avatar">${initials}</div>`;
-
         return `
           <tr>
             <td>
@@ -468,9 +469,7 @@
 
     function renderPagination() {
       Pagination.init({
-        totalItems: state.total,
-        limit: state.limit,
-        currentPage: state.page,
+        totalItems: state.total, limit: state.limit, currentPage: state.page,
         onPageChange: (newPage) => { state.page = newPage; loadDoctors(); }
       });
       Pagination.render('pagination');
@@ -478,7 +477,7 @@
 
     function updateResultsInfo() {
       const start = (state.page - 1) * state.limit + 1;
-      const end = Math.min(state.page * state.limit, state.total);
+      const end   = Math.min(state.page * state.limit, state.total);
       document.getElementById('resultsInfo').innerHTML = state.total > 0
         ? `Showing <strong>${start}-${end}</strong> of <strong>${state.total}</strong> doctors`
         : 'No doctors found';
@@ -547,17 +546,17 @@
       clearErrors();
 
       const formData = {
-  name:            document.getElementById('doctorName').value.trim(),
-  email:           document.getElementById('doctorEmail').value.trim(),
-  phone:           document.getElementById('doctorPhone').value.trim(),
-  password:        document.getElementById('doctorPassword').value,
-  specialization:  document.getElementById('doctorSpecialization').value.trim(),
-  department:      document.getElementById('doctorDepartment').value,
-  profileImage:    selectedAvatarValue,
-  consultationFee: document.getElementById('doctorConsultationFee').value,
-  qualification:   document.getElementById('doctorQualification').value.trim(),
-  experience:      document.getElementById('doctorExperience').value
-};
+        name:            document.getElementById('doctorName').value.trim(),
+        email:           document.getElementById('doctorEmail').value.trim(),
+        phone:           document.getElementById('doctorPhone').value.trim(),
+        password:        document.getElementById('doctorPassword').value,
+        specialization:  document.getElementById('doctorSpecialization').value.trim(),
+        department:      document.getElementById('doctorDepartment').value,
+        profileImage:    selectedAvatarValue,
+        consultationFee: document.getElementById('doctorConsultationFee').value,
+        qualification:   document.getElementById('doctorQualification').value.trim(),
+        experience:      document.getElementById('doctorExperience').value
+      };
 
       let hasError = false;
       if (formData.name.length < 3)                               { document.getElementById('errorName').textContent = 'Full name required (min 3 chars)'; hasError = true; }
@@ -577,7 +576,6 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
-
         const data = await response.json();
         Loader.hide();
 

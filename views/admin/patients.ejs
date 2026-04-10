@@ -222,7 +222,6 @@
     renderPagination();
     updateResultsInfo();
 
-    // Stats — parallel, non-blocking
     try {
       const [totalRes, activeRes, blockedRes, inactiveRes] = await Promise.all([
         fetch('/admin/api/patients?limit=1&page=1'),

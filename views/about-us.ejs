@@ -147,7 +147,7 @@
 
     .stats-bar {
       background: var(--white);
-      border-radius: 18px;
+      border-radius: 14px;
       box-shadow: 0 20px 60px rgba(7,23,48,.12), 0 1px 0 var(--border);
       overflow: hidden;
     }
@@ -171,7 +171,7 @@
       position: absolute;
       bottom: 0; left: 50%;
       transform: translateX(-50%) scaleX(0);
-      width: 40px; height: 2px;
+      width: 40px; height: 20px;
       background: var(--blue-mid);
       border-radius: 2px;
       transition: transform .3s;
@@ -266,45 +266,6 @@
     }
 
     .about-img { position: relative; z-index: 1; }
-
-    .iso-badge {
-      position: absolute;
-      bottom: -16px; right: -16px;
-      z-index: 2;
-      background: var(--white);
-      border-radius: 14px;
-      padding: 16px 20px;
-      box-shadow: 0 12px 36px rgba(7,23,48,.13);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      border: 1px solid var(--border);
-    }
-
-    .iso-icon {
-      width: 44px; height: 44px;
-      border-radius: 11px;
-      background: linear-gradient(135deg, var(--blue), var(--sky));
-      display: flex; align-items: center; justify-content: center;
-      color: var(--white);
-      font-size: 17px;
-      flex-shrink: 0;
-    }
-
-    .iso-num {
-      font-family: 'Lora', serif;
-      font-size: 1.1rem;
-      font-weight: 500;
-      color: var(--ink);
-      line-height: 1;
-    }
-
-    .iso-lbl {
-      font-size: 11px;
-      color: var(--muted);
-      font-weight: 600;
-      margin-top: 3px;
-    }
 
     .about-text { padding-left: 32px; }
 
@@ -614,7 +575,6 @@
     @media (max-width: 991px) {
       .about-text { padding-left: 0; margin-top: 48px; }
       .about-visual::before { display: none; }
-      .iso-badge { right: 12px; bottom: -12px; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); }
       .stat-cell:nth-child(2) { border-right: none; }
       .stat-cell { border-bottom: 1px solid var(--border); }
@@ -694,13 +654,6 @@
       <div class="col-lg-6">
         <div class="about-visual">
           <img src="/images/about_us.jpg" alt="About Healora" class="about-img">
-          <div class="iso-badge">
-            <div class="iso-icon"><i class="fas fa-award"></i></div>
-            <div>
-              <div class="iso-num">ISO Certified</div>
-              <div class="iso-lbl">International Standard</div>
-            </div>
-          </div>
         </div>
       </div>
 

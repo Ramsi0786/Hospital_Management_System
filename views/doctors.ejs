@@ -99,12 +99,12 @@
     .hero-breadcrumb a:hover { color: var(--white); }
     .hero-breadcrumb i { font-size: 8px; opacity: .7; }
 
-      /* ── FILTER BAR ── */
-.filter-section {
-  padding: 16px 0 0;     
-  margin-top: 16px;
-  margin-bottom: 0;      
-}
+    /* ── FILTER BAR ── */
+    .filter-section {
+      padding: 24px 0 0;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
 
     .filter-row {
       display: flex;
@@ -187,23 +187,20 @@
     .clear-filters-btn:hover { background: #fee2e2; }
     .clear-filters-btn.show { display: inline-flex; }
 
-  
+    /* ── RESULTS INFO ── */
+    .results-info {
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 400;
+      padding: 16px 0 14px;
+      display: block;
+      width: 100%;
+    }
 
-/* ── RESULTS INFO ── */
-.results-info {
-  font-size: 13px;
-  color: var(--muted);
-  font-weight: 400;
-  padding: 16px 0 14px;
-  margin-top: 0;
-  display: block;  
-  width: 100%;
-}
-
-.results-info strong {
-  color: var(--ink);
-  font-weight: 700;
-}
+    .results-info strong {
+      color: var(--ink);
+      font-weight: 700;
+    }
 
     /* ── DOCTORS GRID ── */
     .doctors-grid {
@@ -220,6 +217,8 @@
       border-radius: 16px;
       padding: 22px;
       transition: border-color .22s, box-shadow .22s, transform .22s;
+      display: flex;
+      flex-direction: column;
     }
 
     .doctor-card-item:hover {
@@ -230,7 +229,7 @@
 
     .doc-header {
       display: flex; align-items: center; gap: 14px;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .doc-avatar {
@@ -266,7 +265,7 @@
       display: flex; gap: 0;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
 
     .doc-stat {
@@ -281,9 +280,17 @@
       font-size: 14px; font-weight: 700; color: var(--ink);
       display: flex; align-items: center; justify-content: center; gap: 3px;
       margin-bottom: 2px;
+      min-height: 20px;
     }
 
     .doc-stat-val i { font-size: 11px; color: #f59e0b; }
+
+    .doc-stat-new {
+      font-size: 10px; font-weight: 700;
+      color: var(--accent);
+      background: rgba(5,200,164,.1);
+      padding: 2px 7px; border-radius: 20px;
+    }
 
     .doc-stat-lbl {
       font-size: 10px; font-weight: 600;
@@ -305,7 +312,7 @@
     }
 
     /* Action buttons */
-    .doc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .doc-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: auto; }
 
     .btn-doc-view, .btn-doc-book {
       padding: 10px 8px;
@@ -315,6 +322,7 @@
       display: flex; align-items: center; justify-content: center; gap: 5px;
       transition: all .18s;
       font-family: 'Sora', sans-serif;
+      cursor: pointer;
     }
 
     .btn-doc-view {
@@ -453,14 +461,17 @@
 <div class="container">
 
   <div class="results-info">
-  Showing <strong><%= total %></strong> <%= total === 1 ? 'doctor' : 'doctors' %><% if (searchQuery) { %> for "<strong><%= searchQuery %></strong>"<% } %><% if (selectedDepartment !== 'all') { %> in <strong><%= selectedDepartment %></strong><% } %>
-</div>
+    Showing <strong><%= total %></strong> <%= total === 1 ? 'doctor' : 'doctors' %>
+    <% if (searchQuery) { %> for "<strong><%= searchQuery %></strong>"<% } %>
+    <% if (selectedDepartment !== 'all') { %> in <strong><%= selectedDepartment %></strong><% } %>
+  </div>
 
   <% if (doctors && doctors.length > 0) { %>
     <div class="doctors-grid">
       <% doctors.forEach(doctor => { %>
         <div class="doctor-card-item">
 
+          <!-- Doctor Header -->
           <div class="doc-header">
             <div class="doc-avatar">
               <% if (doctor.profileImage) { %>
@@ -476,24 +487,41 @@
             </div>
           </div>
 
+          <!-- Stats -->
           <div class="doc-stats">
             <div class="doc-stat">
               <div class="doc-stat-val">
-                <i class="fas fa-star"></i>
-                <%= doctor.rating && doctor.rating > 0 ? Number(doctor.rating).toFixed(1) : '—' %>
+                <% if (doctor.rating && doctor.rating > 0) { %>
+                  <i class="fas fa-star"></i> <%= Number(doctor.rating).toFixed(1) %>
+                <% } else { %>
+                  <span class="doc-stat-new">New</span>
+                <% } %>
               </div>
               <div class="doc-stat-lbl">Rating</div>
             </div>
             <div class="doc-stat">
-              <div class="doc-stat-val"><%= doctor.experience > 0 ? doctor.experience + '+' : '—' %></div>
-              <div class="doc-stat-lbl">Years</div>
+              <div class="doc-stat-val">
+                <% if (doctor.experience > 0) { %>
+                  <%= doctor.experience %>+
+                <% } else { %>
+                  <span style="font-size:11px;color:var(--muted);">—</span>
+                <% } %>
+              </div>
+              <div class="doc-stat-lbl">Exp. yrs</div>
             </div>
             <div class="doc-stat">
-              <div class="doc-stat-val"><%= doctor.patientsServed > 0 ? doctor.patientsServed + '+' : '—' %></div>
-              <div class="doc-stat-lbl">Patients</div>
+              <div class="doc-stat-val">
+                <% if (doctor.ratingCount > 0) { %>
+                  <%= doctor.ratingCount %>
+                <% } else { %>
+                  <span class="doc-stat-new">New</span>
+                <% } %>
+              </div>
+              <div class="doc-stat-lbl">Reviews</div>
             </div>
           </div>
 
+          <!-- Fee -->
           <div class="doc-fee">
             <span class="doc-fee-lbl">Consultation fee</span>
             <span class="doc-fee-val">
@@ -501,16 +529,17 @@
             </span>
           </div>
 
+          <!-- Actions -->
           <div class="doc-actions">
             <a href="/doctors/<%= doctor._id %>" class="btn-doc-view">
               <i class="fas fa-eye"></i> View
             </a>
-            <% if (locals.currentUser) { %>
-              <a href="/patient/book-appointment/<%= doctor._id %>" class="btn-doc-book">
+            <% if (locals.user) { %>
+              <a href="/doctors/<%= doctor._id %>" class="btn-doc-book">
                 <i class="fas fa-calendar-check"></i> Book
               </a>
             <% } else { %>
-              <a href="/patient/login?redirect=/patient/book-appointment/<%= doctor._id %>" class="btn-doc-book">
+              <a href="/login" class="btn-doc-book">
                 <i class="fas fa-calendar-check"></i> Book
               </a>
             <% } %>

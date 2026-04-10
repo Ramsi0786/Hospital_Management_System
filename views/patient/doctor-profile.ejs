@@ -296,14 +296,37 @@
   }
 
   function selectDate(btn) {
-    if (btn.disabled) return;
-    document.querySelectorAll('.date-card').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    selectedDate = btn.dataset.date;
-    selectedSlot = null;
-    renderTimeSlots(JSON.parse(btn.dataset.slots));
-    updateSummary();
+  if (btn.disabled) return;
+  document.querySelectorAll('.date-card').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  selectedDate = btn.dataset.date;
+  selectedSlot = null;
+  updateSummary();
+  fetchSlots(selectedDate);
+}
+
+async function fetchSlots(date) {
+  const timeGrid = document.getElementById('timeGrid');
+  const noSlotsMsg = document.getElementById('noSlotsMessage');
+  timeGrid.style.display = 'grid';
+  timeGrid.innerHTML = '<div style="padding:20px;color:#94a3b8;font-size:13px;">Loading slots...</div>';
+  noSlotsMsg.style.display = 'none';
+  try {
+    const res = await fetch(`/patient/doctors/${PAGE.doctorId}/slots?date=${date}`);
+    const data = await res.json();
+    if (data.success && data.slots.length > 0) {
+      renderTimeSlots(data.slots);
+    } else {
+      timeGrid.style.display = 'none';
+      noSlotsMsg.style.display = 'flex';
+      document.getElementById('noSlotsText').textContent = 'No available slots for this date';
+    }
+  } catch (err) {
+    timeGrid.style.display = 'none';
+    noSlotsMsg.style.display = 'flex';
+    document.getElementById('noSlotsText').textContent = 'Failed to load slots';
   }
+}
 
   function renderTimeSlots(slots) {
     const timeGrid = document.getElementById('timeGrid');
@@ -376,9 +399,15 @@ function confirmAndBook() {
   window.location.href = `/patient/appointments/book?${params}`;
 }
 
-// Close modal on backdrop click
 document.getElementById('confirmModal').addEventListener('click', function(e) {
   if (e.target === this) closeConfirmModal();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const firstDateBtn = document.querySelector('.date-card:not(.disabled)');
+  if (firstDateBtn) {
+    fetchSlots(firstDateBtn.dataset.date);
+  }
 });
 </script>
 
