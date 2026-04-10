@@ -397,6 +397,7 @@ document.getElementById('confirmModal').addEventListener('click', function(e) {
 document.addEventListener('DOMContentLoaded', () => {
   const firstDateBtn = document.querySelector('.date-card:not(.disabled)');
   if (firstDateBtn) {
+    selectedDate = firstDateBtn.dataset.date;
     fetchSlots(firstDateBtn.dataset.date);
   }
 });
