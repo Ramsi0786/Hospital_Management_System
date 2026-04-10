@@ -162,19 +162,9 @@
           <div class="time-section" id="timeSection">
             <label class="section-label">Select Time</label>
             <div class="time-grid" id="timeGrid">
-              <% const firstDay = slotCalendar[0]; %>
-              <% if (firstDay.slots.length > 0) { %>
-                <% firstDay.slots.forEach(slot => { %>
-                  <%
-                  const [fh, fm] = slot.split(':').map(Number);
-                  const fampm = fh >= 12 ? 'PM' : 'AM';
-                  const fmtSlot = `${fh % 12 || 12}:${String(fm).padStart(2,'0')} ${fampm}`;
-                  %>
-                  <button class="time-slot" data-slot="<%= slot %>" onclick="selectSlot(this)">
-                    <i class="fas fa-clock"></i> <%= fmtSlot %>
-                  </button>
-                  <% }) %>
-              <% } %>
+              <div style="padding:20px;color:#94a3b8;font-size:13px;text-align:center;">
+                <i class="fas fa-spinner fa-spin"></i> Loading slots...
+              </div>
             </div>
             <div class="no-slots-message" id="noSlotsMessage" style="display: none;">
               <i class="fas fa-info-circle"></i>
@@ -309,7 +299,7 @@ async function fetchSlots(date) {
   const timeGrid = document.getElementById('timeGrid');
   const noSlotsMsg = document.getElementById('noSlotsMessage');
   timeGrid.style.display = 'grid';
-  timeGrid.innerHTML = '<div style="padding:20px;color:#94a3b8;font-size:13px;">Loading slots...</div>';
+  timeGrid.innerHTML = '<div style="padding:20px;color:#94a3b8;font-size:13px;text-align:center;">Loading slots...</div>';
   noSlotsMsg.style.display = 'none';
   try {
     const res = await fetch(`/patient/doctors/${PAGE.doctorId}/slots?date=${date}`);
@@ -327,6 +317,7 @@ async function fetchSlots(date) {
     document.getElementById('noSlotsText').textContent = 'Failed to load slots';
   }
 }
+
 
   function renderTimeSlots(slots) {
     const timeGrid = document.getElementById('timeGrid');
