@@ -3,212 +3,295 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Healora login page - choose your role to access personalized dashboard" />
   <title>Login | Healora</title>
-  <link rel="icon" href="/images/Logo-browser.jpg" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="/images/logo.jpg" rel="icon">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --navy:    #071730;
+      --navy-2:  #0f2a4a;
+      --teal:    #1a7f8e;
+      --teal-2:  #156b79;
+      --ink:     #0f1f3d;
+      --slate:   #475569;
+      --muted:   #94a3b8;
+      --border:  #e2e8f0;
+      --surface: #f8fafd;
+      --white:   #ffffff;
     }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(135deg, #667eea, #203f6a);
+      font-family: 'Plus Jakarta Sans', sans-serif;
       min-height: 100vh;
+      background: var(--navy);
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-    }
-
-    .login-container {
-      width: 100%;
-      max-width: 1000px;
-      background: #fff;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-      padding: 60px 40px;
-      text-align: center;
-    }
-
-    .logo {
-      width: 150px;
-      height: auto;
-     
-      margin-bottom: 20px;
-    }
-
-    .main-title {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #2d3748;
-      margin-bottom: 10px;
-    }
-
-    .subtitle {
-      font-size: 1rem;
-      color: #718096;
-      margin-bottom: 50px;
-    }
-
-    .cards-container {
-      display: flex;
-      gap: 25px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-
-    .role-card {
-      background: #fff;
-      border: 2px solid #e2e8f0;
-      border-radius: 16px;
-      padding: 30px 25px;
-      width: 280px;
-      text-decoration: none;
-      transition: all 0.3s ease;
+      padding: 24px;
       position: relative;
       overflow: hidden;
     }
 
+    /* Background grid */
+    body::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.023) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.023) 1px, transparent 1px);
+      background-size: 52px 52px;
+      pointer-events: none;
+    }
+
+    /* Glow orbs */
+    .orb-1 {
+      position: absolute;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(26,127,142,.18) 0%, transparent 70%);
+      top: -180px; right: -120px;
+      pointer-events: none;
+    }
+
+    .orb-2 {
+      position: absolute;
+      width: 380px; height: 380px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(18,80,176,.15) 0%, transparent 70%);
+      bottom: -140px; left: -100px;
+      pointer-events: none;
+    }
+
+    /* ── WRAPPER ── */
+    .page-wrap {
+      position: relative; z-index: 2;
+      width: 100%; max-width: 860px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+      text-align: center;
+      margin-bottom: 52px;
+      animation: fadeUp .5s ease both;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      margin-bottom: 32px;
+    }
+
+    .brand-logo {
+  height: 70px;
+  width: auto;
+  margin-left:-18px;
+  filter: brightness(0) invert(1);
+}
+
+
+    .page-title {
+      font-size: clamp(1.8rem, 4vw, 2.6rem);
+      font-weight: 800;
+      color: var(--white);
+      letter-spacing: -0.5px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+    }
+
+    .page-sub {
+      font-size: 15px;
+      color: rgba(255,255,255,.45);
+      font-weight: 300;
+    }
+
+    /* ── CARDS ── */
+    .cards-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      width: 100%;
+    }
+
+    .role-card {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.09);
+      border-radius: 18px;
+      padding: 32px 24px 28px;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .22s, background .22s, transform .22s, box-shadow .22s;
+      animation: fadeUp .5s ease both;
+    }
+
+    .role-card:nth-child(1) { animation-delay: .1s; }
+    .role-card:nth-child(2) { animation-delay: .18s; }
+    .role-card:nth-child(3) { animation-delay: .26s; }
+
+    /* Top accent line */
     .role-card::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, #667eea, #203f6a);
-      transform: scaleX(0);
-      transition: transform 0.4s ease;
-    }
-
-    .role-card:hover::before {
-      transform: scaleX(1);
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--teal), #0ea5d4);
+      opacity: 0;
+      transition: opacity .22s;
     }
 
     .role-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(102, 126, 234, 0.25);
-      border-color: #667eea;
+      background: rgba(255,255,255,.07);
+      border-color: rgba(26,127,142,.4);
+      transform: translateY(-4px);
+      box-shadow: 0 16px 40px rgba(0,0,0,.3);
     }
 
-    .icon-wrapper {
-      width: 70px;
-      height: 70px;
-      margin: 0 auto 20px;
-      background: linear-gradient(135deg, #667eea, #203f6a);
-      border-radius: 50%;
-      display: flex;
+    .role-card:hover::before { opacity: 1; }
+
+    /* Icon */
+    .card-icon {
+      width: 52px; height: 52px;
+      background: rgba(26,127,142,.15);
+      border: 1px solid rgba(26,127,142,.25);
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--teal);
+      font-size: 20px;
+      margin-bottom: 20px;
+      transition: background .22s, border-color .22s;
+      flex-shrink: 0;
+    }
+
+    .role-card:hover .card-icon {
+      background: rgba(26,127,142,.25);
+      border-color: rgba(26,127,142,.45);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 6px;
+      letter-spacing: -0.2px;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: rgba(255,255,255,.42);
+      font-weight: 300;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+
+    .card-cta {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      transition: all 0.3s ease;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--teal);
+      transition: gap .18s;
     }
 
-    .role-card:hover .icon-wrapper {
-      transform: scale(1.1) rotate(5deg);
+    .card-cta i { font-size: 11px; }
+
+    .role-card:hover .card-cta { gap: 9px; }
+
+    /* ── FOOTER NOTE ── */
+    .page-note {
+      margin-top: 36px;
+      font-size: 12.5px;
+      color: rgba(255,255,255,.25);
+      text-align: center;
+      animation: fadeUp .5s .35s ease both;
     }
 
-    .icon-wrapper i {
-      font-size: 32px;
-      color: #fff;
-    }
-
-    .role-title {
-      font-size: 1.25rem;
+    .page-note a {
+      color: rgba(255,255,255,.45);
+      text-decoration: none;
       font-weight: 600;
-      color: #2d3748;
-      margin-bottom: 8px;
     }
 
-    .role-description {
-      font-size: 0.9rem;
-      color: #718096;
-      margin-bottom: 0;
+    .page-note a:hover { color: var(--white); }
+
+    /* ── ANIMATION ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .login-container {
-        padding: 40px 25px;
-      }
-
-      .main-title {
-        font-size: 1.5rem;
-      }
-
-      .cards-container {
-        flex-direction: column;
-        align-items: center;
-      }
-
-      .role-card {
-        width: 100%;
-        max-width: 350px;
-      }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 720px) {
+      .cards-row { grid-template-columns: 1fr; max-width: 400px; }
+      .page-header { margin-bottom: 36px; }
     }
 
     @media (max-width: 480px) {
-      .logo {
-        width: 60px;
-        height: 60px;
-      }
-
-      .main-title {
-        font-size: 1.3rem;
-      }
-
-      .subtitle {
-        font-size: 0.9rem;
-        margin-bottom: 35px;
-      }
+      .page-title { font-size: 1.7rem; }
+      .role-card { padding: 24px 20px 22px; }
     }
   </style>
 </head>
 <body>
 
-  <div class="login-container">
-    <img src="/images/logo-1.jpg" class="logo" alt="Healora Logo" loading="lazy" />
-    <h1 class="main-title">Welcome to Healora</h1>
-    <p class="subtitle">Select your role to access your dashboard</p>
+  <div class="orb-1"></div>
+  <div class="orb-2"></div>
 
-    <div class="cards-container">
-      <!-- Patient Card -->
-      <a href="/patient/login" class="role-card">
-        <div class="icon-wrapper">
-          <i class="fas fa-user"></i>
-        </div>
-        <h3 class="role-title">Patient</h3>
-        <p class="role-description">Book appointments and manage your health records</p>
-      </a>
+  <div class="page-wrap">
 
-      <!-- Doctor Card -->
-      <a href="/doctor/login" class="role-card">
-        <div class="icon-wrapper">
-          <i class="fas fa-user-md"></i>
-        </div>
-        <h3 class="role-title">Doctor</h3>
-        <p class="role-description">Manage patients and view appointments</p>
-      </a>
-
-      <!-- Admin Card -->
-      <a href="/admin/login" class="role-card">
-        <div class="icon-wrapper">
-          <i class="fas fa-user-shield"></i>
-        </div>
-        <h3 class="role-title">Admin</h3>
-        <p class="role-description">Oversee system and manage operations</p>
-      </a>
+    <div class="page-header">
+      <a href="/" class="brand">
+  <img src="/images/logo-1.jpg" alt="Healora" class="brand-logo">
+</a>
+      <h1 class="page-title">Who are you signing in as?</h1>
+      <p class="page-sub">Choose your role to access your dashboard</p>
     </div>
-  </div>
 
-  <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <div class="cards-row">
+
+      <!-- Patient -->
+      <a href="/patient/login" class="role-card">
+        <div class="card-icon"><i class="fas fa-user"></i></div>
+        <div class="card-title">Patient</div>
+        <p class="card-desc">Book appointments, view records and manage your health journey.</p>
+        <div class="card-cta">Sign in <i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <!-- Doctor -->
+      <a href="/doctor/login" class="role-card">
+        <div class="card-icon"><i class="fas fa-user-md"></i></div>
+        <div class="card-title">Doctor</div>
+        <p class="card-desc">Manage your schedule, patients and consultation records.</p>
+        <div class="card-cta">Sign in <i class="fas fa-arrow-right"></i></div>
+      </a>
+
+      <!-- Admin -->
+      <a href="/admin/login" class="role-card">
+        <div class="card-icon"><i class="fas fa-user-shield"></i></div>
+        <div class="card-title">Admin</div>
+        <p class="card-desc">Oversee hospital operations, staff and system settings.</p>
+        <div class="card-cta">Sign in <i class="fas fa-arrow-right"></i></div>
+      </a>
+
+    </div>
+
+    <p class="page-note">
+      <a href="/">← Back to home</a> &nbsp;·&nbsp; Healora Health &copy; 2025
+    </p>
+
+  </div>
 
 </body>
 </html>

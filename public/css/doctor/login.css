@@ -1,21 +1,43 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+ *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
-  background: linear-gradient(90deg, #667eea, #203f6a);
-  font-family: 'Poppins', sans-serif;
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
+    :root {
+      --navy:    #071730;
+      --navy-2:  #0f2a4a;
+      --teal:    #1a7f8e;
+      --teal-2:  #156b79;
+      --ink:     #0f1f3d;
+      --slate:   #475569;
+      --muted:   #94a3b8;
+      --border:  #e2e8f0;
+      --surface: #f8fafd;
+      --white:   #ffffff;
+    }
 
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      background: var(--navy);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Background grid */
+    body::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.023) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.023) 1px, transparent 1px);
+      background-size: 52px 52px;
+      pointer-events: none;
+    }
+    
 .login-container {
-  background: rgba(255, 255, 255, 0.95);
+   background: rgba(255,255,255,.04);
   backdrop-filter: blur(10px);
   padding: 50px 40px;
   border-radius: 25px;
@@ -25,6 +47,19 @@ body {
   text-align: center;
   animation: slideUp 0.5s ease-out;
 }
+
+      /* border: 1px solid rgba(255,255,255,.09);
+      border-radius: 18px;
+      padding: 32px 24px 28px;
+      text-decoration: none;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .22s, background .22s, transform .22s, box-shadow .22s;
+      animation: fadeUp .5s ease both; */
 
 @keyframes slideUp {
   from {
@@ -40,13 +75,12 @@ body {
 .icon-wrapper {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #667eea, #203f6a);
+      background: radial-gradient(circle, rgba(26,127,142,.18) 0%, transparent 70%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 25px;
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
 }
 
 .icon-wrapper i {
